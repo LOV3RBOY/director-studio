@@ -12,6 +12,7 @@ export async function register() {
     ["webhooks", async () => (await import("./server/developer/webhooks")).ensureDispatcher()],
     ["ads", async () => (await import("./server/ads/campaigns")).ensurePump()],
     ["cinema", async () => (await import("./server/cinema/batch")).pump()],
+    ["director", async () => (await import("./server/director/worker")).ensureDirectorWorker()],
     ["super", async () => (await import("./server/super/loop")).ensureSuper()],
   ];
   for (const [name, start] of loops) {

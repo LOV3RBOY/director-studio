@@ -32,4 +32,6 @@ jobs:
       - run: npm run check:registry
       - run: npm run typecheck
       - run: npm run build
+      - run: command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
       - run: python3 tests/run.py tests/core_e2e.py tests/cinema.py tests/super_hermes.py
+      - run: python3 tests/run.py tests/director.py
