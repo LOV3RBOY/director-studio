@@ -99,7 +99,7 @@ export function projectRow(userId: string, id: string, mode = directorMode()) {
 export function projectProfile(userId: string, project: ReturnType<typeof projectRow>) {
   const version = styleVersion(userId, project.style_version_id, project.mode);
   const style = styleRow(userId, version.style_id, project.mode);
-  return { id: style.id, title: style.title, ...toVersion(version) };
+  return { styleId: style.id, title: style.title, ...toVersion(version) };
 }
 
 export function listProjects(userId: string) {
