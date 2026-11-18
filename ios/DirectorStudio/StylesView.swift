@@ -21,17 +21,25 @@ struct StylesView: View {
                     ContentUnavailableView("No styles yet", systemImage: "rectangle.on.rectangle", description: Text("Study an image or video to create a reusable guide."))
                 }
                 ForEach(styles) { style in
-                    NavigationLink(value: style.id) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(style.title).font(.headline)
-                            if let version = style.latest {
-                                Text(version.saved ? "Saved · v\(version.version)" : "Draft · v\(version.version)")
-                                    .font(.caption).foregroundStyle(.secondary)
-                            } else {
-                                Text("Analysis pending").font(.caption).foregroundStyle(.secondary)
+                    Button { path.append(style.id) } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(style.title).font(.headline)
+                                if let version = style.latest {
+                                    Text(version.saved ? "Saved · v\(version.version)" : "Draft · v\(version.version)")
+                                        .font(.caption).foregroundStyle(.secondary)
+                                } else {
+                                    Text("Analysis pending").font(.caption).foregroundStyle(.secondary)
+                                }
                             }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.caption.weight(.semibold))
+                                .foregroundStyle(.tertiary).accessibilityHidden(true)
                         }
+                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                     .accessibilityIdentifier("style-row-\(style.id)")
                 }
             }

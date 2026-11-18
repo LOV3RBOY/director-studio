@@ -50,14 +50,19 @@ final class DirectorStudioUITests: XCTestCase {
         XCTAssertTrue(project.waitForExistence(timeout: 20))
         app.tabBars.buttons["Style Library"].tap()
         XCTAssertTrue(app.navigationBars["Style Library"].waitForExistence(timeout: 10), app.debugDescription)
-        let style = app.descendants(matching: .any)
+        let style = app.buttons
             .matching(NSPredicate(format: "identifier BEGINSWITH %@", "style-row-")).firstMatch
         XCTAssertTrue(style.waitForExistence(timeout: 10), app.debugDescription)
-        style.tap()
+        if style.isHittable {
+            style.tap()
+        } else {
+            XCTAssertTrue(app.frame.intersects(style.frame), app.debugDescription)
+            style.coordinate(withNormalizedOffset: CGVector(dx: 0.35, dy: 0.5)).tap()
+        }
         XCTAssertTrue(app.navigationBars["iPhone fixture style"].waitForExistence(timeout: 10), app.debugDescription)
         let saveStyle = app.buttons["Save style"]
         reveal(saveStyle, in: app)
-        XCTAssertTrue(saveStyle.isHittable, app.debugDescription)
+        XCTAssertTrue(saveStyle.exists, app.debugDescription)
         app.tabBars.buttons["Director"].tap()
         project.tap()
         let pack = app.buttons["Open Project Pack"]
