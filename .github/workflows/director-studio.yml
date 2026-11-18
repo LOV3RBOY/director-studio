@@ -84,7 +84,6 @@ jobs:
           sys.exit("No available iPhone simulator")
           ')
           printf 'DIRECTOR_SIMULATOR=%s\n' "$device" >> "$GITHUB_ENV"
-          xcrun simctl boot "$device" || true
           xcodebuild -project DirectorStudio.xcodeproj -scheme DirectorStudio -configuration Debug \
             -destination "platform=iOS Simulator,id=$device" -derivedDataPath "$RUNNER_TEMP/simulator-build" \
             -parallel-testing-enabled NO -quiet build-for-testing

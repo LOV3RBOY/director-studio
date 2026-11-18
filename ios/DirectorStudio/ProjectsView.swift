@@ -7,7 +7,8 @@ struct ProjectsView: View {
     let commerce: Bool
     let signOut: () async -> Void
     @State private var projects: [ProjectSummary] = []
-    @State private var path: [String] = []
+    @State private var createdProject: String?
+    @State private var pendingProject: String?
     @State private var loaded = false
     @State private var creating = false
     @State private var showAccount = false
@@ -15,21 +16,26 @@ struct ProjectsView: View {
     @State private var error: String?
 
     var body: some View {
-        NavigationStack(path: $path) {
-            List {
-                if fixture {
-                    Label("Provider-free workspace", systemImage: "testtube.2")
-                        .font(.footnote).foregroundStyle(.secondary)
-                }
-                if !loaded { ProgressView("Loading projects") }
-                if loaded && projects.isEmpty {
-                    ContentUnavailableView("No projects yet", systemImage: "film.stack", description: Text("Save a style in the Style Library, then start a project with a fresh brief."))
-                }
-                ForEach(projects) { project in
-                    NavigationLink(value: project.id) {
-                        Label(project.title, systemImage: "film")
+        NavigationStack {
+            VStack(spacing: 0) {
+                List {
+                    if fixture {
+                        Label("Provider-free workspace", systemImage: "testtube.2")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                    if !loaded { ProgressView("Loading projects") }
+                    if loaded && projects.isEmpty {
+                        ContentUnavailableView("No projects yet", systemImage: "film.stack", description: Text("Save a style in the Style Library, then start a project with a fresh brief."))
+                    }
+                    ForEach(projects) { project in
+                        NavigationLink {
+                            ProjectWorkspace(api: api, projectId: project.id)
+                        } label: {
+                            Label(project.title, systemImage: "film")
+                        }
                     }
                 }
+                .refreshable { await reload() }
             }
             .navigationTitle("Director")
             .toolbar {
@@ -41,9 +47,14 @@ struct ProjectsView: View {
                         .accessibilityIdentifier("new-project")
                 }
             }
-            .navigationDestination(for: String.self) { id in ProjectWorkspace(api: api, projectId: id) }
-            .sheet(isPresented: $creating) {
-                NewProjectForm(api: api) { id in creating = false; path.append(id) }
+            .navigationDestination(item: $createdProject) { id in ProjectWorkspace(api: api, projectId: id) }
+            .sheet(isPresented: $creating, onDismiss: {
+                if let id = pendingProject { createdProject = id; pendingProject = nil }
+            }) {
+                NewProjectForm(api: api) { id in
+                    pendingProject = id
+                    creating = false
+                }
             }
             .confirmationDialog("Studio Account", isPresented: $showAccount, titleVisibility: .visible) {
                 if commerce { Button("Purchases") { showPurchases = true } }
@@ -52,8 +63,7 @@ struct ProjectsView: View {
                 Text(api.base.host ?? "")
             }
             .sheet(isPresented: $showPurchases) { StudioPurchases(api: api) }
-            .task(id: path.isEmpty) { if path.isEmpty { await reload() } }
-            .refreshable { await reload() }
+            .task { await reload() }
             .studioError($error)
         }
     }

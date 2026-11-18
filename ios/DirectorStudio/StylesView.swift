@@ -4,25 +4,28 @@ struct StylesView: View {
     let api: StudioAPI
     let fixture: Bool
     @State private var styles: [StyleSummary] = []
-    @State private var path: [String] = []
+    @State private var createdStyle: String?
+    @State private var pendingStyle: String?
     @State private var showNew = false
     @State private var loaded = false
     @State private var error: String?
 
     var body: some View {
-        NavigationStack(path: $path) {
-            List {
-                if fixture {
-                    Label("Provider-free workspace", systemImage: "testtube.2")
-                        .font(.footnote).foregroundStyle(.secondary)
-                }
-                if !loaded { ProgressView("Loading styles") }
-                if loaded && styles.isEmpty {
-                    ContentUnavailableView("No styles yet", systemImage: "rectangle.on.rectangle", description: Text("Study an image or video to create a reusable guide."))
-                }
-                ForEach(styles) { style in
-                    Button { path.append(style.id) } label: {
-                        HStack {
+        NavigationStack {
+            VStack(spacing: 0) {
+                List {
+                    if fixture {
+                        Label("Provider-free workspace", systemImage: "testtube.2")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                    if !loaded { ProgressView("Loading styles") }
+                    if loaded && styles.isEmpty {
+                        ContentUnavailableView("No styles yet", systemImage: "rectangle.on.rectangle", description: Text("Study an image or video to create a reusable guide."))
+                    }
+                    ForEach(styles) { style in
+                        NavigationLink {
+                            StyleEditor(api: api, styleId: style.id)
+                        } label: {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(style.title).font(.headline)
                                 if let version = style.latest {
@@ -32,29 +35,27 @@ struct StylesView: View {
                                     Text("Analysis pending").font(.caption).foregroundStyle(.secondary)
                                 }
                             }
-                            Spacer()
-                            Image(systemName: "chevron.right").font(.caption.weight(.semibold))
-                                .foregroundStyle(.tertiary).accessibilityHidden(true)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .contentShape(Rectangle())
                         }
-                        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                        .contentShape(Rectangle())
+                        .accessibilityIdentifier("style-row-\(style.id)")
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("style-row-\(style.id)")
                 }
+                .refreshable { await reload() }
             }
             .navigationTitle("Style Library")
             .toolbar {
                 Button { showNew = true } label: { Label("Learn a style", systemImage: "plus") }
                     .accessibilityIdentifier("learn-style")
             }
-            .navigationDestination(for: String.self) { id in StyleEditor(api: api, styleId: id) }
-            .task(id: path.isEmpty) { if path.isEmpty { await reload() } }
-            .refreshable { await reload() }
-            .sheet(isPresented: $showNew) {
+            .navigationDestination(item: $createdStyle) { id in StyleEditor(api: api, styleId: id) }
+            .task { await reload() }
+            .sheet(isPresented: $showNew, onDismiss: {
+                if let id = pendingStyle { createdStyle = id; pendingStyle = nil }
+            }) {
                 LearnStyleForm(api: api) { id in
+                    pendingStyle = id
                     showNew = false
-                    path.append(id)
                 }
             }
             .studioError($error)

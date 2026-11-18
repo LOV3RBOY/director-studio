@@ -56,8 +56,10 @@ final class DirectorStudioUITests: XCTestCase {
         if style.isHittable {
             style.tap()
         } else {
-            XCTAssertTrue(app.frame.intersects(style.frame), app.debugDescription)
-            style.coordinate(withNormalizedOffset: CGVector(dx: 0.35, dy: 0.5)).tap()
+            let window = app.windows.firstMatch
+            XCTAssertTrue(window.frame.intersects(style.frame), app.debugDescription)
+            window.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: style.frame.midX - window.frame.minX, dy: style.frame.midY - window.frame.minY)).tap()
         }
         XCTAssertTrue(app.navigationBars["iPhone fixture style"].waitForExistence(timeout: 10), app.debugDescription)
         let saveStyle = app.buttons["Save style"]
