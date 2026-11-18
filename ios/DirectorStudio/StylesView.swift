@@ -3,6 +3,7 @@ import SwiftUI
 struct StylesView: View {
     let api: StudioAPI
     let fixture: Bool
+    @Environment(\.dismiss) private var dismiss
     @State private var styles: [StyleSummary] = []
     @State private var createdStyle: String?
     @State private var pendingStyle: String?
@@ -45,8 +46,14 @@ struct StylesView: View {
             }
             .navigationTitle("Style Library")
             .toolbar {
-                Button { showNew = true } label: { Label("Learn a style", systemImage: "plus") }
-                    .accessibilityIdentifier("learn-style")
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") { dismiss() }
+                        .accessibilityIdentifier("close-style-library")
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button { showNew = true } label: { Label("Learn a style", systemImage: "plus") }
+                        .accessibilityIdentifier("learn-style")
+                }
             }
             .navigationDestination(item: $createdStyle) { id in StyleEditor(api: api, styleId: id) }
             .task { await reload() }

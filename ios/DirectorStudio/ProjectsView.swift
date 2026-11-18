@@ -12,6 +12,7 @@ struct ProjectsView: View {
     @State private var loaded = false
     @State private var creating = false
     @State private var showAccount = false
+    @State private var showStyles = false
     @State private var showPurchases = false
     @State private var error: String?
 
@@ -23,6 +24,10 @@ struct ProjectsView: View {
                         Label("Provider-free workspace", systemImage: "testtube.2")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
+                    Button { showStyles = true } label: {
+                        Label("Style Library", systemImage: "rectangle.on.rectangle")
+                    }
+                    .accessibilityIdentifier("open-style-library")
                     if !loaded { ProgressView("Loading projects") }
                     if loaded && projects.isEmpty {
                         ContentUnavailableView("No projects yet", systemImage: "film.stack", description: Text("Save a style in the Style Library, then start a project with a fresh brief."))
@@ -63,6 +68,7 @@ struct ProjectsView: View {
                 Text(api.base.host ?? "")
             }
             .sheet(isPresented: $showPurchases) { StudioPurchases(api: api) }
+            .sheet(isPresented: $showStyles) { StylesView(api: api, fixture: fixture) }
             .task { await reload() }
             .studioError($error)
         }

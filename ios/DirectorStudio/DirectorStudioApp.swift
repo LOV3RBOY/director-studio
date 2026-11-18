@@ -10,15 +10,10 @@ struct DirectorStudioApp: App {
                 if session.inDemo {
                     StudioDemo { session.inDemo = false }
                 } else if let api = session.api {
-                    TabView {
-                        ProjectsView(api: api, fixture: session.fixture, commerce: session.commerce) { await session.signOut() }
-                            .tabItem { Label("Director", systemImage: "film.stack") }
-                        StylesView(api: api, fixture: session.fixture)
-                            .tabItem { Label("Style Library", systemImage: "rectangle.on.rectangle") }
-                    }
-                    .task(id: session.commerce) {
-                        if session.commerce { await StoreReceipt.listen(api) }
-                    }
+                    ProjectsView(api: api, fixture: session.fixture, commerce: session.commerce) { await session.signOut() }
+                        .task(id: session.commerce) {
+                            if session.commerce { await StoreReceipt.listen(api) }
+                        }
                 } else {
                     StudioSignIn(session: session)
                 }
@@ -29,12 +24,14 @@ struct DirectorStudioApp: App {
 }
 
 private struct StudioSignIn: View {
+    private enum Field: Hashable { case address, email, password }
     @Bindable var session: StudioSession
     @State private var email = ""
     @State private var password = ""
     @State private var signup = false
     @State private var working = false
     @State private var error: String?
+    @FocusState private var focusedField: Field?
 
     var body: some View {
         NavigationStack {
@@ -54,13 +51,17 @@ private struct StudioSignIn: View {
                     TextField("https://studio.example.com", text: $session.address)
                         .keyboardType(.URL).textContentType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                         .accessibilityLabel("Studio server address")
+                        .focused($focusedField, equals: .address)
                 }
                 Section(signup ? "Create an account" : "Sign in") {
                     TextField("Email", text: $email)
                         .keyboardType(.emailAddress).textContentType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .focused($focusedField, equals: .email)
                     SecureField("Password", text: $password)
                         .textContentType(signup ? .newPassword : .password)
+                        .focused($focusedField, equals: .password)
                     Button(working ? "Connecting…" : (signup ? "Create account" : "Sign in")) {
+                        focusedField = nil
                         Task { await connect() }
                     }
                     .disabled(working || email.isEmpty || password.isEmpty || session.address.isEmpty)
@@ -74,6 +75,7 @@ private struct StudioSignIn: View {
                     Text("Explore sample material without a server or provider account.")
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 #if DEBUG

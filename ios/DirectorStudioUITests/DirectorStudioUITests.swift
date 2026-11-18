@@ -48,7 +48,7 @@ final class DirectorStudioUITests: XCTestCase {
 
         let project = app.staticTexts["iPhone fixture project"]
         XCTAssertTrue(project.waitForExistence(timeout: 20))
-        app.tabBars.buttons["Style Library"].tap()
+        app.buttons["open-style-library"].tap()
         XCTAssertTrue(app.navigationBars["Style Library"].waitForExistence(timeout: 10), app.debugDescription)
         let style = app.buttons
             .matching(NSPredicate(format: "identifier BEGINSWITH %@", "style-row-")).firstMatch
@@ -65,7 +65,8 @@ final class DirectorStudioUITests: XCTestCase {
         let saveStyle = app.buttons["Save style"]
         reveal(saveStyle, in: app)
         XCTAssertTrue(saveStyle.exists, app.debugDescription)
-        app.tabBars.buttons["Director"].tap()
+        app.navigationBars["iPhone fixture style"].buttons.firstMatch.tap()
+        app.buttons["close-style-library"].tap()
         project.tap()
         let pack = app.buttons["Open Project Pack"]
         XCTAssertTrue(pack.waitForExistence(timeout: 15))
