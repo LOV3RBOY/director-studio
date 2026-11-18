@@ -4,12 +4,14 @@ import SwiftUI
 struct ProjectsView: View {
     let api: StudioAPI
     let fixture: Bool
+    let commerce: Bool
     let signOut: () async -> Void
     @State private var projects: [ProjectSummary] = []
     @State private var path: [String] = []
     @State private var loaded = false
     @State private var creating = false
     @State private var showAccount = false
+    @State private var showPurchases = false
     @State private var error: String?
 
     var body: some View {
@@ -44,10 +46,12 @@ struct ProjectsView: View {
                 NewProjectForm(api: api) { id in creating = false; path.append(id) }
             }
             .confirmationDialog("Studio Account", isPresented: $showAccount, titleVisibility: .visible) {
+                if commerce { Button("Purchases") { showPurchases = true } }
                 Button("Sign out", role: .destructive) { Task { await signOut() } }
             } message: {
                 Text(api.base.host ?? "")
             }
+            .sheet(isPresented: $showPurchases) { StudioPurchases(api: api) }
             .task(id: path.isEmpty) { if path.isEmpty { await reload() } }
             .refreshable { await reload() }
             .studioError($error)

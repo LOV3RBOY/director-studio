@@ -3,6 +3,7 @@ import { all, get, newId, run, tx } from "../db";
 import { ApiError, badRequest, notFound } from "../errors";
 import { createElement, createProject, createShot, ownedProject, scenesOf, toProject } from "../cinema/store";
 import { compilePack, inspectAsset, type PackBody } from "./compiler";
+import { requireAuthoringEntitlement } from "./commerce";
 import { type Brief, type Guidance, type Plan, type Settings, type StyleProfile, verifyGuidance } from "./contracts";
 import { directorMode, hermesConfig, type DirectorMode } from "./runtime";
 
@@ -190,6 +191,7 @@ export function queue(input: {
     )!.n;
     if (count >= 4) throw new ApiError(429, "too_many_jobs", "Wait for one of the four Director jobs to finish.");
     if (mode === "live" && ["analysis", "plan", "chat"].includes(input.kind)) {
+      requireAuthoringEntitlement(input.userId);
       hermesConfig();
       const limit = Number(process.env.DIRECTOR_DAILY_AUTHORING_JOBS);
       const recent = get<{ n: number }>("SELECT COUNT(*) AS n FROM director_jobs WHERE mode = 'live' AND kind IN ('analysis', 'plan', 'chat') AND created_at > ?", Date.now() - 86_400_000)!.n;

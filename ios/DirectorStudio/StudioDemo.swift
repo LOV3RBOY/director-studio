@@ -8,9 +8,15 @@ struct StudioDemo: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Offline demo") {
-                    NavigationLink("Sample style", systemImage: "rectangle.on.rectangle") { sampleStyle }
-                    NavigationLink("Sample Project Pack", systemImage: "film.stack") { SamplePack() }
+                Section {
+                    NavigationLink { sampleStyle } label: {
+                        Label("Sample style", systemImage: "rectangle.on.rectangle")
+                    }
+                    NavigationLink { SamplePack() } label: {
+                        Label("Sample Project Pack", systemImage: "film.stack")
+                    }
+                } header: {
+                    Text("Offline demo")
                 } footer: {
                     Text("Sample guide, storyboard, and synthetic take. Connect a Studio server to upload, export a complete pack, or generate.")
                 }

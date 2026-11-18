@@ -11,10 +11,13 @@ struct DirectorStudioApp: App {
                     StudioDemo { session.inDemo = false }
                 } else if let api = session.api {
                     TabView {
-                        ProjectsView(api: api, fixture: session.fixture) { await session.signOut() }
+                        ProjectsView(api: api, fixture: session.fixture, commerce: session.commerce) { await session.signOut() }
                             .tabItem { Label("Director", systemImage: "film.stack") }
                         StylesView(api: api, fixture: session.fixture)
                             .tabItem { Label("Style Library", systemImage: "rectangle.on.rectangle") }
+                    }
+                    .task(id: session.commerce) {
+                        if session.commerce { await StoreReceipt.listen(api) }
                     }
                 } else {
                     StudioSignIn(session: session)

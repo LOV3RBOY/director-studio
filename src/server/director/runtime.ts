@@ -3,12 +3,17 @@ import { ApiError, badRequest } from "../errors";
 import { guidance, plan, topics, valid, verifyGuidance, type Brief, type Evidence, type Guidance, type Plan, type StyleProfile } from "./contracts";
 
 export type DirectorMode = "mock" | "live";
+const unsafeLive = () => process.env.DIRECTOR_MODE === "live" && process.env.PARALLAX_DEMO_BILLING === "1";
 export const mode = (): DirectorMode | null => {
   const value = process.env.DIRECTOR_MODE;
+  if (unsafeLive()) return null;
   return value === "mock" || value === "live" ? value : null;
 };
 
 export function directorMode(): DirectorMode {
+  if (unsafeLive()) {
+    throw new ApiError(503, "director_mode_conflict", "Disable demo billing before enabling live Director Studio.");
+  }
   const value = mode();
   if (!value) throw new ApiError(503, "director_disabled", "Director Studio is disabled on this server.");
   return value;

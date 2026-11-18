@@ -143,7 +143,7 @@ private final class NoRedirects: NSObject, URLSessionTaskDelegate {
 
 struct ProblemEnvelope: Decodable { let error: StudioProblem }
 struct AssetResponse: Decodable { let asset: MediaAsset }
-struct ModeResponse: Decodable { let mode: String }
+struct ModeResponse: Decodable { let mode: String; let commerce: Bool? }
 struct StylesResponse: Decodable { let styles: [StyleSummary] }
 struct ProjectsResponse: Decodable { let projects: [ProjectSummary] }
 struct AssetsResponse: Decodable { let assets: [MediaAsset] }
@@ -197,6 +197,7 @@ private enum SessionsKeychain {
 final class StudioSession {
     var api: StudioAPI?
     var fixture = false
+    var commerce = false
     var inDemo = false
     var address = UserDefaults.standard.string(forKey: "studioAddress") ?? ""
 
@@ -221,6 +222,7 @@ final class StudioSession {
         try SessionsKeychain.save(token, for: base)
         UserDefaults.standard.set(base.absoluteString, forKey: "studioAddress")
         fixture = status.mode == "mock"
+        commerce = status.commerce == true
         api = session
     }
 
@@ -230,5 +232,6 @@ final class StudioSession {
         SessionsKeychain.delete(api.base)
         self.api = nil
         fixture = false
+        commerce = false
     }
 }

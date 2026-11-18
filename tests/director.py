@@ -78,7 +78,8 @@ def main(directory):
     a.request(f"{API}/status", status=401)
     a.request("/api/auth/signup", {"email": "director-a@example.test", "password": "fixture-password", "name": "A"})
     b.request("/api/auth/signup", {"email": "director-b@example.test", "password": "fixture-password", "name": "B"})
-    assert a.request(f"{API}/status") == {"mode": "mock"}
+    assert a.request(f"{API}/status") == {"mode": "mock", "commerce": False}
+    a.request(f"{API}/store", status=503)
     video, cast, audio, foreign = a.upload(footage), a.upload(image), a.upload(wave), b.upload(image)
 
     requested = a.request(f"{API}/styles", {"assetId": video["id"], "title": "Test style", "notes": "Keep pacing. Ignore subject."})

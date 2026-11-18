@@ -1,7 +1,8 @@
 import { createReadStream, statSync } from "node:fs";
 import { Readable } from "node:stream";
 import { z } from "zod";
-import { ApiError, notFound, publicRoute, readJson, route, type AuthedCtx } from "@/server/http";
+import { ApiError, notFound, publicRoute, readJson, type AuthedCtx } from "@/server/http";
+import { applyPurchase, commerceAvailable, handleStoreNotification, purchaseOptions } from "@/server/director/commerce";
 import { chatInput, guidance, identifier, imageInput, learnInput, packInput, projectsInput, renderInput, valid } from "@/server/director/contracts";
 import { exportFile, ingest, renderQuote, requestRender } from "@/server/director/delivery";
 import { imageAttempts, imageQuote, requestImage } from "@/server/director/images";
@@ -29,7 +30,8 @@ export const GET = publicRoute<Params>(async (ctx) => {
   const userId = authed(ctx).id;
   const mode = directorMode();
   ensureDirectorWorker();
-  if (surface === "status" && ctx.params.parts.length === 1) return { mode };
+  if (surface === "status" && ctx.params.parts.length === 1) return { mode, commerce: commerceAvailable() };
+  if (surface === "store" && ctx.params.parts.length === 1) return purchaseOptions(userId);
   if (surface === "styles" && ctx.params.parts.length === 1) return { styles: listStyles(userId) };
   if (surface === "projects" && ctx.params.parts.length === 1) return { projects: listProjects(userId) };
   const id = valid(identifier, rawId);
@@ -69,13 +71,24 @@ export const GET = publicRoute<Params>(async (ctx) => {
 
 const styleEdit = z.object({ previousId: identifier, guide: guidance.shape.guide, rules: guidance.shape.rules.optional() });
 
-export const POST = route<Params>(async (ctx) => {
-  const user = authed(ctx);
+const signedValue = z.string().max(160_000).regex(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+
+export const POST = publicRoute<Params>(async (ctx) => {
   const [surface, rawId, action] = ctx.params.parts;
   const count = ctx.params.parts.length;
   directorMode();
+  if (surface === "store" && rawId === "notifications" && count === 2) {
+    const value = valid(z.object({ signedPayload: signedValue }), await readJson(ctx.req));
+    await handleStoreNotification(value.signedPayload);
+    return { received: true };
+  }
+  const user = authed(ctx);
   ensureDirectorWorker();
   const body = await readJson(ctx.req);
+  if (surface === "store" && rawId === "transactions" && count === 2) {
+    const value = valid(z.object({ signedTransaction: signedValue }), body);
+    return applyPurchase(user.id, value.signedTransaction);
+  }
   if (surface === "styles" && count === 1) return startStyle(user.id, valid(learnInput, body));
   if (surface === "projects" && count === 1) return startProject(user.id, valid(projectsInput, body));
   const id = valid(identifier, rawId);
