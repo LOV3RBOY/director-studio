@@ -32,6 +32,7 @@ struct StylesView: View {
                             }
                         }
                     }
+                    .accessibilityIdentifier("style-row-\(style.id)")
                 }
             }
             .navigationTitle("Style Library")

@@ -53,11 +53,6 @@ def server(mode, **env):
             child.wait(timeout=10)
 
 
-def sqlite_path():
-    candidates = list(DATA.glob("*.sqlite*"))
-    return next(path for path in candidates if not path.name.endswith(("-wal", "-shm")))
-
-
 def brief(style_id, title):
     return {
         "title": title, "styleVersionId": style_id, "brief": "A dancer enters from the right and pauses in a pool of light.",
@@ -148,7 +143,8 @@ def main():
         pending = a.request(f"{API}/packs/{project['id']}/render", {"clip": 0, "requestKey": "fixture-recovery-0001", "maxCredits": 0})["job"]
         a.request(f"{API}/store", status=503)
 
-    database = sqlite_path()
+    database = DATA / "parallax.db"
+    assert database.is_file(), "The Parallax SQLite database was not created."
     with sqlite3.connect(database) as db:
         db.execute("UPDATE director_jobs SET state = 'running', result = NULL WHERE id = ?", (pending["id"],))
         photo_file = DATA / db.execute("SELECT path FROM assets WHERE id = ?", (image["id"],)).fetchone()[0]

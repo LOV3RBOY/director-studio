@@ -49,10 +49,15 @@ final class DirectorStudioUITests: XCTestCase {
         let project = app.staticTexts["iPhone fixture project"]
         XCTAssertTrue(project.waitForExistence(timeout: 20))
         app.tabBars.buttons["Style Library"].tap()
-        let style = app.staticTexts["iPhone fixture style"]
-        XCTAssertTrue(style.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["Style Library"].waitForExistence(timeout: 10), app.debugDescription)
+        let style = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@", "style-row-")).firstMatch
+        XCTAssertTrue(style.waitForExistence(timeout: 10), app.debugDescription)
         style.tap()
-        XCTAssertTrue(app.buttons["Save style"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.navigationBars["iPhone fixture style"].waitForExistence(timeout: 10), app.debugDescription)
+        let saveStyle = app.buttons["Save style"]
+        reveal(saveStyle, in: app)
+        XCTAssertTrue(saveStyle.isHittable, app.debugDescription)
         app.tabBars.buttons["Director"].tap()
         project.tap()
         let pack = app.buttons["Open Project Pack"]
@@ -62,12 +67,12 @@ final class DirectorStudioUITests: XCTestCase {
         reveal(quote, in: app)
         quote.tap()
         let approval = app.buttons["approve-generation"]
-        XCTAssertTrue(approval.waitForExistence(timeout: 10))
+        XCTAssertTrue(approval.waitForExistence(timeout: 10), app.debugDescription)
         approval.tap()
 
         let take = app.buttons["Play take"].firstMatch
         reveal(take, in: app)
-        XCTAssertTrue(take.waitForExistence(timeout: 25))
+        XCTAssertTrue(take.waitForExistence(timeout: 25), app.debugDescription)
         if !take.isHittable { app.swipeUp() }
         take.tap()
         XCTAssertTrue(app.navigationBars["Take"].waitForExistence(timeout: 25))
