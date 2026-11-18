@@ -14,7 +14,7 @@ import urllib.request
 import zipfile
 
 
-BASE = sys.argv[1]
+BASE = sys.argv[1] if __name__ == "__main__" else ""
 API = "/api/director"
 
 
@@ -64,7 +64,8 @@ def fixtures(directory):
     subprocess.run(ffmpeg + ["-f", "lavfi", "-i", "color=red:size=128x72", "-threads", "1", "-frames:v", "1", str(image)], check=True)
     subprocess.run(ffmpeg + [
         "-f", "lavfi", "-i", "testsrc2=size=128x72:rate=12", "-f", "lavfi", "-i", "sine=frequency=330",
-        "-t", "2", "-c:v", "libx264", "-c:a", "aac", str(footage),
+        "-t", "2", "-vf", "select='not(eq(mod(n,5),4))'", "-fps_mode", "vfr",
+        "-c:v", "libx264", "-c:a", "aac", str(footage),
     ], check=True)
     subprocess.run(ffmpeg + ["-f", "lavfi", "-i", "sine=frequency=220", "-t", "1", str(wave)], check=True)
     return image, footage, wave
@@ -192,5 +193,6 @@ def main(directory):
     print("Director end-to-end passed: sign-in, evidence, tenant isolation, style reuse, snapshots, export, model mappings, concurrent render, audio take, chat.")
 
 
-with tempfile.TemporaryDirectory() as temp:
-    main(Path(temp))
+if __name__ == "__main__":
+    with tempfile.TemporaryDirectory() as temp:
+        main(Path(temp))

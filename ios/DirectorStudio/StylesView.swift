@@ -185,6 +185,19 @@ private struct StyleEditor: View {
         return Section("Reference evidence") {
             Text("\(evidence.width) × \(evidence.height) · \(evidence.hasAudio ? "Audio stream" : "No audio stream")")
                 .font(.footnote).foregroundStyle(.secondary)
+            if let cues = evidence.audioCues, !cues.isEmpty {
+                DisclosureGroup("Audio timing") {
+                    ForEach(cues.indices, id: \.self) { index in
+                        HStack {
+                            Text(cues[index].type == "silence-start" ? "Silence begins" : "Silence ends")
+                            Spacer()
+                            Text("\(cues[index].seconds, format: .number.precision(.fractionLength(2))) s")
+                                .monospacedDigit()
+                        }
+                        .font(.footnote)
+                    }
+                }
+            }
             ScrollView(.horizontal) {
                 HStack(alignment: .top, spacing: 12) {
                     ForEach(evidence.frames) { frame in

@@ -44,7 +44,13 @@ struct Evidence: Decodable {
     let height: Int
     let duration: Double?
     let hasAudio: Bool
+    let audioCues: [AudioCue]?
     let frames: [EvidenceFrame]
+}
+
+struct AudioCue: Decodable {
+    let seconds: Double
+    let type: String
 }
 
 struct EvidenceFrame: Decodable, Identifiable {

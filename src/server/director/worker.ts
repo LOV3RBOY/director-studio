@@ -60,7 +60,7 @@ export function ensureDirectorWorker() {
 
 function handleFailure(row: JobRow, error: unknown) {
   if (error instanceof RenderPending) {
-    if (Date.now() - row.created_at < 45 * 60_000) {
+    if (Date.now() - row.updated_at < 45 * 60_000) {
       run("UPDATE director_jobs SET next_run = ? WHERE id = ?", Date.now() + 5_000, row.id);
     } else {
       review(row, "MuAPI is taking longer than expected. Check the provider request before retrying.");

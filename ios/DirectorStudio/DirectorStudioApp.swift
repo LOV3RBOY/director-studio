@@ -75,6 +75,9 @@ private struct StudioSignIn: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .task {
+                #if DEBUG
+                if ProcessInfo.processInfo.arguments.contains("--fresh-sign-in") { return }
+                #endif
                 do { try await session.restore() }
                 catch { if !Task.isCancelled { self.error = error.localizedDescription } }
             }

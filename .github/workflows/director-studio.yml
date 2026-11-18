@@ -34,11 +34,16 @@ jobs:
       - run: npm run build
       - run: command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
       - run: python3 tests/run.py tests/core_e2e.py tests/cinema.py tests/super_hermes.py
-      - run: python3 tests/run.py tests/director.py
+      - run: python3 tests/run.py tests/director.py tests/director_recovery.py
 
   iphone:
     runs-on: macos-15
     timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      TREG_MODE: mock
+      SUPER_MODE: mock
+      DIRECTOR_MODE: mock
     steps:
       - uses: actions/checkout@v6
         with:
@@ -60,7 +65,7 @@ jobs:
           xcodebuild -project DirectorStudio.xcodeproj -scheme DirectorStudio -configuration Release \
             -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/device-build" \
             CODE_SIGNING_ALLOWED=NO -quiet build
-      - name: Build and smoke-test with the iPhone simulator
+      - name: Compile iPhone simulator app and test target
         run: |
           set -eu
           cd "$RUNNER_TEMP/xcode"
@@ -70,23 +75,55 @@ jobs:
           for runtime in sorted(runtimes, reverse=True):
               if ".iOS-" not in runtime:
                   continue
-              for device in runtimes[runtime]:
-                  if device["name"].startswith("iPhone"):
-                      print(device["udid"])
-                      sys.exit(0)
+              devices = [device for device in runtimes[runtime] if device["name"].startswith("iPhone")]
+              if devices:
+                  device = next((candidate for candidate in devices if candidate["name"] == "iPhone 16 Pro"), devices[0])
+                  print(device["udid"])
+                  sys.exit(0)
           sys.exit("No available iPhone simulator")
           ')
-          xcrun simctl boot "$device" || true
-          xcrun simctl bootstatus "$device" -b
+          printf 'DIRECTOR_SIMULATOR=%s\n' "$device" >> "$GITHUB_ENV"
           xcodebuild -project DirectorStudio.xcodeproj -scheme DirectorStudio -configuration Debug \
             -destination "platform=iOS Simulator,id=$device" -derivedDataPath "$RUNNER_TEMP/simulator-build" \
-            -parallel-testing-enabled NO -resultBundlePath "$RUNNER_TEMP/DirectorSmoke.xcresult" -quiet test
-      - name: Upload verified Xcode package
+            -parallel-testing-enabled NO -quiet build-for-testing
+      - name: Upload compiled Xcode source package
         uses: actions/upload-artifact@v6
         with:
           name: Director-Studio-Xcode
-          path: |
-            ${{ runner.temp }}/Director-Studio-Xcode.zip
-            ${{ runner.temp }}/DirectorSmoke.xcresult
+          path: ${{ runner.temp }}/Director-Studio-Xcode.zip
           if-no-files-found: error
+          retention-days: 14
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Build provider-free server for the iPhone simulator
+        run: |
+          command -v ffmpeg || brew install ffmpeg
+          npm ci
+          npm run build
+      - name: Smoke-test with the iPhone simulator
+        timeout-minutes: 12
+        run: |
+          set -eu
+          export PARALLAX_DATA_DIR="$RUNNER_TEMP/iphone-server-data"
+          node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3191 >"$RUNNER_TEMP/iphone-server.log" 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for attempt in {1..40}; do
+            if curl --fail --silent --output /dev/null http://127.0.0.1:3191/api/auth/me; then break; fi
+            sleep 1
+          done
+          python3 tests/seed_director_ios.py http://127.0.0.1:3191
+          cd "$RUNNER_TEMP/xcode"
+          xcodebuild -project DirectorStudio.xcodeproj -scheme DirectorStudio -configuration Debug \
+            -destination "platform=iOS Simulator,id=$DIRECTOR_SIMULATOR" -derivedDataPath "$RUNNER_TEMP/simulator-build" \
+            -parallel-testing-enabled NO -resultBundlePath "$RUNNER_TEMP/DirectorSmoke.xcresult" -quiet test-without-building
+      - name: Upload simulator evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: Director-Studio-Simulator-Verification
+          path: ${{ runner.temp }}/DirectorSmoke.xcresult
+          if-no-files-found: ignore
           retention-days: 14

@@ -124,9 +124,9 @@ function fixtureGuide(evidence: Evidence): Guidance {
 
 export async function studyStyle(options: {
   mode: DirectorMode; id: string; notes: string; evidence: Evidence; frames: () => Promise<Buffer[]>;
-  window: (seconds: number) => Promise<Buffer[]>;
+  window: (seconds: number) => Promise<{ evidence: Evidence; images: Buffer[] }>;
 }): Promise<StyleProfile> {
-  const { evidence } = options;
+  let { evidence } = options;
   if (options.mode === "mock") {
     return {
       ...verifyGuidance(fixtureGuide(evidence), evidence), schemaVersion: 1, fixture: true, evidence,
@@ -134,7 +134,7 @@ export async function studyStyle(options: {
     };
   }
   const instruction = JSON.stringify({
-    task: "Study the supplied frames. Infer only what the visuals support. Describe original subject specifics as exclusions. Label lens and style inferences. For unknowns state what cannot be determined. Cite zero-based frame ordinals for every finding other than unknowns.",
+    task: "Study the actual frames and timings. Describe geometry, color, lighting and texture, shot scale and apparent lens character, movement and acceleration, blocking, holds, reveals, cut rhythm and audio relationships. Distinguish static evidence and cut candidates from inference. Preserve the reusable method and exclude original subjects and scene particulars. Label lens estimates and do not invent measurements. For unknowns state what cannot be determined. Cite zero-based frame ordinals for every finding other than unknowns.",
     evidence, notes: options.notes, topics,
     response: { guide: "readable multi-section style guide", rules: [{ topic: "one specified topic", basis: "observed | inferred | unknown", reuse: "signature | adaptable | exclude", detail: "specific evidence or limitation", evidence: [0] }] },
     optionalTool: "If a specific time window would resolve a question, first return only {windowSeconds: number}. At most one closer look is available.",
@@ -144,8 +144,9 @@ export async function studyStyle(options: {
   const window = z.object({ windowSeconds: z.number().nonnegative() }).safeParse(result.value);
   if (window.success) {
     const nearby = await options.window(window.data.windowSeconds);
+    evidence = nearby.evidence;
     const previousUsage = result.usage;
-    result = await turn("analysis", `${instruction}\nThe final ${nearby.length} images are supplemental views near ${window.data.windowSeconds}s. Cite the listed primary evidence ordinals. Return the guide now.`, [...frames, ...nearby]);
+    result = await turn("analysis", `${instruction}\nThe final ${nearby.images.length} images are supplemental views: ${JSON.stringify(evidence.frames.slice(-nearby.images.length))}. Cite the combined evidence ordinals. Return the guide now.`, [...frames, ...nearby.images]);
     for (const [name, value] of Object.entries(previousUsage)) result.usage[name] = (result.usage[name] ?? 0) + value;
   }
   return {

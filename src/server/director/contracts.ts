@@ -44,6 +44,7 @@ export interface EvidenceFrame {
   ordinal: number;
   seconds: number | null;
   cutCandidate: boolean;
+  filename?: string;
 }
 
 export interface Evidence {
@@ -53,6 +54,7 @@ export interface Evidence {
   width: number;
   height: number;
   hasAudio: boolean;
+  audioCues?: { seconds: number; type: "silence-start" | "silence-end" }[];
   frames: EvidenceFrame[];
 }
 

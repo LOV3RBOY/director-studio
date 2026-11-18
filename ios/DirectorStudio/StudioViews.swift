@@ -25,7 +25,11 @@ struct ImportedMedia {
 
     init(filename: String, data: Data) throws {
         guard data.count <= 30_000_000 else { throw StudioAPIError.uploadSize }
-        if let image = UIImage(data: data), let jpeg = image.jpegData(compressionQuality: 0.90) {
+        // Preserve original bytes for formats the server and both render adapters accept.
+        let header = [UInt8](data.prefix(12))
+        let canKeepImage = data.starts(with: [0xff, 0xd8, 0xff]) || data.starts(with: [0x89, 0x50, 0x4e, 0x47]) ||
+            (header.count == 12 && String(bytes: header[8..<12], encoding: .ascii) == "WEBP")
+        if !canKeepImage, let image = UIImage(data: data), let jpeg = image.jpegData(compressionQuality: 0.92) {
             self.filename = (filename as NSString).deletingPathExtension + ".jpg"
             self.data = jpeg
         } else {

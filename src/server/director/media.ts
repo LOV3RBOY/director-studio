@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { readFile, readdir, mkdir, mkdtemp, rename, rm } from "node:fs/promises";
+import { readFile, readdir, mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { assetFile, type AssetRow } from "../assets";
@@ -41,20 +41,33 @@ const frameName = (ordinal: number) => `frame-${String(ordinal + 1).padStart(3, 
 const evidenceDir = (asset: AssetRow, digest: string) => privateDirectory(asset.user_id, "evidence", asset.id, digest);
 
 export function evidenceFrame(asset: AssetRow, evidence: Evidence, ordinal: number) {
-  return readFile(path.join(evidenceDir(asset, evidence.digest), frameName(ordinal)));
+  const supplemental = evidence.frames.find((item) => item.ordinal === ordinal)?.filename;
+  const filename = supplemental && /^window-\d{1,8}-\d{3}\.jpg$/.test(supplemental) ? supplemental : frameName(ordinal);
+  return readFile(path.join(evidenceDir(asset, evidence.digest), filename));
 }
 
-export async function sampleWindow(asset: AssetRow, evidence: Evidence, seconds: number): Promise<Buffer[]> {
+export async function sampleWindow(asset: AssetRow, evidence: Evidence, seconds: number): Promise<{ evidence: Evidence; images: Buffer[] }> {
   if (!evidence.duration || !Number.isFinite(seconds) || seconds < 0 || seconds >= evidence.duration) {
     throw badRequest("Choose a point inside this video.");
   }
   return temporary(asset.user_id, async (directory) => {
-    await runMedia("ffmpeg", [
-      "-nostdin", "-hide_banner", "-loglevel", "error", "-protocol_whitelist", "file,pipe",
-      "-ss", String(Math.max(0, seconds - 0.25)), "-i", assetFile(asset), "-an",
-      "-vf", "fps=8,scale=480:-2", "-frames:v", "4", "-q:v", "5", path.join(directory, "window-%03d.jpg"),
+    const start = Math.max(0, seconds - 0.15).toFixed(3);
+    const end = Math.min(evidence.duration!, seconds + 0.30).toFixed(3);
+    const prefix = `window-${Math.round(seconds * 1000)}`;
+    const { stderr } = await runMedia("ffmpeg", [
+      "-nostdin", "-hide_banner", "-protocol_whitelist", "file,pipe", "-i", assetFile(asset), "-an",
+      "-vf", `setpts=PTS-STARTPTS,select='between(t,${start},${end})*(isnan(prev_selected_t)+gte(t-prev_selected_t,0.08))',scale='min(480,iw)':-2,showinfo`,
+      "-fps_mode", "vfr", "-frames:v", "4", "-q:v", "5", path.join(directory, `${prefix}-%03d.jpg`),
     ], bounded);
-    return Promise.all((await readdir(directory)).sort().map((name) => readFile(path.join(directory, name))));
+    const files = (await readdir(directory)).sort();
+    const times = timestamps(stderr);
+    if (!files.length || times.length !== files.length) throw badRequest("There are no readable frames in that window.");
+    const images = await Promise.all(files.map((name) => readFile(path.join(directory, name))));
+    const frames = files.map((filename, index) => ({
+      ordinal: evidence.frames.length + index, seconds: times[index], cutCandidate: false, filename,
+    }));
+    for (const file of files) await rename(path.join(directory, file), path.join(evidenceDir(asset, evidence.digest), file));
+    return { evidence: { ...evidence, frames: [...evidence.frames, ...frames] }, images };
   });
 }
 
@@ -64,22 +77,25 @@ export async function extractEvidence(asset: AssetRow): Promise<Evidence> {
   const digest = await digestOf(source);
   const stored = evidenceDir(asset, digest);
   try {
-    return JSON.parse(await readFile(path.join(stored, "evidence.json"), "utf8")) as Evidence;
+    const cached = JSON.parse(await readFile(path.join(stored, "evidence.json"), "utf8")) as Evidence;
+    if (cached.audioCues !== undefined) return cached;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
   try {
     return await temporary(asset.user_id, async (directory) => {
       const { stdout } = await runMedia("ffprobe", [
-        "-v", "error", "-protocol_whitelist", "file,pipe", "-show_entries", "format=duration:stream=codec_type,width,height",
+        "-v", "error", "-protocol_whitelist", "file,pipe", "-show_entries", "format=duration:stream=codec_type,width,height:stream_side_data=rotation",
         "-of", "json", source,
       ], bounded);
       const media = JSON.parse(stdout) as {
-        streams: { codec_type: string; width?: number; height?: number }[];
+        streams: { codec_type: string; width?: number; height?: number; side_data_list?: { rotation?: number }[] }[];
         format: { duration?: string };
       };
       const video = media.streams.find((stream) => stream.codec_type === "video");
       if (!video?.width || !video.height) throw badRequest("This file has no readable picture.");
+      const rotation = video.side_data_list?.find((item) => item.rotation != null)?.rotation ?? 0;
+      const [width, height] = Math.abs(rotation) % 180 === 90 ? [video.height, video.width] : [video.width, video.height];
       const duration = asset.kind === "video" ? Number(media.format.duration ?? asset.duration) : null;
       if (duration !== null && (!Number.isFinite(duration) || duration <= 0 || duration > 120)) {
         throw badRequest("Use a video with known timing and a maximum length of two minutes.");
@@ -107,21 +123,36 @@ export async function extractEvidence(asset: AssetRow): Promise<Evidence> {
       const files = (await readdir(directory)).filter((name) => name.endsWith(".jpg")).sort();
       const times = timestamps(samples.stderr);
       if (!files.length || files.length !== times.length) throw badRequest("Frame extraction returned incomplete timing.");
+      const hasAudio = media.streams.some((stream) => stream.codec_type === "audio");
+      let audioCues: NonNullable<Evidence["audioCues"]> = [];
+      if (hasAudio) {
+        try {
+          const audio = await runMedia("ffmpeg", [
+            "-nostdin", "-hide_banner", "-protocol_whitelist", "file,pipe", "-i", source, "-map", "0:a:0", "-vn",
+            "-af", "asetpts=PTS-STARTPTS,silencedetect=noise=-35dB:d=0.25", "-f", "null", "-",
+          ], bounded);
+          audioCues = [...audio.stderr.matchAll(/silence_(start|end):\s*([\d.eE+-]+)/g)]
+            .slice(0, 24).map((match) => ({ seconds: Number(match[2]), type: match[1] === "start" ? "silence-start" : "silence-end" }))
+            .filter((cue): cue is NonNullable<Evidence["audioCues"]>[number] => Number.isFinite(cue.seconds));
+        } catch {
+          // Presence is known from ffprobe. Audio cues are supplemental.
+        }
+      }
       const evidence: Evidence = {
-        assetId: asset.id, digest, duration, width: video.width, height: video.height,
-        hasAudio: media.streams.some((stream) => stream.codec_type === "audio"),
+        assetId: asset.id, digest, duration, width, height,
+        hasAudio, audioCues,
         frames: files.map((_, ordinal) => ({
           ordinal, seconds: duration === null ? null : times[ordinal],
           cutCandidate: cuts.some((time) => Math.abs(time - times[ordinal]) < 0.04),
         })),
       };
-      const { writeFile } = await import("node:fs/promises");
       await writeFile(path.join(directory, "evidence.json"), JSON.stringify(evidence));
       await mkdir(path.dirname(stored), { recursive: true, mode: 0o700 });
       try {
         await rename(directory, stored);
       } catch (error) {
         if (!["EEXIST", "ENOTEMPTY"].includes((error as NodeJS.ErrnoException).code ?? "")) throw error;
+        for (const file of [...files, "evidence.json"]) await rename(path.join(directory, file), path.join(stored, file));
       }
       return evidence;
     });
