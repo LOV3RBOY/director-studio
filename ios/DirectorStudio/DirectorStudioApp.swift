@@ -69,6 +69,7 @@ private struct StudioSignIn: View {
                 }
                 Section {
                     Button("Open offline demo") { session.inDemo = true }
+                        .accessibilityIdentifier("open-offline-demo")
                 } footer: {
                     Text("Explore sample material without a server or provider account.")
                 }

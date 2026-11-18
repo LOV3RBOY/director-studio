@@ -10,15 +10,16 @@ final class DirectorStudioUITests: XCTestCase {
         app.launchArguments = ["--fresh-sign-in"]
         app.launch()
 
-        let demo = app.buttons["Open offline demo"]
+        let demo = app.buttons["open-offline-demo"]
         XCTAssertTrue(demo.waitForExistence(timeout: 15))
         demo.tap()
-        let sampleStyle = app.buttons["Sample style"]
+        let sampleStyle = app.buttons["demo-style"]
         XCTAssertTrue(sampleStyle.waitForExistence(timeout: 8))
         sampleStyle.tap()
-        XCTAssertTrue(app.staticTexts["Pocket of Light"].waitForExistence(timeout: 5))
-        app.navigationBars.buttons.element(boundBy: 0).tap()
-        app.buttons["Sample Project Pack"].tap()
+        let guide = app.navigationBars["Sample Style"]
+        XCTAssertTrue(guide.waitForExistence(timeout: 8))
+        guide.buttons.firstMatch.tap()
+        app.buttons["demo-pack"].tap()
 
         let take = app.buttons["demo-take"]
         if !take.isHittable { app.swipeUp() }

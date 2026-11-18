@@ -12,9 +12,11 @@ struct StudioDemo: View {
                     NavigationLink { sampleStyle } label: {
                         Label("Sample style", systemImage: "rectangle.on.rectangle")
                     }
+                    .accessibilityIdentifier("demo-style")
                     NavigationLink { SamplePack() } label: {
                         Label("Sample Project Pack", systemImage: "film.stack")
                     }
+                    .accessibilityIdentifier("demo-pack")
                 } header: {
                     Text("Offline demo")
                 } footer: {

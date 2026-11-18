@@ -40,6 +40,7 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 25
     env:
+      DEVELOPER_DIR: /Applications/Xcode_26.2.app/Contents/Developer
       NEXT_TELEMETRY_DISABLED: '1'
       TREG_MODE: mock
       SUPER_MODE: mock
@@ -118,7 +119,7 @@ jobs:
           cd "$RUNNER_TEMP/xcode"
           xcodebuild -project DirectorStudio.xcodeproj -scheme DirectorStudio -configuration Debug \
             -destination "platform=iOS Simulator,id=$DIRECTOR_SIMULATOR" -derivedDataPath "$RUNNER_TEMP/simulator-build" \
-            -parallel-testing-enabled NO -resultBundlePath "$RUNNER_TEMP/DirectorSmoke.xcresult" -quiet test-without-building
+            -parallel-testing-enabled NO -resultBundlePath "$RUNNER_TEMP/DirectorSmoke.xcresult" test-without-building
       - name: Upload simulator evidence
         if: always()
         uses: actions/upload-artifact@v6
