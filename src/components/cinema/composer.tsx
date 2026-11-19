@@ -241,7 +241,7 @@ function Toolbar() {
             <ChevronRight className="size-5 shrink-0" strokeWidth={1.5} aria-hidden />
           </button>
         </PopoverTrigger>
-        <PopoverContent look="panel" className="scroll-quiet max-h-[min(420px,70dvh)] w-[300px] overflow-y-auto p-2">
+        <PopoverContent look="panel" className="scroll-quiet max-h-[min(420px,70dvh,var(--radix-popover-content-available-height))] w-[300px] overflow-y-auto p-2">
           <MenuLabel>{output === "image" ? c.stillModels : c.videoModels}</MenuLabel>
           {list?.map((m) => (
             <MenuItem

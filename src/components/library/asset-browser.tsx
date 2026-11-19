@@ -195,7 +195,7 @@ export function AssetBrowser({
             <ListFilter className="size-4" strokeWidth={1.5} aria-hidden />
             {library.filter}
           </PopoverTrigger>
-          <PopoverContent align="end" className="max-h-[70vh] w-[260px] overflow-y-auto scroll-quiet">
+          <PopoverContent align="end" className="max-h-[min(70dvh,var(--radix-popover-content-available-height))] w-[260px] overflow-y-auto scroll-quiet">
             {!scope.source ? (
               <>
                 <MenuLabel>{library.filterLabels.source}</MenuLabel>
