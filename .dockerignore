@@ -1,0 +1,9 @@
+.git
+.next
+node_modules
+ios
+data
+.env
+.env.*
+*.env
+*.log
