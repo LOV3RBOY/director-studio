@@ -29,15 +29,18 @@ final class DirectorStudioUITests: XCTestCase {
         XCTAssertFalse(app.alerts.firstMatch.exists)
     }
 
-    func testSignedInWorkspaceCanRenderAndPlayTake() throws {
+    private func signedIn() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["--fresh-sign-in"]
         app.launch()
 
         let address = app.textFields["Studio server address"]
         XCTAssertTrue(address.waitForExistence(timeout: 15))
-        address.tap()
-        address.typeText("http://127.0.0.1:3191")
+        let fixtureAddress = "http://127.0.0.1:3191"
+        if address.value as? String != fixtureAddress {
+            address.tap()
+            address.typeText(fixtureAddress)
+        }
         let email = app.textFields["Email"]
         email.tap()
         email.typeText("studio-ios@example.test")
@@ -48,25 +51,35 @@ final class DirectorStudioUITests: XCTestCase {
 
         let project = app.staticTexts["iPhone fixture project"]
         XCTAssertTrue(project.waitForExistence(timeout: 20))
+        return app
+    }
+
+    func testSignedInStyleLibraryCanOpenAGuide() throws {
+        let app = signedIn()
         app.buttons["open-style-library"].tap()
         XCTAssertTrue(app.navigationBars["Style Library"].waitForExistence(timeout: 10), app.debugDescription)
         let style = app.buttons
             .matching(NSPredicate(format: "identifier BEGINSWITH %@", "style-row-")).firstMatch
         XCTAssertTrue(style.waitForExistence(timeout: 10), app.debugDescription)
-        if style.isHittable {
-            style.tap()
-        } else {
+        let guide = app.navigationBars["iPhone fixture style"]
+        if style.isHittable { style.tap() }
+        if !guide.waitForExistence(timeout: 4) {
+            let title = app.staticTexts["iPhone fixture style"].firstMatch
+            XCTAssertTrue(title.exists, app.debugDescription)
             let window = app.windows.firstMatch
-            XCTAssertTrue(window.frame.intersects(style.frame), app.debugDescription)
+            XCTAssertTrue(window.frame.intersects(title.frame), app.debugDescription)
             window.coordinate(withNormalizedOffset: .zero)
-                .withOffset(CGVector(dx: style.frame.midX - window.frame.minX, dy: style.frame.midY - window.frame.minY)).tap()
+                .withOffset(CGVector(dx: title.frame.midX - window.frame.minX, dy: title.frame.midY - window.frame.minY)).tap()
         }
-        XCTAssertTrue(app.navigationBars["iPhone fixture style"].waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(guide.waitForExistence(timeout: 12), app.debugDescription)
         let saveStyle = app.buttons["Save style"]
         reveal(saveStyle, in: app)
         XCTAssertTrue(saveStyle.exists, app.debugDescription)
-        app.navigationBars["iPhone fixture style"].buttons.firstMatch.tap()
-        app.buttons["close-style-library"].tap()
+    }
+
+    func testSignedInWorkspaceCanRenderAndPlayTake() throws {
+        let app = signedIn()
+        let project = app.staticTexts["iPhone fixture project"]
         project.tap()
         let pack = app.buttons["Open Project Pack"]
         XCTAssertTrue(pack.waitForExistence(timeout: 15))

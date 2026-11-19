@@ -32,7 +32,13 @@ jobs:
       - run: npm run check:registry
       - run: npm run typecheck
       - run: npm run build
-      - run: command -v ffmpeg || (sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg)
+      - name: Ensure FFmpeg is available
+        timeout-minutes: 4
+        run: |
+          if ! command -v ffmpeg; then
+            sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 update -qq
+            sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 install -y -qq ffmpeg
+          fi
       - run: python3 tests/run.py tests/core_e2e.py tests/cinema.py tests/super_hermes.py
       - run: python3 tests/run.py tests/director.py tests/director_recovery.py
 
