@@ -3,25 +3,25 @@ import WebKit
 
 let studioGround = Color(red: 0.937, green: 0.937, blue: 0.961)
 private let studioInk = Color(red: 0.067, green: 0.067, blue: 0.078)
+private let studioShade = Color(red: 0.886, green: 0.878, blue: 0.934)
 
 struct StudioGround: View {
     var body: some View {
-        ZStack {
-            studioGround
-            RadialGradient(
-                colors: [Color(red: 0.875, green: 0.863, blue: 0.948), studioGround],
-                center: .topTrailing, startRadius: 5, endRadius: 560
-            )
-            Canvas { context, size in
-                for y in stride(from: 6.0, to: size.height, by: 10) {
-                    for x in stride(from: 6.0, to: size.width, by: 10) {
-                        context.fill(Path(ellipseIn: CGRect(x: x, y: y, width: 1, height: 1)), with: .color(studioInk.opacity(0.09)))
-                    }
-                }
-            }
-        }
+        RadialGradient(colors: [studioShade, studioGround], center: .topTrailing, startRadius: 5, endRadius: 560)
         .ignoresSafeArea()
         .accessibilityHidden(true)
+    }
+}
+
+struct StudioPlate: View {
+    var radius: CGFloat = 18
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        shape.fill(LinearGradient(colors: [.white, studioGround], startPoint: .topLeading, endPoint: .bottomTrailing))
+            .overlay { shape.strokeBorder(studioInk.opacity(0.14), lineWidth: 1) }
+            .shadow(color: studioInk.opacity(0.09), radius: 5, x: 0, y: 3)
+            .accessibilityHidden(true)
     }
 }
 
@@ -77,15 +77,19 @@ struct ConnectedStudio: View {
     var body: some View {
         TabView(selection: $selection) {
             web("/studio")
+                .toolbarBackground(studioGround, for: .tabBar)
                 .tabItem { Label("Studio", systemImage: "square.grid.2x2") }
                 .tag(Destination.studio)
             ProjectsView(api: api, fixture: session.fixture, commerce: session.commerce) { await session.signOut() }
+                .toolbarBackground(studioGround, for: .tabBar)
                 .tabItem { Label("Director", systemImage: "viewfinder") }
                 .tag(Destination.director)
             web("/agents")
+                .toolbarBackground(studioGround, for: .tabBar)
                 .tabItem { Label("Agents", systemImage: "person.2") }
                 .tag(Destination.agents)
             web("/library")
+                .toolbarBackground(studioGround, for: .tabBar)
                 .tabItem { Label("Library", systemImage: "folder") }
                 .tag(Destination.library)
         }

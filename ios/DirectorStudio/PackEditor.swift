@@ -73,6 +73,7 @@ struct PackEditor: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
         .sheet(isPresented: $showReference) {
             ReferencePicker(api: api) { reference in
                 showReference = false

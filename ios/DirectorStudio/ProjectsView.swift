@@ -20,14 +20,35 @@ struct ProjectsView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 List {
+                    Text("Projects")
+                        .font(.system(.largeTitle, design: .default, weight: .heavy))
+                        .accessibilityAddTraits(.isHeader)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     if fixture {
                         Label("Provider-free workspace", systemImage: "testtube.2")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                     Button { showStyles = true } label: {
-                        Label("Style Library", systemImage: "rectangle.on.rectangle")
+                        HStack(spacing: 12) {
+                            Image(systemName: "rectangle.on.rectangle")
+                                .frame(width: 40, height: 40)
+                                .background { StudioPlate(radius: 11) }
+                                .accessibilityHidden(true)
+                            Text("Style Library").font(.headline)
+                            Spacer(minLength: 0)
+                            Image(systemName: "arrow.up.right")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .accessibilityHidden(true)
+                        }
+                        .padding(.vertical, 4)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                     }
                     .accessibilityIdentifier("open-style-library")
+                    .listRowBackground(StudioPlate())
+                    .listRowSeparator(.hidden)
                     if !loaded { ProgressView("Loading projects") }
                     if loaded && projects.isEmpty {
                         ContentUnavailableView("No projects yet", systemImage: "film.stack", description: Text("Save a style in the Style Library, then start a project with a fresh brief."))
@@ -37,14 +58,18 @@ struct ProjectsView: View {
                             ProjectWorkspace(api: api, projectId: project.id)
                         } label: {
                             Label(project.title, systemImage: "film")
+                                .font(.body.weight(.medium))
+                                .padding(.vertical, 5)
                         }
                     }
                 }
+                .listStyle(.insetGrouped)
                 .refreshable { await reload() }
             }
             .scrollContentBackground(.hidden)
             .background { StudioGround() }
             .navigationTitle("Director")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { showAccount = true } label: { Label("Account", systemImage: "person.crop.circle") }
@@ -248,6 +273,7 @@ struct ProjectWorkspace: View {
             .pickerStyle(.segmented)
             .padding(.horizontal)
             .padding(.vertical, 8)
+            .background(alignment: .bottom) { StudioPlate(radius: 0) }
             if let detail {
                 if tab == 0 {
                     director(detail)
@@ -261,6 +287,7 @@ struct ProjectWorkspace: View {
                 ProgressView("Loading project").frame(maxHeight: .infinity)
             }
         }
+        .background { StudioGround() }
         .navigationTitle(detail?.project.title ?? "Project")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: watch) {
@@ -313,6 +340,7 @@ struct ProjectWorkspace: View {
                 .disabled(working || message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
+        .scrollContentBackground(.hidden)
         .refreshable { await reload() }
     }
 

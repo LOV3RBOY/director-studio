@@ -33,6 +33,8 @@ struct StylesView: View {
                 }
                 .refreshable { await reload() }
             }
+            .scrollContentBackground(.hidden)
+            .background { StudioGround() }
             .navigationTitle("Style Library")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -95,6 +97,8 @@ private struct LearnStyleForm: View {
                 Button("Analyze reference") { Task { await analyze() } }
                     .disabled(working || asset == nil || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
+            .scrollContentBackground(.hidden)
+            .background { StudioGround() }
             .disabled(working)
             .navigationTitle("Learn a Style")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
@@ -173,6 +177,8 @@ private struct StyleEditor: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background { StudioGround() }
         .navigationTitle(detail?.title ?? "Style")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: watch) {
