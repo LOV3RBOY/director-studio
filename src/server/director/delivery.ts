@@ -86,9 +86,9 @@ export function renderQuote(userId: string, packId: string, index: number) {
   const clip = clipAt(pack.body, index);
   const assets = checkReferences(userId, clip);
   const quote = exactQuote(clip, pack.body.settings);
-  const sendsReferences = assets.length > 0 && !quote.fixture;
-  if (sendsReferences && !uploadReferences()) signedMediaConfig();
-  return { ...quote, sendsReferencesToMuapi: sendsReferences };
+  if (!assets.length || quote.fixture) return quote;
+  if (!uploadReferences()) signedMediaConfig();
+  return { ...quote, sendsReferencesToMuapi: true };
 }
 
 export function requestRender(userId: string, packId: string, input: { clip: number; requestKey: string; maxCredits: number }) {
