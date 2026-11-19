@@ -3,6 +3,7 @@
 from pathlib import Path
 import json
 import os
+import pwd
 import re
 import secrets
 import signal
@@ -75,7 +76,17 @@ signal.signal(signal.SIGTERM, stop)
 exit_code = 0
 data = Path(environment.get("RAILWAY_VOLUME_MOUNT_PATH") or environment["PARALLAX_DATA_DIR"])
 data.mkdir(parents=True, exist_ok=True)
-environment["PARALLAX_DATA_DIR"] = str(data)
+if os.geteuid() == 0:
+    user = pwd.getpwnam("node")
+    if data.stat().st_uid != user.pw_uid:
+        for parent, dirs, files in os.walk(data, followlinks=False):
+            for name in dirs + files:
+                os.chown(Path(parent) / name, user.pw_uid, user.pw_gid, follow_symlinks=False)
+        os.chown(data, user.pw_uid, user.pw_gid)
+    os.initgroups(user.pw_name, user.pw_gid)
+    os.setgid(user.pw_gid)
+    os.setuid(user.pw_uid)
+environment.update(PARALLAX_DATA_DIR=str(data), HOME=str(data))
 profiles = data / "hermes"
 profiles.mkdir(exist_ok=True)
 try:

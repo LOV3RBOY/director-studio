@@ -28,6 +28,7 @@ COPY --from=studio-build /app/node_modules ./node_modules
 COPY --from=studio-build /app/public ./public
 COPY --from=studio-build /app/migrations ./migrations
 COPY scripts/studio-hosted.mjs scripts/studio-hosted.py ./scripts/
+RUN rm -rf /app/.next/cache && install -d -o node -g node -m 0750 /app/.next/cache
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PARALLAX_DATA_DIR=/data
 EXPOSE 8080
 CMD ["/opt/hermes/.venv/bin/python", "/app/scripts/studio-hosted.py"]
