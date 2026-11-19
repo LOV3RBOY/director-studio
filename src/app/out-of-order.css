@@ -165,3 +165,36 @@
   .ooo-tool:hover, .ooo-tool:hover .ooo-tool-arrow,
   .ooo-pill:active, .ooo-tool:active, .ooo-control:active { translate: none; }
 }
+
+/* The workspace rail reserves space above fixed-height editors. */
+.studio-workspace-bar {
+  position: sticky;
+  z-index: 31;
+  top: 0;
+  height: 49px;
+  border-bottom: 1px solid var(--studio-seam);
+  background: linear-gradient(180deg, #fbfafd, #eae7f2);
+  box-shadow: inset 0 1px 0 #fff;
+}
+.studio-workspace-bar + .studio-pages {
+  --studio-available-height: calc(100dvh - 49px);
+}
+.studio-viewport { height: var(--studio-available-height, 100dvh); }
+.studio-sidebar-height { height: calc(var(--studio-available-height, 100dvh) - 8px); }
+
+.studio-director-panel {
+  top: auto;
+  right: 12px;
+  bottom: 12px;
+  left: auto;
+  display: flex;
+  width: min(450px, calc(100vw - 24px));
+  height: min(680px, calc(100dvh - 24px));
+  max-height: none;
+  translate: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+@media (max-width: 639px) {
+  .studio-director-panel { right: 6px; bottom: 6px; width: calc(100vw - 12px); height: min(720px, calc(100dvh - 12px)); }
+}

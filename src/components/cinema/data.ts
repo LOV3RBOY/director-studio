@@ -194,8 +194,8 @@ export function refreshProject(id: string | null) {
   if (id) void globalMutate(projectKey(id));
 }
 
-export async function createProject(title: string, aspect?: string) {
-  const { project } = await api<{ project: Project }>(PROJECTS, { method: "POST", body: { title, aspect } });
+export async function createProject(title: string, settings: Partial<Pick<Project, "aspect" | "look" | "stillModelId" | "videoModelId">>) {
+  const { project } = await api<{ project: Project }>(PROJECTS, { method: "POST", body: { ...settings, title } });
   return project;
 }
 

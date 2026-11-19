@@ -144,6 +144,9 @@ class MockLlm implements LlmClient {
     const words = memberWords(text);
     if (/\[llm-fail\]/i.test(words)) throw new Error("mock model failure");
     if (/\[slow\]/i.test(words)) await sleep(3_000);
+    if (/^open (the )?style library[.!]?$/i.test(words) && has("open_studio")) {
+      return call("open_studio", { destination: "styles" }, "Here is the Style Library.");
+    }
     let m = /generate (?:an? )?(image|picture|photo|video|clip|song|music|track|speech|voiceover)? ?of (.+)/i.exec(words);
     if (m && has("generate_media")) {
       const kind = /video|clip/i.test(m[1] ?? "") ? "video" : /song|music|track/i.test(m[1] ?? "") ? "music" : /speech|voice/i.test(m[1] ?? "") ? "audio" : "image";

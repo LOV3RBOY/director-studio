@@ -34,7 +34,7 @@ export function SuperShell({
   useSuperEvents(() => {});
 
   return (
-    <div className="flex h-dvh w-full overflow-hidden ooo-ground text-text-primary">
+    <div className="flex studio-viewport w-full overflow-hidden ooo-ground text-text-primary">
       {/* Wide screens: the sidebar column. */}
       {!collapsed ? (
         <div className="hidden w-[244px] shrink-0 items-center justify-center lg:flex">

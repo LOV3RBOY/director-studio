@@ -111,7 +111,7 @@ async function perform(row: JobRow) {
     ).reverse().map((turn) => ({ message: JSON.parse(turn.input).message as string, reply: JSON.parse(turn.result!).reply as string }));
     const result = await directChat({
       mode: row.mode, message: input.message, brief: project.request,
-      rules: style.profile.rules.filter((rule) => rule.reuse !== "exclude").slice(0, 18),
+      guide: style.profile.guide, rules: style.profile.rules.filter((rule) => rule.reuse !== "exclude"),
       current: current?.body.plan ?? null, history,
     });
     tx(() => {

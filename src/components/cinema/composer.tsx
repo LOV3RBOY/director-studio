@@ -191,7 +191,7 @@ function MenuChip({ label, trigger, children, className }: { label: string; trig
 const DURATIONS = [3, 4, 5, 6, 8, 10, 12, 15];
 
 function Toolbar() {
-  const { catalog, fields, patchShot, aspect, patchProject, output, model, patchProject: patch, stillModelId, videoModelId, count, setCount, setCastOpen, project } = useCinema();
+  const { catalog, fields, patchShot, aspect, patchProject, output, model, stillModelId, videoModelId, count, setCount, setCastOpen, project, projectId } = useCinema();
   const [modelOpen, setModelOpen] = useState(false);
   const [sound, setSound] = useState(fields.sound);
   const [seenSound, setSeenSound] = useState(fields.sound);
@@ -235,7 +235,7 @@ function Toolbar() {
       </Popover>
       <Popover open={modelOpen} onOpenChange={setModelOpen}>
         <PopoverTrigger asChild>
-          <button type="button" aria-label={c.model(model?.name ?? "")} className={cn(toolClass, "w-[170px] gap-1 px-2")}>
+          <button type="button" aria-label={c.model(model?.name ?? "")} disabled={!list?.length || (!!projectId && !project)} className={cn(toolClass, "w-[170px] gap-1 px-2 disabled:opacity-50")}>
             {model ? <VendorGlyph vendor={model.vendor} className="w-4 text-center text-brand" /> : <Film className="size-4" strokeWidth={1.5} aria-hidden />}
             <span className="min-w-0 truncate text-xs leading-[18px] font-semibold tracking-normal">{model?.name ?? "…"}</span>
             <ChevronRight className="size-5 shrink-0" strokeWidth={1.5} aria-hidden />
@@ -251,7 +251,7 @@ function Toolbar() {
               hint={output === "video" && !m.canTextToVideo ? c.animateOnly : output === "video" && !m.canAnimate ? c.textOnly : undefined}
               onClick={() => {
                 setModelOpen(false);
-                void patch(output === "image" ? { stillModelId: m.id } : { videoModelId: m.id });
+                void patchProject(output === "image" ? { stillModelId: m.id } : { videoModelId: m.id });
               }}
             >
               {m.name}

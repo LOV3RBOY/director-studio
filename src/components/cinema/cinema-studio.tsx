@@ -96,7 +96,7 @@ function Workspace() {
   const [sheet, setSheet] = useState(false);
 
   return (
-    <div className="flex h-dvh w-full gap-1 overflow-hidden bg-surface-primary p-1">
+    <div className="flex studio-viewport w-full gap-1 overflow-hidden bg-surface-primary p-1">
       {/* Desktop: the drawn sidebar. Phone: a sheet over the page. */}
       <aside className={cn("hidden w-[231px] shrink-0", !collapsed && "lg:flex")}>
         <Sidebar onCollapse={() => setCollapsed(true)} />

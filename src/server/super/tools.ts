@@ -1,5 +1,6 @@
 import "server-only";
 
+import { studioDestination, studioDestinations } from "@/config/studio-workspace";
 import { formatCredits } from "@/config/economy";
 import { listAssets, ownedAsset, toAsset } from "@/server/assets";
 import type { User } from "@/server/auth";
@@ -452,9 +453,25 @@ const personalTools: ToolDef[] = [
 
 /* ---------------------------------- export --------------------------------- */
 
+const openStudio: ToolDef = {
+  name: "open_studio",
+  description: "Offer an in-app navigation button when the member asks to go somewhere in Out of Order Studio. The member taps to open it. Use the Style Library for studying reference media and reusing a saved style.",
+  input_schema: {
+    type: "object",
+    properties: { destination: { type: "string", enum: studioDestinations.map(({ id }) => id) } },
+    required: ["destination"],
+  },
+  async run(ctx, input) {
+    const destination = studioDestination(input.destination);
+    if (!destination) return fail("Choose an available Studio destination.", "Unknown destination");
+    addRow(ctx.chatId, "card", { card: "studio-navigation", destination: destination.id });
+    return ok(`Displayed an Open ${destination.label} button. The member can tap it to navigate.`, `Open ${destination.label}`);
+  },
+};
+
 /** The tools for one model call. Connected apps add their own tools. */
 export async function toolsFor(userId: string): Promise<ToolDef[]> {
-  const list = [generateMedia, ...registryTools, ...libraryTools, ...computerTools, ...connectorBase, ...personalTools];
+  const list = [openStudio, generateMedia, ...registryTools, ...libraryTools, ...computerTools, ...connectorBase, ...personalTools];
   const apps = activeApps(userId);
   if (apps.length) {
     try {
@@ -473,7 +490,7 @@ export async function toolsFor(userId: string): Promise<ToolDef[]> {
  * its own browser and shell.
  */
 export function engineTools(): ToolDef[] {
-  const list = [generateMedia, ...registryTools, ...libraryTools, ...personalTools];
+  const list = [openStudio, generateMedia, ...registryTools, ...libraryTools, ...personalTools];
   if (serviceMode("computer") === "live") list.push(...computerTools);
   return list;
 }

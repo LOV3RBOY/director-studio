@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import useSWR, { mutate } from "swr";
 import { api, ApiError, errorMessage, fetcher } from "@/lib/api";
+import { useQueryParam } from "@/lib/browser";
 import { ensureSession, setBalance, useSession } from "@/lib/session";
 import { cinema } from "@/content/cinema";
 import {
@@ -62,18 +63,21 @@ function useCinemaState() {
   const [draft, setDraft] = useState<ShotFields>(BLANK);
   const [draftLook, setDraftLook] = useState<Record<LookKey, string>>(BLANK_LOOK);
   const [draftAspect, setDraftAspect] = useState("16:9");
+  const [draftModels, setDraftModels] = useState<Partial<Pick<Project, "stillModelId" | "videoModelId">>>({});
   const [castOpen, setCastOpen] = useState(false);
 
   // The open project: the one picked if it still exists, else the most recent one.
   const list = projects.data?.projects;
+  const requestedProject = useQueryParam("project");
+  const preferredProject = pickedProject ?? requestedProject;
   const projectId = !session.user
     ? null
     : !list
       ? pickedProject
-      : pickedProject && list.some((p) => p.id === pickedProject)
-        ? pickedProject
-        : noneChosen
-          ? null
+      : noneChosen
+        ? null
+        : preferredProject && list.some((p) => p.id === preferredProject)
+          ? preferredProject
           : (list[0]?.id ?? null);
 
   const board = useStoryboard(projectId);
@@ -96,8 +100,8 @@ function useCinemaState() {
   const aspect = project?.aspect ?? draftAspect;
 
   const defaults = catalog.data?.defaults;
-  const stillModelId = project?.stillModelId ?? defaults?.stillModelId ?? "";
-  const videoModelId = project?.videoModelId ?? defaults?.videoModelId ?? "";
+  const stillModelId = project?.stillModelId ?? draftModels.stillModelId ?? defaults?.stillModelId ?? "";
+  const videoModelId = project?.videoModelId ?? draftModels.videoModelId ?? defaults?.videoModelId ?? "";
   const mode: TakeMode = output === "image" ? "still" : shot?.hasStill ? "animate" : "text";
   const modelId = output === "image" ? stillModelId : videoModelId;
   const model: CatalogModel | undefined = (output === "image" ? catalog.data?.models.still : catalog.data?.models.video)?.find(
@@ -107,14 +111,14 @@ function useCinemaState() {
   const composeKey = shot
     ? `/api/cinema/shots/${shot.id}/compose?mode=${mode}&modelId=${encodeURIComponent(modelId)}&count=${count}&at=${shot.updatedAt}-${project?.updatedAt ?? 0}-${shot.takes?.length ?? 0}`
     : null;
-  const composed = useSWR<Composed>(composeKey, fetcher, { keepPreviousData: true, shouldRetryOnError: false });
+  const composed = useSWR<Composed>(composeKey, fetcher, { shouldRetryOnError: false });
 
   // Before a shot exists there is nothing to compose, but the first take still has a price.
   const draftKey =
     !shot && modelId
       ? `/api/cinema/compose?mode=${mode}&modelId=${encodeURIComponent(modelId)}&aspect=${encodeURIComponent(aspect)}&duration=${fields.duration}&count=${count}`
       : null;
-  const draftQuote = useSWR<Pick<Composed, "price">>(draftKey, fetcher, { keepPreviousData: true, shouldRetryOnError: false });
+  const draftQuote = useSWR<Pick<Composed, "price">>(draftKey, fetcher, { shouldRetryOnError: false });
   /** What Generate will cost, in millicredits, or null while it is not known. */
   const price = (shot ? composed.data : draftQuote.data)?.price.total ?? null;
 
@@ -157,6 +161,13 @@ function useCinemaState() {
       if (!project) {
         if (patch.look) setDraftLook((l) => ({ ...l, ...patch.look }));
         if (patch.aspect) setDraftAspect(patch.aspect);
+        const { stillModelId, videoModelId } = patch;
+        if (stillModelId || videoModelId) {
+          setDraftModels((models) => ({
+            stillModelId: stillModelId ?? models.stillModelId,
+            videoModelId: videoModelId ?? models.videoModelId,
+          }));
+        }
         return;
       }
       const key = projectKey(project.id);
@@ -187,19 +198,18 @@ function useCinemaState() {
   const startProject = useCallback(
     async (title: string = cinema.sidebar.newTitle, action?: string) => {
       await ensureSession();
-      const lookPatch = Object.fromEntries(Object.entries(draftLook).filter(([, v]) => v));
-      const made = await createProject(title, draftAspect);
-      if (Object.keys(lookPatch).length) await api(projectKey(made.id), { method: "PATCH", body: { look: lookPatch } });
+      const made = await createProject(title, { aspect: draftAspect, look: draftLook, ...draftModels });
       const first = await firstShot(made.id, action === undefined ? draft : { ...draft, action });
       setDraft(BLANK);
       setDraftLook(BLANK_LOOK);
+      setDraftModels({});
       await Promise.all([mutate(projectKey(made.id)), mutate("/api/cinema/projects")]);
       setNoneChosen(false);
       setProjectId(made.id);
       setShotId(first.id);
       return { project: made, shot: first };
     },
-    [draft, draftLook, draftAspect],
+    [draft, draftLook, draftAspect, draftModels],
   );
 
   const newProject = useCallback(async () => {

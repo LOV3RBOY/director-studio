@@ -19,6 +19,8 @@ import {
   Sparkles,
   Wrench,
 } from "lucide-react";
+import Link from "next/link";
+import { studioDestination } from "@/config/studio-workspace";
 import { useState, type ReactNode } from "react";
 import { copy } from "@/content/super";
 import { api, errorMessage } from "@/lib/api";
@@ -416,7 +418,7 @@ function Notice({ body }: { body: B }) {
 }
 
 /** One transcript row, drawn by its kind. Tool calls are grouped by the caller. */
-export function RowView({ row }: { row: Row }) {
+export function RowView({ row, onNavigate }: { row: Row; onNavigate?: () => void }) {
   const b = row.body;
   if (row.kind === "message") return b.role === "user" ? <UserMessage body={b} /> : <AssistantMessage body={b} />;
   if (row.kind === "card") {
@@ -424,6 +426,16 @@ export function RowView({ row }: { row: Row }) {
     if (b.card === "question") return <QuestionCard body={b} />;
     if (b.card === "result") return <ResultCard body={b} />;
     if (b.card === "connect") return <ConnectCard body={b} />;
+    if (b.card === "studio-navigation") {
+      const destination = studioDestination(b.destination);
+      return destination ? (
+        <CardFrame icon={<ExternalLink className="size-4" aria-hidden />} title={destination.label}>
+          <Link href={destination.href} onNavigate={onNavigate} className="ooo-pill ooo-primary self-start">
+            Open {destination.label}
+          </Link>
+        </CardFrame>
+      ) : null;
+    }
     return null;
   }
   if (row.kind === "event") {

@@ -35,7 +35,7 @@ export function AppShell({
   children: ReactNode;
 }) {
   return (
-    <div className={cn("ooo-ground flex flex-col", fixed ? "h-dvh overflow-hidden" : "min-h-dvh")}>
+    <div className={cn("ooo-ground flex flex-col", fixed ? "studio-viewport overflow-hidden" : "min-h-dvh")}>
       {nav === "full" ? <FullNav active={active} /> : <CompactNav active={active} />}
       <main className="relative flex min-h-0 flex-1 flex-col">{children}</main>
       {footer && !fixed ? <SiteFooter /> : null}

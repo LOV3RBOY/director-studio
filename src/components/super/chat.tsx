@@ -8,7 +8,7 @@ import useSWR, { mutate } from "swr";
 import { copy, superRoutes } from "@/content/super";
 import { api, ApiError, errorMessage, fetcher } from "@/lib/api";
 import { useSession } from "@/lib/session";
-import { ButtonLink, Spinner } from "@/ui";
+import { ButtonLink, cn, Spinner } from "@/ui";
 import { SuperComposer, type SendInput } from "./composer";
 import { ContextRow } from "./context-row";
 import { keys, sortChats, useSuperEvents } from "./data";
@@ -41,7 +41,7 @@ function Skeleton() {
   );
 }
 
-export function SuperChat({ id }: { id: string }) {
+export function SuperChat({ id, embedded, onNavigate }: { id: string; embedded?: boolean; onNavigate?: () => void }) {
   const { user, loading: sessionLoading } = useSession();
   const [rows, setRows] = useState<Map<number, Row>>(() => new Map());
   const [loaded, setLoaded] = useState(false);
@@ -159,16 +159,16 @@ export function SuperChat({ id }: { id: string }) {
     } catch {}
   };
 
-  return (
-    <SuperShell active="chat" activeChat={id}>
+  const content = (
+    <>
       {/* The title sits in the corner row, centred. */}
-      <div className="pointer-events-none absolute top-0 right-20 left-25 z-30 flex h-[62px] min-w-0 items-center justify-center gap-2 lg:left-28">
+      {!embedded && <div className="pointer-events-none absolute top-0 right-20 left-25 z-30 flex h-[62px] min-w-0 items-center justify-center gap-2 lg:left-28">
         {chat?.pinned ? <Pin className="size-3 shrink-0 text-text-secondary" strokeWidth={1.5} aria-label={copy.chat.pinned} /> : null}
         {chat?.incognito ? <HatGlasses className="size-4 shrink-0 text-brand" strokeWidth={1.5} aria-label={copy.chat.private} /> : null}
         {chat?.agentId && <span className="shrink-0 text-xs font-semibold text-text-primary">{findStudioAgent(chat.agentId)?.name}</span>}
         <h1 className="truncate text-sm leading-5 font-medium text-text-secondary">{chat?.title || copy.nav.newChat}</h1>
         {running ? <Spinner /> : null}
-      </div>
+      </div>}
       <div
         ref={scroller}
         onScroll={(e) => {
@@ -187,11 +187,11 @@ export function SuperChat({ id }: { id: string }) {
             </ButtonLink>
           </div>
         ) : (
-          <ol className="mx-auto flex w-full max-w-[720px] flex-col gap-5 px-4 pt-20 pb-6" aria-live="polite" aria-label={chat?.title || copy.nav.newChat}>
+          <ol className={cn("mx-auto flex w-full max-w-[720px] flex-col gap-5 px-4 pb-6", embedded ? "pt-4" : "pt-20")} aria-live="polite" aria-label={chat?.title || copy.nav.newChat}>
             {items.length === 0 ? <li className="text-center text-sm leading-5 text-text-secondary">{copy.chat.empty}</li> : null}
             {items.map((it) => (
               <li key={it.type === "row" ? it.row.seq : `t${it.rows[0].seq}`} className="animate-fade-in">
-                {it.type === "row" ? <RowView row={it.row} /> : <ToolGroup rows={it.rows} computer={computer} />}
+                {it.type === "row" ? <RowView row={it.row} onNavigate={onNavigate} /> : <ToolGroup rows={it.rows} computer={computer} />}
               </li>
             ))}
             {chat?.state === "running" && sorted[sorted.length - 1]?.kind === "message" && sorted[sorted.length - 1]?.body.role === "user" ? (
@@ -215,7 +215,7 @@ export function SuperChat({ id }: { id: string }) {
               onStop={() => void stop()}
               placeholder={copy.chatPlaceholder}
               below={
-                chat && !chat.incognito ? (
+                chat && !chat.incognito && !embedded ? (
                   <div className="hidden sm:block">
                     <ContextRow projectId={chat.projectId} onProject={(p) => void patch({ projectId: p })} skillIds={chat.skillIds} onSkills={(s) => void patch({ skillIds: s })} />
                   </div>
@@ -225,6 +225,9 @@ export function SuperChat({ id }: { id: string }) {
           </div>
         </div>
       ) : null}
-    </SuperShell>
+    </>
   );
+  return embedded
+    ? <div className="ooo-chat flex min-h-0 flex-1 flex-col">{content}</div>
+    : <SuperShell active="chat" activeChat={id}>{content}</SuperShell>;
 }

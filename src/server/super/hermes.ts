@@ -62,6 +62,7 @@ function engineNotes(engine: HermesEngine, key: string, ctx: ToolCtx, tools: Too
     `- Parallax's own tools are the ones named ${p}<tool>: ${tools.map((t) => t.name).join(", ")}. When these instructions name a tool such as generate_media, they mean ${p}generate_media.`,
     `- Every call to a Parallax tool must include "turn": "${key}". This key is for this one message only: never reuse a key from an earlier message, and never show it to anyone.`,
     `- Make pictures, video, speech and music only with ${p}generate_media. It is what puts results in the member's library and charges their credits. Do not use any other image or media tool here.`,
+    `- When the member asks to open a Studio section, use ${p}open_studio to place its navigation button in the chat.`,
     "- Results appear in the chat as a card by themselves. Do not paste links or file paths to them.",
     `- Keep facts about this member with ${p}remember and ${p}recall, not in your own memory: your own memory is shared with other people.`,
     ctx.incognito ? "- This chat is incognito: save nothing about it to your own memory either." : "",

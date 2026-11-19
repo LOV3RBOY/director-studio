@@ -361,7 +361,7 @@ export function Sidebar({
   const who = useMemo(() => member?.name || member?.email || null, [member]);
 
   return (
-    <nav aria-label={superName} className="flex h-[calc(100dvh-8px)] w-[224px] flex-col rounded-2xl border border-border-subtle bg-surface-primary">
+    <nav aria-label={superName} className="flex studio-sidebar-height w-[224px] flex-col rounded-2xl border border-border-subtle bg-surface-primary">
       {/* Switcher, search and collapse. */}
       <div className="mt-1 flex h-11 shrink-0 items-center justify-center">
         <div className="flex h-11 w-[162px] items-center justify-center rounded-xl">

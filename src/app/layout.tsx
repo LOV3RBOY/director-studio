@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import localFont from "next/font/local";
+import { WorkspaceBar } from "@/components/workspace/workspace-bar";
 import { brand } from "@/config/brand";
 import { bootScript } from "@/lib/closable";
 import "./globals.css";
@@ -35,7 +37,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Hides what the visitor closed earlier before the first paint. See src/lib/closable.ts. */}
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
-      <body>{children}</body>
+      <body>
+        <Suspense><WorkspaceBar /></Suspense>
+        <div className="studio-pages">{children}</div>
+      </body>
     </html>
   );
 }

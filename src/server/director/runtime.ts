@@ -196,8 +196,9 @@ function fixturePlan(brief: Brief, profile: StyleProfile): Plan {
 export async function directProject(brief: Brief, profile: StyleProfile, runMode: DirectorMode) {
   if (runMode === "mock") return { plan: fixturePlan(brief, profile), model: "none", usage: {} };
   const result = await turn("plan", JSON.stringify({
-    task: "Compose an ordered plan in milliseconds. Complete every required field. Preserve brief for action, original refs for identity, style for filming. Provide chronological camera start, action, movement, end, frame/reveal, continuity and sound. Do not quote excluded source subjects. Reuse only cast asset ids provided. A single clip is permitted within provider limits, otherwise split duration into contiguous whole-second clips. Seedance 2.0 clips are 4–15 seconds with up to 9 images; Seedance 2.5 clips are 5–30 seconds with up to 30 images. Select the most relevant original refs, one per distinct role and identity at minimum. Do not put provider tags in shot text.",
-    brief, rules: profile.rules.filter((rule) => rule.reuse !== "exclude").slice(0, 18), evidence: profile.evidence.frames,
+    task: "Compose an ordered plan in milliseconds. Complete every required field. Preserve brief for action, original refs for identity, and the saved guide and signature rules for filming. Express the style in specific camera, lighting, palette, texture, timing and sound directions. Adapt flexible rules to the new brief. Provide chronological camera start, action, movement, end, frame/reveal, continuity and sound. Do not reuse reference subjects or scene-specific details. Reuse only cast asset ids provided. A single clip is permitted within provider limits, otherwise split duration into contiguous whole-second clips. Seedance 2.0 clips are 4–15 seconds with up to 9 images; Seedance 2.5 clips are 5–30 seconds with up to 30 images. Select the most relevant original refs, one per distinct role and identity at minimum. Do not put provider tags in shot text.",
+    brief, guide: profile.guide, rules: profile.rules.filter((rule) => rule.reuse !== "exclude"),
+    evidence: profile.evidence.frames.map(({ ordinal, seconds, cutCandidate }) => ({ ordinal, seconds, cutCandidate })),
     response: { clips: [{
       startMs: 0, endMs: 5000, mode: "continuous | cuts", references: [{ assetId: "original id", modality: "image", role: "identity", scope: "identity of cast member" }], promptOverride: "",
       shots: [{ startMs: 0, endMs: 5000, start: "camera start", action: "subject action", movement: "camera move", end: "end shot", framing: "framing/reveal", continuity: "continuity", sound: "native sound cue", transition: "continuous | cut" }],
@@ -209,15 +210,15 @@ export async function directProject(brief: Brief, profile: StyleProfile, runMode
 const chatResult = z.object({ reply: z.string().trim().min(1).max(3000), edits: plan.optional() });
 
 export async function directChat(input: {
-  mode: DirectorMode; message: string; brief: Brief; rules: Guidance["rules"];
+  mode: DirectorMode; message: string; brief: Brief; guide: string; rules: Guidance["rules"];
   current: Plan | null; history: { message: string; reply: string }[];
 }) {
   if (input.mode === "mock") {
     return { reply: `Fixture Director received “${input.message.slice(0, 240)}”. You can refine the shot and prompt in the Project Pack.`, edits: undefined, model: "none", usage: {} };
   }
   const result = await turn("chat", JSON.stringify({
-    task: "Respond as the Director. Return {reply:string, edits?:plan}. Include a complete revised plan matching the current plan's schema only when the user explicitly asked to make changes. Preserve project duration, times, cast and asset IDs unless the request intentionally changes timing within the total.",
-    message: input.message, brief: input.brief, rules: input.rules, current: input.current, history: input.history,
+    task: "Respond as the Director. Return {reply:string, edits?:plan}. Include a complete revised plan matching the current plan's schema only when the user explicitly asked to make changes. Keep the saved style guide and signature rules in the plan as you revise it. Preserve project duration, times, cast and asset IDs unless the request intentionally changes timing within the total.",
+    message: input.message, brief: input.brief, guide: input.guide, rules: input.rules, current: input.current, history: input.history,
   }));
   const output = valid(chatResult, result.value);
   if (!input.current && output.edits) throw badRequest("Finish the initial storyboard before applying chat edits.");

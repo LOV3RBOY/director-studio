@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Bell } from "@/components/shell/bell";
 import { ProviderState } from "@/components/studio/provider-state";
-import { ArrowDown, ArrowUpRight, AudioLines, Clapperboard, Film, ImageIcon, LayoutGrid, PanelsTopLeft, Scissors, Upload, Users, WandSparkles } from "lucide-react";
+import { Aperture, ArrowDown, ArrowUpRight, AudioLines, Clapperboard, Film, ImageIcon, LayoutGrid, PanelsTopLeft, Scissors, Upload, Users, WandSparkles } from "lucide-react";
 
 const tools = [
   { name: "Image", href: "/image", icon: ImageIcon, detail: "Generate and edit stills" },
@@ -37,6 +37,7 @@ export default function StudioPage() {
             <div className="mt-5 flex flex-wrap gap-2 sm:mt-7">
               <a href="#tools" className="ooo-pill ooo-primary">Open tools <ArrowDown size={16} aria-hidden /></a>
               <Link href="/agents" className="ooo-pill"><Users size={16} aria-hidden /> Agents</Link>
+              <Link href="/style-library" className="ooo-pill"><Aperture size={16} aria-hidden /> Style Library</Link>
             </div>
           </div>
           <div className="ooo-hero-art relative aspect-[2.55] overflow-hidden rounded-[20px] sm:aspect-auto">
