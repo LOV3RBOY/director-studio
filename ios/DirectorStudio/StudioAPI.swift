@@ -33,7 +33,7 @@ struct StudioAPI {
     }()
 
     #if DEBUG
-    private static let pairingSession: URLSession = {
+    fileprivate static let pairingSession: URLSession = {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.httpShouldSetCookies = false
         configuration.httpCookieStorage = nil
@@ -81,8 +81,8 @@ struct StudioAPI {
         throw StudioProblem(code: "http_error", message: "The Studio server returned HTTP \(response.statusCode).")
     }
 
-    func get<T: Decodable>(_ path: String) async throws -> T {
-        let (data, response) = try await Self.session.data(for: request(path))
+    func get<T: Decodable>(_ path: String, through session: URLSession = Self.session) async throws -> T {
+        let (data, response) = try await session.data(for: request(path))
         try check(response, data: data)
         return try JSONDecoder().decode(T.self, from: data)
     }
@@ -160,7 +160,7 @@ enum StudioPilotTrust {
     static func isLocal(_ url: URL) -> Bool {
         guard let host = url.host?.lowercased() else { return false }
         if host.hasSuffix(".local") || host == "localhost" { return true }
-        let octets = host.split(".").compactMap { UInt8($0) }
+        let octets = host.split(separator: ".").compactMap { UInt8($0) }
         guard octets.count == 4 else { return false }
         return octets[0] == 127 || octets[0] == 10 || (octets[0] == 192 && octets[1] == 168)
             || (octets[0] == 172 && (16...31).contains(octets[1]))
@@ -304,14 +304,16 @@ final class StudioSession {
             do {
                 if let existing = SessionsKeychain.read(base) {
                     do {
-                        try await open(base: base, token: existing)
+                        try await open(base: base, token: existing, checkingVia: StudioAPI.pairingSession)
                         return
                     } catch let problem as StudioProblem where problem.code == "unauthorized" {
                         SessionsKeychain.delete(base)
                     }
                 }
-                try await open(base: base, token: anonymous.pilotToken(code))
+                try await open(base: base, token: anonymous.pilotToken(code), checkingVia: StudioAPI.pairingSession)
                 return
+            } catch let problem as StudioProblem where problem.code == "http_error" {
+                continue
             } catch let error as URLError where [
                 .cannotFindHost, .cannotConnectToHost, .dnsLookupFailed, .notConnectedToInternet,
                 .timedOut, .networkConnectionLost,
@@ -338,9 +340,14 @@ final class StudioSession {
         try await open(base: base, token: token)
     }
 
-    private func open(base: URL, token: String) async throws {
+    private func open(base: URL, token: String, checkingVia: URLSession? = nil) async throws {
         let session = StudioAPI(base: base, token: token)
-        let status: ModeResponse = try await session.get("/api/director/status")
+        let status: ModeResponse
+        if let checkingVia {
+            status = try await session.get("/api/director/status", through: checkingVia)
+        } else {
+            status = try await session.get("/api/director/status")
+        }
         try SessionsKeychain.save(token, for: base)
         UserDefaults.standard.set(base.absoluteString, forKey: "studioAddress")
         fixture = status.mode == "mock"
