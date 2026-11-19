@@ -40,7 +40,7 @@ export function DeveloperConsole() {
             <h1 className="font-display text-[28px] leading-[34px] font-bold tracking-[-0.04em] text-text-primary uppercase md:text-4xl md:leading-[44px]">
               {dev.title}
             </h1>
-            <p className="text-sm leading-5 text-[#FFFFFF80]">
+            <p className="text-sm leading-5 text-text-secondary">
               {dev.intro}{" "}
               <Link href={routes.mcp} className="text-text-primary underline-offset-2 hover:underline">
                 Connect an agent

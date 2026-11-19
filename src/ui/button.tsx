@@ -3,12 +3,12 @@ import type { ComponentProps } from "react";
 import { cn } from "./cn";
 
 const base =
-  "inline-flex shrink-0 items-center justify-center whitespace-nowrap select-none transition-colors duration-150 disabled:pointer-events-none disabled:opacity-40";
+  "ooo-control inline-flex shrink-0 items-center justify-center whitespace-nowrap select-none transition-colors duration-150 disabled:pointer-events-none disabled:opacity-40";
 
 /** The button looks the designs draw. Hover and pressed states are ours: one step lighter or darker. */
 const variants = {
   /** The lime call to action ("Get started"). */
-  lime: "bg-brand bg-gradient-to-br from-[#2C2C31] to-[#0A0A0C] text-text-inverse hover:from-[#3D3D45] active:bg-brand-pressed",
+  lime: "bg-brand bg-gradient-to-br from-[#2C2C31] to-[#0A0A0C] text-text-inverse shadow-[inset_0_1px_0_#ffffff2e,0_2px_3px_#15121e30] hover:from-[#3D3D45] active:bg-brand-pressed",
   /** Lime text on a lime wash ("Login"). */
   tint: "bg-brand-tint text-brand shadow-inset-soft hover:bg-brand-chip",
   /** The white pill ("Learn now", the banner button). */
@@ -16,7 +16,7 @@ const variants = {
   /** A hairline box ("View", "Filter"). */
   outline: "border border-border-default text-text-primary hover:bg-border-subtle",
   /** The quiet grey used by chips and menu rows. */
-  soft: "bg-border-subtle text-text-primary hover:bg-border-default",
+  soft: "border border-border-subtle bg-surface-tertiary text-text-primary hover:bg-surface-elevated",
   ghost: "text-text-primary hover:bg-border-subtle",
 } as const;
 

@@ -113,7 +113,7 @@ export function HeroCarousel() {
                         <span aria-hidden className="absolute inset-0 rounded-md shadow-[inset_-0.5px_-0.5px_1px_#FFFFFF1F,inset_0.8px_0.5px_0.5px_#1B1B1B2B]" />
                       </span>
                       <span className="flex min-w-0 flex-col">
-                        <span className="truncate font-display text-base leading-6 font-bold tracking-[-0.04em] text-text-soft uppercase">{s.title}</span>
+                        <span className="truncate font-display text-base leading-6 font-bold tracking-[-0.04em] text-text-inverse uppercase">{s.title}</span>
                         <span className="truncate text-sm leading-5 text-text-muted transition-colors duration-150 group-hover/card:text-text-nav">{s.sub}</span>
                       </span>
                     </Link>

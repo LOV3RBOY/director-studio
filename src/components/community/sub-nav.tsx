@@ -11,16 +11,16 @@ export function viewHref(view: CommunityView) {
 }
 
 /**
- * The community bar under the top nav: the wordmark, then the places. 52 high on a near-black
+ * The community bar under the top nav: the wordmark, then the places. 52 high on a
  * strip with a hairline under it, as drawn. `onPick` lets the community page switch views in
  * place instead of reloading.
  */
 export function CommunitySubNav({ active, onPick }: { active?: CommunityView; onPick?: (view: CommunityView) => void }) {
   return (
-    <div className="sticky top-0 z-20 border-b border-border-subtle bg-[#000000F5]">
+    <div className="ooo-toolbar sticky top-0 z-20">
       <div className="flex h-[52px] items-center gap-[87px] px-4 md:pl-8">
         <Link href={routes.community} className="hidden w-[260px] shrink-0 md:block">
-          <span className="text-chrome font-display text-[19px] leading-[17px] font-bold tracking-[0.04em] uppercase">{w.wordmark}</span>
+          <span className="text-text-primary font-display text-[19px] leading-[17px] font-bold tracking-[0.04em] uppercase">{w.wordmark}</span>
         </Link>
         <nav aria-label={w.wordmark} className="scroll-none -mx-4 flex h-full min-w-0 items-center gap-[28px] overflow-x-auto px-4 md:mx-0 md:px-0">
           {communityViews.map((item) => {

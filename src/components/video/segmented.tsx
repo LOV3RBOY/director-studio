@@ -5,7 +5,7 @@ import { cn } from "@/ui";
 
 /** The lit glass pill the design draws under the chosen segment. */
 export const glass =
-  "rounded-md border border-border-subtle bg-[#23262ABF] bg-[linear-gradient(149deg,#FFFFFF0A_22.61%,#FFFFFF0F_51.26%,#FFFFFF05_79.91%)] bg-origin-border [box-shadow:#FFFFFF0D_0px_2px_3px_inset,#0000001F_0px_2px_2px]";
+  "rounded-md border border-border-default bg-surface-secondary shadow-[inset_0_1px_0_#fff,0_2px_4px_#26213618]";
 
 /**
  * A row of two or three choices with one lit. `wide` is the boxed, full-width version from the

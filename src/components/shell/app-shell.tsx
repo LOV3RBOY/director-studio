@@ -15,7 +15,7 @@ import { SiteFooter } from "./site-footer";
  * manage its own scrolling (create pages, where the composer floats over a scrolling grid).
  * Without it the page scrolls as a whole.
  *
- * `nav` picks the bar: "compact" (the default, 36 pixels, on the studios) or "full" (the
+ * `nav` picks the bar: "compact" (the default on the studios) or "full" (the
  * taller bar with the big menus, on the home and marketing pages). `footer` adds the site
  * footer under the page; it has no effect with `fixed`.
  *
@@ -35,7 +35,7 @@ export function AppShell({
   children: ReactNode;
 }) {
   return (
-    <div className={cn("flex flex-col", fixed ? "h-dvh overflow-hidden" : "min-h-dvh")}>
+    <div className={cn("ooo-ground flex flex-col", fixed ? "h-dvh overflow-hidden" : "min-h-dvh")}>
       {nav === "full" ? <FullNav active={active} /> : <CompactNav active={active} />}
       <main className="relative flex min-h-0 flex-1 flex-col">{children}</main>
       {footer && !fixed ? <SiteFooter /> : null}

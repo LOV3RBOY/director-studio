@@ -70,7 +70,7 @@ export function Panel({ title, blurb, action, children }: { title: string; blurb
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
           <h2 className="text-xl leading-6 font-semibold tracking-[-0.02em] text-text-primary">{title}</h2>
-          {blurb ? <p className="text-sm leading-5 text-[#FFFFFF80]">{blurb}</p> : null}
+          {blurb ? <p className="text-sm leading-5 text-text-secondary">{blurb}</p> : null}
         </div>
         {action}
       </div>
@@ -106,7 +106,7 @@ export function Skeleton({ rows = 3, className }: { rows?: number; className?: s
 export function Empty({ text, children }: { text: string; children?: ReactNode }) {
   return (
     <div className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-border-default p-6">
-      <p className="text-sm leading-5 text-[#FFFFFF80]">{text}</p>
+      <p className="text-sm leading-5 text-text-secondary">{text}</p>
       {children}
     </div>
   );
@@ -142,7 +142,7 @@ export function Pill({ children, tone = "neutral" }: { children: ReactNode; tone
     <span
       className={cn(
         "inline-flex h-6 shrink-0 items-center rounded-full px-2 text-xs leading-4 font-medium",
-        tone === "neutral" && "bg-border-subtle text-[#FFFFFFCC]",
+        tone === "neutral" && "bg-border-subtle text-text-secondary",
         tone === "brand" && "bg-brand-tint text-brand",
         tone === "danger" && "bg-[#FF6B6B1F] text-danger",
         tone === "muted" && "bg-border-subtle text-text-tertiary",

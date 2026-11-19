@@ -34,7 +34,7 @@ function Card({ item, onUse }: { item: ShowcaseItem; onUse: (item: ShowcaseItem)
       >
         <div className="relative aspect-[367/215] w-full overflow-clip rounded-lg bg-surface-secondary-strong">
           <Artwork name={`super/showcase-${item.id}`} className="size-full transition-transform duration-300 ease-out-soft group-hover:scale-[1.03]" />
-          <p className="absolute inset-x-0 bottom-0 line-clamp-3 bg-gradient-to-t from-[#000000B3] to-transparent px-3 pt-8 pb-3 text-xs leading-4 text-text-soft opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:hidden">
+          <p className="absolute inset-x-0 bottom-0 line-clamp-3 bg-gradient-to-t from-[#000000B3] to-transparent px-3 pt-8 pb-3 text-xs leading-4 text-text-inverse opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:hidden">
             {item.prompt}
           </p>
         </div>

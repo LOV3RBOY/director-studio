@@ -42,7 +42,7 @@ function Bubble({
   return (
     <span
       className={cn(
-        "relative flex size-9 shrink-0 items-center justify-center rounded-full bg-[#1C1E20] text-text-primary",
+        "relative flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-tertiary text-text-primary",
         className,
       )}
     >
@@ -185,7 +185,7 @@ function Row({
       {...rest}
     >
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="text-xs leading-4 font-medium text-[#FFFFFF99]">
+        <span className="text-xs leading-4 font-medium text-text-secondary">
           {label}
         </span>
         <span className="truncate text-sm leading-5 font-medium text-text-soft">
@@ -453,10 +453,10 @@ export function RemixForm({
     >
       <header className="flex h-[110px] shrink-0 justify-center rounded-t-3xl bg-linear-to-b from-[#FFFFFF0D] to-[#FFFFFF03] pt-2">
         <div className="flex h-[58px] flex-col items-center justify-center gap-1">
-          <p className="text-2xs leading-[14px] tracking-[0.02em] text-[#FFFFFF99]">
+          <p className="text-2xs leading-[14px] tracking-[0.02em] text-text-secondary">
             {copy.kicker}
           </p>
-          <h1 className="text-chrome font-display text-[34px] leading-6 font-bold tracking-[0.02em] uppercase">
+          <h1 className="text-text-primary font-display text-[34px] leading-6 font-bold tracking-[0.02em] uppercase">
             {copy.wordmark}
           </h1>
         </div>

@@ -22,7 +22,7 @@ const MODE_MODELS: readonly string[] = remixModes.map((m) => m.modelId);
 
 /* The lit pill behind the chosen tab, as drawn: grey glass with a faint diagonal sheen. */
 const pill =
-  "border border-border-subtle bg-[#23262ABF] bg-[linear-gradient(149deg,#FFFFFF0A_22.61%,#FFFFFF0F_51.26%,#FFFFFF05_79.91%)] [box-shadow:#FFFFFF0D_0px_2px_3px_inset,#0000001F_0px_2px_2px]";
+  "border border-border-default bg-surface-secondary shadow-pill";
 
 /**
  * The Remix studio: the form on the left, and on the right either sample directions or the

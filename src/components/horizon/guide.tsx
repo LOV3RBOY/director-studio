@@ -16,7 +16,7 @@ const card = "rounded-4xl border border-border-subtle bg-border-subtle";
 /** The Guide: credits, studios and prompt tips, in the Horizon page's visual language. Not drawn. */
 export function GuidePage() {
   return (
-    <div className="flex w-full min-w-0 flex-col items-center bg-black px-4 pb-[120px] desktop:px-0">
+    <div className="flex w-full min-w-0 flex-col items-center bg-page px-4 pb-[120px] desktop:px-0">
       <header className="flex flex-col items-center gap-[6px] pt-16 pb-10 text-center desktop:pt-20">
         <p className="text-xs leading-5 font-medium tracking-[0.0833em] text-text-idle uppercase">{copy.eyebrow}</p>
         <Display as="h1" lines={[copy.title]} className="items-center text-3xl leading-9 desktop:text-[40px] desktop:leading-[48px]" />
@@ -123,7 +123,7 @@ function Balance() {
   const { user, member, balance, loading } = useSession();
   if (loading) return <div aria-hidden className="mt-auto h-12 shimmer rounded-xl bg-border-subtle" />;
   return (
-    <div className="mt-auto flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-subtle bg-black/30 px-4 py-3">
+    <div className="mt-auto flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-default bg-surface-tertiary px-4 py-3">
       {user ? (
         <p className="text-sm leading-5 text-text-tab">
           {c.balanceLabel}: <span className="font-mono font-semibold text-text-primary">{formatCredits(balance)}</span>

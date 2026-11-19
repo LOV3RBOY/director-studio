@@ -72,8 +72,8 @@ export function SearchPage() {
       <h1 className="text-2xl leading-8 font-semibold tracking-[-0.02em] text-text-primary">{c.pageTitle}</h1>
 
       <form role="search" onSubmit={submit} className="flex">
-        <label className="flex h-[52px] min-w-0 flex-1 items-center rounded-4xl bg-[#D9D9D90A] pl-3 transition-colors duration-150 focus-within:bg-[#D9D9D914]">
-          <Search className="size-6 shrink-0 text-[#737475]" strokeWidth={1.5} aria-hidden />
+        <label className="flex h-[52px] min-w-0 flex-1 items-center rounded-4xl bg-surface-tertiary pl-3 transition-colors duration-150 focus-within:bg-surface-elevated">
+          <Search className="size-6 shrink-0 text-text-tertiary" strokeWidth={1.5} aria-hidden />
           <span className="sr-only">{c.title}</span>
           <input
             name="q"
@@ -83,7 +83,7 @@ export function SearchPage() {
             onChange={(e) => setText(e.target.value)}
             placeholder={c.placeholder}
             autoComplete="off"
-            className="h-7 min-w-0 flex-1 bg-transparent px-2 text-lg leading-7 tracking-[-0.01em] text-text-primary outline-none placeholder:text-[#737475]"
+            className="h-7 min-w-0 flex-1 bg-transparent px-2 text-lg leading-7 tracking-[-0.01em] text-text-primary outline-none placeholder:text-text-tertiary"
           />
           <button
             type="submit"
@@ -106,7 +106,7 @@ export function SearchPage() {
               aria-selected={on}
               onClick={() => show(query, t.id, false)}
               className={cn(
-                "inline-flex h-8 shrink-0 items-center gap-1 rounded-full text-sm leading-5 font-medium whitespace-nowrap text-[#FFFFFFCC] transition-colors duration-150",
+                "inline-flex h-8 shrink-0 items-center gap-1 rounded-full text-sm leading-5 font-medium whitespace-nowrap text-text-secondary transition-colors duration-150",
                 on ? "bg-border-default px-[15px] text-text-primary" : "border border-border-default px-[14px] hover:bg-border-subtle",
               )}
             >
@@ -127,7 +127,7 @@ export function SearchPage() {
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-6 rounded-[28px] border border-[#FFFFFF1F] bg-[#23262AB2] p-3" aria-live="polite" aria-busy={isLoading}>
+      <div className="flex flex-col gap-6 ooo-panel p-3" aria-live="polite" aria-busy={isLoading}>
         {!ready || (query && isLoading && !data) ? <RowSkeleton count={5} /> : null}
         {ready && !query ? <p className="px-2 py-8 text-center text-sm leading-5 text-text-secondary">{c.pageEmpty}</p> : null}
         {query && error ? (

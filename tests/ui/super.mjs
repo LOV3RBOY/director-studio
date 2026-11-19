@@ -38,9 +38,9 @@ try {
       if (!(await b.evaluate(`!!document.querySelector('nav[aria-label="Supercomputer"]')`))) throw new Error("no sidebar");
       if (!(await b.evaluate(has("No chats yet")))) throw new Error("no empty chat list");
     }],
-    ["the logo goes home", async () => {
+    ["the logo returns to Studio", async () => {
       const href = await b.evaluate(`[...document.querySelectorAll('a[aria-label="Back to the home page"]')].map((a) => a.getAttribute("href")).join(",")`);
-      if (!href.split(",").includes("/")) throw new Error(`logo links to ${href}`);
+      if (!href.split(",").includes("/studio")) throw new Error(`logo links to ${href}`);
     }],
     ["a pill filters the examples", async () => {
       const before = await b.evaluate(`document.querySelectorAll('button[aria-label^="Use this example"]').length`);

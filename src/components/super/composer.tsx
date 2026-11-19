@@ -43,7 +43,7 @@ function Thumb({ file, onRemove }: { file: Attached; onRemove: () => void }) {
         type="button"
         aria-label={`${copy.composer.remove}: ${file.title}`}
         onClick={onRemove}
-        className="absolute top-[2px] right-[2px] flex size-5 items-center justify-center rounded-full bg-scrim text-text-primary"
+        className="absolute top-[2px] right-[2px] flex size-5 items-center justify-center rounded-full bg-brand text-text-inverse"
       >
         <X className="size-3" strokeWidth={2} aria-hidden />
       </button>
@@ -152,14 +152,14 @@ export function SuperComposer({
   return (
     <div className="flex w-full flex-col">
       <div
-        className="w-full rounded-3xl bg-surface-sunken p-1 backdrop-blur-[40px]"
+        className="ooo-composer w-full"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
           void upload(e.dataTransfer.files);
         }}
       >
-        <div className="flex flex-col gap-3 rounded-2xl bg-surface-secondary px-3 pt-4 pb-3">
+        <div className="flex flex-col gap-2 px-3 pt-4 pb-2 sm:px-4">
           {files.length || uploading ? (
             <ul className="flex gap-2 overflow-x-auto scroll-none" aria-label={copy.composer.attach}>
               {files.map((f) => (
@@ -192,14 +192,14 @@ export function SuperComposer({
             }}
             className="min-h-[45px] w-full resize-none bg-transparent px-0 text-sm leading-5 font-medium text-text-primary caret-brand outline-none scroll-quiet placeholder:text-text-secondary"
           />
-          <div className="flex h-8 items-center justify-between gap-2">
+          <div className="flex min-h-11 items-center justify-between gap-1">
             <div className="flex min-w-0 items-center gap-1">
               <input ref={picker} type="file" multiple accept="image/*,video/*,audio/*" className="hidden" onChange={(e) => void upload(e.target.files).then(() => (e.target.value = ""))} />
               <button
                 type="button"
                 aria-label={copy.composer.attach}
                 onClick={() => picker.current?.click()}
-                className="flex size-8 shrink-0 items-center justify-center rounded-lg text-text-primary backdrop-blur-[40px] transition-colors duration-150 hover:bg-border-subtle"
+                className="ooo-control flex size-11 shrink-0 items-center justify-center rounded-lg text-text-primary backdrop-blur-[40px] transition-colors duration-150 hover:bg-border-subtle"
               >
                 <Plus className="size-4" strokeWidth={1.5} aria-hidden />
               </button>
@@ -215,13 +215,13 @@ export function SuperComposer({
                   <button
                     type="button"
                     aria-label={`${copy.composer.model}: ${modelDef?.name ?? "Auto"}`}
-                    className="flex h-8 min-w-0 items-center gap-[2px] rounded-lg px-2 transition-colors duration-150 hover:bg-border-subtle data-[state=open]:bg-border-subtle"
+                    className="ooo-control flex h-11 min-w-0 items-center gap-[2px] rounded-lg px-2 transition-colors duration-150 hover:bg-border-subtle data-[state=open]:bg-border-subtle"
                   >
                     <span className="flex min-w-0 items-center gap-2">
                       <Cpu className="size-4 shrink-0 text-text-secondary" strokeWidth={1.5} aria-hidden />
                       <span className="truncate text-xs leading-4 font-medium text-text-primary">{modelDef?.name ?? "Auto"}</span>
                       {modelDef ? (
-                        <span className="flex h-5 shrink-0 items-center rounded-full bg-[#D1FE170D] px-[6px] text-xs leading-4 font-medium text-brand" title={copy.tierHint}>
+                        <span className="flex h-5 shrink-0 items-center rounded-full bg-surface-tertiary px-[6px] text-xs leading-4 font-medium text-brand" title={copy.tierHint}>
                           {copy.tiers[modelDef.tier] ?? modelDef.tier}
                         </span>
                       ) : null}
@@ -260,7 +260,7 @@ export function SuperComposer({
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-2 text-sm leading-5 font-medium text-text-primary">
                           {m.name}
-                          <span className="rounded-full bg-[#D1FE170D] px-[6px] text-2xs leading-4 text-brand">{copy.tiers[m.tier] ?? m.tier}</span>
+                          <span className="rounded-full bg-surface-tertiary px-[6px] text-2xs leading-4 text-brand">{copy.tiers[m.tier] ?? m.tier}</span>
                         </span>
                         {m.description ? <span className="block text-xs leading-4 text-text-secondary">{m.description}</span> : null}
                       </span>
@@ -282,7 +282,7 @@ export function SuperComposer({
                   <button
                     type="button"
                     aria-label={`${copy.composer.mode}: ${modeDef.name}`}
-                    className="flex h-8 min-w-0 items-center rounded-lg px-2 text-xs leading-4 font-medium text-text-tab transition-colors duration-150 hover:bg-border-subtle hover:text-text-primary data-[state=open]:bg-border-subtle"
+                    className="ooo-control flex h-11 min-w-0 items-center rounded-lg px-2 text-xs leading-4 font-medium text-text-tab transition-colors duration-150 hover:bg-border-subtle hover:text-text-primary data-[state=open]:bg-border-subtle"
                   >
                     {modeId === "ask" ? (
                       <Hand className="mr-[6px] size-4 shrink-0" strokeWidth={1.5} aria-hidden />
@@ -329,7 +329,7 @@ export function SuperComposer({
                   type="button"
                   aria-label={copy.composer.stop}
                   onClick={onStop}
-                  className="flex size-8 items-center justify-center rounded-md bg-text-primary text-text-inverse transition-colors duration-150 hover:bg-text-soft"
+                  className="ooo-control flex size-11 items-center justify-center rounded-xl bg-brand text-text-inverse hover:bg-brand-pressed"
                 >
                   <Square className="size-3 fill-current" strokeWidth={1.5} aria-hidden />
                 </button>
@@ -340,7 +340,7 @@ export function SuperComposer({
                 onClick={() => void send()}
                 aria-disabled={!canSend}
                 className={cn(
-                  "relative flex size-8 items-center justify-center rounded-md bg-brand text-ink transition-colors duration-150 [box-shadow:#FFFFFF99_0px_1px_1px_inset,#00000040_0px_-1px_0px_inset] hover:bg-brand-glow",
+                  "relative ooo-control flex size-11 items-center justify-center rounded-xl bg-brand text-ink transition-colors duration-150 [box-shadow:#FFFFFF99_0px_1px_1px_inset,#00000040_0px_-1px_0px_inset] hover:bg-brand-glow",
                   !canSend && "cursor-default",
                 )}
                 style={{ backgroundImage: "linear-gradient(in oklab 180deg, #00000000 50%, #0000001A 100%)" }}

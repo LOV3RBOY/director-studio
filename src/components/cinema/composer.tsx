@@ -324,7 +324,7 @@ function Toolbar() {
         </button>
         <span className="flex w-8 justify-center text-sm leading-5 font-semibold text-text-primary">
           {count}
-          <span className="text-[#FFFFFF99]">/{MAX_BATCH}</span>
+          <span className="text-text-secondary">/{MAX_BATCH}</span>
         </span>
         <button type="button" aria-label={c.more} disabled={count >= MAX_BATCH} onClick={() => setCount(count + 1)} className="flex size-4 items-center justify-center text-text-primary disabled:opacity-40">
           <Plus className="size-4" strokeWidth={1.5} aria-hidden />
@@ -372,7 +372,7 @@ function ModeSwitch() {
     <div
       role="radiogroup"
       aria-label={c.modeLabel}
-      className="flex h-[60px] w-full shrink-0 items-center justify-center rounded-4xl bg-[#1C1E20] p-1 [box-shadow:#00000029_0px_4px_6px,#00000014_0px_4px_16px] sm:h-[116px] sm:w-[72px]"
+      className="flex h-[60px] w-full shrink-0 items-center justify-center rounded-4xl bg-surface-tertiary p-1 [box-shadow:#00000029_0px_4px_6px,#00000014_0px_4px_16px] sm:h-[116px] sm:w-[72px]"
     >
       <div className="relative flex size-full gap-1 sm:h-[108px] sm:w-16 sm:flex-col">
         {(["image", "video"] as const).map((o) => (
@@ -422,7 +422,7 @@ export function CinemaComposer() {
   return (
     <div className="flex w-full max-w-[876px] flex-col items-stretch gap-1 sm:flex-row sm:items-end">
       <ModeSwitch />
-      <div className="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-4xl bg-[#1C1E20] p-1">
+      <div className="flex min-w-0 flex-1 flex-col items-center gap-1 rounded-4xl bg-surface-tertiary p-1">
         <ParamCards />
         <div className="flex w-full flex-col gap-3 rounded-3xl bg-border-subtle p-3 sm:flex-row sm:items-end">
           <div className="flex min-w-0 flex-1 flex-col gap-1">

@@ -13,7 +13,7 @@ import { MenuItem, MenuLabel, Popover, PopoverContent, PopoverTrigger } from "@/
 export function SiteFooter() {
   return (
     <footer className="flex min-h-[68px] shrink-0 flex-col items-start justify-center gap-3 bg-page px-6 py-6 min-[900px]:flex-row min-[900px]:items-center min-[900px]:justify-between min-[900px]:py-0">
-      <p className="flex flex-wrap items-center text-sm leading-5 text-[#FFFFFF99]">
+      <p className="flex flex-wrap items-center text-sm leading-5 text-text-secondary">
         <span>{footerWords.legal}</span>
         <span>&nbsp;{footerWords.rights}</span>
       </p>

@@ -17,7 +17,7 @@ export function CountChip({ studio }: { studio: Studio }) {
       </button>
       <span aria-live="polite" aria-label={`${count} of ${maxCount}`} className="flex h-4 w-9 items-center justify-center text-sm leading-4 font-semibold text-text-primary tabular-nums">
         {count}
-        <span className="text-[#FFFFFF99]">/{maxCount}</span>
+        <span className="text-text-secondary">/{maxCount}</span>
       </span>
       <button type="button" aria-label="One more" disabled={count >= maxCount} onClick={() => studio.setCount(count + 1)} className={`${step} justify-start rounded-r-md pl-[2px]`}>
         <Plus className="size-4" strokeWidth={1.5} aria-hidden />

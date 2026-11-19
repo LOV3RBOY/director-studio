@@ -20,7 +20,7 @@ function PanelLink({ link, active, onDone }: { link: NavLink; active: boolean; o
       aria-current={active ? "page" : undefined}
       className={cn(
         "flex h-10 shrink-0 items-center gap-[6px] rounded-lg px-3 text-sm leading-5 font-medium transition-colors duration-150 hover:bg-border-subtle",
-        active ? "text-brand" : link.chrome ? "text-chrome" : "text-text-primary",
+        active ? "text-brand" : link.chrome ? "text-text-secondary" : "text-text-primary",
       )}
     >
       <NavTagged link={link} />
@@ -37,7 +37,7 @@ function Heading({ children }: { children: string }) {
  * sign-in buttons for a visitor or the account rows for a member. Not drawn in the design; it is
  * built from the nav's own parts.
  */
-export function MobileMenu({ active, onAsk, size }: { active?: NavId; onAsk: (mode: "login" | "join") => void; size: 24 | 32 }) {
+export function MobileMenu({ active, onAsk, size }: { active?: NavId; onAsk: (mode: "login" | "join") => void; size: 24 | 32 | 44 }) {
   const [open, setOpen] = useState(false);
   const { member } = useSession();
   const done = () => setOpen(false);
@@ -51,7 +51,7 @@ export function MobileMenu({ active, onAsk, size }: { active?: NavId; onAsk: (mo
         aria-label={navWords.openMenu}
         className={cn(
           "flex shrink-0 items-center justify-center text-text-primary transition-colors duration-150 hover:bg-border-default min-[900px]:hidden",
-          size === 32 ? "size-8 rounded-lg bg-border-subtle [box-shadow:#FFFFFF0D_0px_1.5px_3px_inset]" : "size-6 rounded-md hover:bg-border-subtle",
+          size === 44 ? "ooo-control size-11 rounded-xl border border-border-default bg-surface-secondary" : size === 32 ? "size-8 rounded-lg bg-border-subtle" : "size-6 rounded-md hover:bg-border-subtle",
         )}
       >
         <Menu className="size-4" strokeWidth={1.5} aria-hidden />
@@ -60,7 +60,7 @@ export function MobileMenu({ active, onAsk, size }: { active?: NavId; onAsk: (mo
         <D.Overlay className="fixed inset-0 z-50 animate-fade-in bg-scrim" />
         <D.Content
           aria-describedby={undefined}
-          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[380px] animate-fade-in flex-col overflow-y-auto border-l border-border-subtle bg-surface-menu p-3 text-text-primary outline-none scroll-quiet"
+          className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[380px] animate-fade-in flex-col overflow-y-auto border-l border-border-default bg-surface-menu p-3 shadow-menu text-text-primary outline-none scroll-quiet"
         >
           <div className="flex h-10 shrink-0 items-center justify-between pl-3">
             <D.Title className="flex items-center">
@@ -69,7 +69,7 @@ export function MobileMenu({ active, onAsk, size }: { active?: NavId; onAsk: (mo
             </D.Title>
             <D.Close
               aria-label={navWords.closeMenu}
-              className="flex size-8 items-center justify-center rounded-full bg-border-subtle text-text-secondary transition-colors duration-150 hover:bg-border-default hover:text-text-primary"
+              className="flex size-11 items-center justify-center rounded-full bg-border-subtle text-text-secondary transition-colors duration-150 hover:bg-border-default hover:text-text-primary"
             >
               <X className="size-4" strokeWidth={1.5} aria-hidden />
             </D.Close>

@@ -122,7 +122,7 @@ export function ModelPicker({ studio }: { studio: Studio }) {
       >
         <span aria-hidden className="pointer-events-none absolute top-0 left-0 h-[37px] w-full rounded-[317px] bg-[#8BD5F43D] blur-[50px]" />
         <span aria-hidden className="pointer-events-none absolute top-[379px] left-0 h-[37px] w-full rounded-[317px] bg-[#8BD5F43D] blur-[50px]" />
-        <label className="relative flex h-[42px] shrink-0 items-center gap-2 border-b border-[#D9D9D90A] px-3 text-[#F7F7F880]">
+        <label className="relative flex h-[42px] shrink-0 items-center gap-2 border-b border-border-default px-3 text-text-tertiary">
           <span className="flex size-6 shrink-0 items-center justify-center">
             <Search className="size-5" strokeWidth={1.5} aria-hidden />
           </span>
@@ -142,7 +142,7 @@ export function ModelPicker({ studio }: { studio: Studio }) {
             aria-label="Search models"
             autoComplete="off"
             spellCheck={false}
-            className="h-full min-w-0 flex-1 bg-transparent text-sm leading-5 text-text-primary outline-none placeholder:text-[#F7F7F880]"
+            className="h-full min-w-0 flex-1 bg-transparent text-sm leading-5 text-text-primary outline-none placeholder:text-text-tertiary"
           />
         </label>
         <div role="listbox" aria-label="Models" onKeyDown={onListKey} className="scroll-quiet relative min-h-0 flex-1 overflow-y-auto px-3 pb-3">

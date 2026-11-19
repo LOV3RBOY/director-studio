@@ -68,7 +68,7 @@ function UserMessage({ body }: { body: B }) {
           </div>
         ) : null}
         {str(body.text) ? (
-          <p className="rounded-2xl rounded-br-md bg-surface-secondary-strong px-4 py-[10px] text-sm leading-5 whitespace-pre-wrap text-text-primary [overflow-wrap:anywhere]">{str(body.text)}</p>
+          <p className="ooo-user-note rounded-2xl rounded-br-md px-4 py-3 text-sm leading-6 whitespace-pre-wrap [overflow-wrap:anywhere]">{str(body.text)}</p>
         ) : null}
       </div>
     </div>
@@ -78,11 +78,11 @@ function UserMessage({ body }: { body: B }) {
 function AssistantMessage({ body }: { body: B }) {
   const streaming = body.streaming === true;
   return (
-    <div className="flex gap-3">
-      <span aria-hidden className="mt-[2px] flex size-6 shrink-0 items-center justify-center rounded-md bg-brand-tint text-brand">
+    <div data-assistant-reply className="flex items-start gap-2.5 sm:gap-3">
+      <span aria-hidden className="ooo-icon-tile !size-8 !rounded-lg text-brand">
         <Sparkles className="size-[14px]" strokeWidth={1.5} />
       </span>
-      <p className="min-w-0 flex-1 pt-[2px] text-sm leading-6 whitespace-pre-wrap text-text-soft [overflow-wrap:anywhere]" aria-busy={streaming}>
+      <p className="ooo-panel ooo-reply min-w-0 max-w-[68ch] px-3.5 py-2.5 text-sm leading-6 whitespace-pre-wrap text-text-primary sm:px-4 [overflow-wrap:anywhere]" aria-busy={streaming}>
         {str(body.text)}
         {streaming ? <span aria-hidden className="ml-[2px] inline-block h-4 w-[2px] translate-y-[3px] animate-pulse bg-brand" /> : null}
       </p>

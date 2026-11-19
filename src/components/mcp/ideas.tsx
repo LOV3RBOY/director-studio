@@ -97,7 +97,7 @@ function IdeaCard({ idea }: { idea: (typeof ideas)[number] }) {
 
 function Pill({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
   return (
-    <span className="inline-flex h-6 items-center gap-[6px] rounded-full bg-border-subtle px-2 text-xs leading-4 font-medium text-[#FFFFFF80]">
+    <span className="inline-flex h-6 items-center gap-[6px] rounded-full bg-border-subtle px-2 text-xs leading-4 font-medium text-text-secondary">
       <Icon className="size-4" strokeWidth={1.5} aria-hidden />
       {children}
     </span>

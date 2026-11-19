@@ -54,7 +54,7 @@ function KeyStep() {
   const href = member || loading ? routes.developer : `${routes.join}?next=${encodeURIComponent(routes.developer)}`;
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm leading-5 text-[#FFFFFF80]">{connect.step1Body}</p>
+      <p className="text-sm leading-5 text-text-secondary">{connect.step1Body}</p>
       <ButtonLink href={href} variant="white" size="sm" className="self-start">
         <KeyRound className="size-4" strokeWidth={1.5} aria-hidden />
         {member || loading ? connect.step1Cta : "Create a free account"}
@@ -71,7 +71,7 @@ export function ConnectBody({ client, onClient }: { client: ClientId; onClient: 
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <ClientPicker value={client} onChange={onClient} />
-      <p className="text-sm leading-5 text-[#FFFFFF80]">{blurb}</p>
+      <p className="text-sm leading-5 text-text-secondary">{blurb}</p>
       <div className="flex min-w-0 flex-col gap-2">
         <Row label={connect.urlLabel} value={url} />
         <Row label={connect.headerLabel} value={`Authorization: Bearer ${connect.keyPlaceholder}`} />
@@ -107,7 +107,7 @@ export function ConnectSection({ client, onClient }: { client: ClientId; onClien
           </Step>
           <ul className="flex flex-col gap-2 border-t border-border-subtle pt-6">
             {connect.notes.map((n) => (
-              <li key={n} className="text-sm leading-5 text-[#FFFFFF80]">
+              <li key={n} className="text-sm leading-5 text-text-secondary">
                 {n}
               </li>
             ))}

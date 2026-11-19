@@ -25,7 +25,7 @@ interface News {
 }
 
 const KEY = "/api/notifications/whats-new";
-const panel = "rounded-[28px] border border-[#FFFFFF1F] bg-[#23262AB2]";
+const panel = "ooo-panel";
 const day = new Intl.DateTimeFormat("en", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
 
 /** /whats-new: release notes, newest first, with "mark all seen" for a signed-in member. */

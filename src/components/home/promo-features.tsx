@@ -42,7 +42,7 @@ function Countdown({ endsAt }: { endsAt: number }) {
       >
         {promoCard.timerLabel}
       </span>
-      <span className="flex items-center gap-1 font-mono text-xs leading-4 font-semibold text-text-primary tabular-nums" aria-hidden>
+      <span className="flex items-center gap-1 font-mono text-xs leading-4 font-semibold text-text-inverse tabular-nums" aria-hidden>
         <span>
           {h}
           <span className="text-[#FFFFFF66]">h</span>
@@ -89,7 +89,7 @@ function PromoCard() {
         <div className="relative flex flex-1 flex-col">
           {live ? <Countdown endsAt={endsAt} /> : <div className="h-[22px]" />}
           <h2 className="mt-5 flex flex-col font-display text-2xl leading-7 font-bold tracking-[-0.04em] uppercase sm:text-3xl sm:leading-8">
-            <span className="flex items-center gap-[6px] text-text-primary">
+            <span className="flex items-center gap-[6px] text-text-inverse">
               {words.one}
               <span
                 aria-hidden
@@ -99,9 +99,9 @@ function PromoCard() {
                 <LogoMark size={18} className="text-text-primary" />
               </span>
             </span>
-            <span className="text-promo">{words.two}</span>
+            <span className="text-[#ffabcb]">{words.two}</span>
           </h2>
-          <p className="mt-3 max-w-[480px] text-sm leading-5 text-[#DF99C5]">{words.body}</p>
+          <p className="mt-3 max-w-[480px] text-sm leading-5 text-text-inverse">{words.body}</p>
           <div className="mt-auto pt-5">
             <Link href={words.href} className={LIME_BUTTON}>
               {words.cta}
@@ -134,7 +134,7 @@ function FeatureCard({ tile }: { tile: FeatureTile }) {
               <span
                 className={cn(
                   "flex h-[18px] shrink-0 items-center rounded-xs px-[7px] font-display text-xs leading-[18px] font-bold uppercase",
-                  tile.tag.tone === "brand" ? "bg-brand text-ink" : "bg-[#5E6369] text-text-primary",
+                  tile.tag.tone === "brand" ? "bg-brand text-ink" : "bg-brand text-text-inverse",
                 )}
               >
                 {tile.tag.label}

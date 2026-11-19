@@ -144,7 +144,7 @@ export function AudioForm({ surface, onSurface, studios }: { surface: AudioSurfa
               tabIndex={on ? 0 : -1}
               className={cn(
                 "flex h-9 shrink-0 items-start border-b-2 text-sm leading-5 font-medium transition-colors duration-150",
-                on ? "border-text-primary text-text-primary" : "border-transparent text-[#FFFFFF99] hover:text-text-primary",
+                on ? "border-text-primary text-text-primary" : "border-transparent text-text-secondary hover:text-text-primary",
               )}
             >
               {tab.label}

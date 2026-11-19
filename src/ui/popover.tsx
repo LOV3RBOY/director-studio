@@ -13,12 +13,12 @@ export const PopoverClose = P.Close;
 /**
  * The two floating panels the designs draw.
  *  - `glass`: the small option menu (aspect ratio, quality). 12px corners, blurred grey glass.
- *  - `panel`: the large picker (models, search). 16px corners, near-black glass.
+ *  - `panel`: the large picker (models, search). 16px corners, light glass.
  */
 const looks = {
   glass:
-    "rounded-xl bg-surface-glass p-2 [box-shadow:#FFFFFF0D_0px_0px_0px_1px,#0000004C_0px_20px_25px_-5px,#0000004C_0px_8px_10px_-6px] backdrop-blur-[40px]",
-  panel: "rounded-2xl border border-[#D9D9D90A] bg-[#1C1E20F2] shadow-menu backdrop-blur-[32px]",
+    "rounded-xl bg-surface-glass p-2 border border-border-default shadow-menu backdrop-blur-[40px]",
+  panel: "rounded-2xl border border-border-default bg-surface-menu shadow-menu backdrop-blur-[32px]",
 } as const;
 
 export function PopoverContent({

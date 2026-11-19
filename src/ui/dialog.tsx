@@ -26,7 +26,7 @@ export function DialogContent({
       <D.Overlay className="fixed inset-0 z-50 animate-fade-in bg-scrim" />
       <D.Content
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-32px)] w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 animate-fade-in overflow-y-auto rounded-3xl bg-surface-secondary text-text-primary shadow-menu outline-none scroll-quiet",
+          "fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-32px)] w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 animate-fade-in overflow-y-auto rounded-3xl border border-border-default bg-surface-menu text-text-primary shadow-menu outline-none scroll-quiet",
           className,
         )}
         {...rest}
@@ -36,7 +36,7 @@ export function DialogContent({
         {closeButton ? (
           <D.Close
             aria-label="Close"
-            className="absolute top-4 right-4 flex size-8 items-center justify-center rounded-full bg-border-subtle text-text-secondary transition-colors duration-150 hover:bg-border-default hover:text-text-primary"
+            className="absolute top-4 right-4 flex size-10 items-center justify-center rounded-full bg-border-subtle text-text-secondary transition-colors duration-150 hover:bg-border-default hover:text-text-primary"
           >
             <X className="size-4" strokeWidth={1.5} aria-hidden />
           </D.Close>

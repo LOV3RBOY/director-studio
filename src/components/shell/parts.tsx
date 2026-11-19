@@ -19,7 +19,7 @@ export const plateIcon = cn("flex size-8 shrink-0 items-center justify-center", 
 export function navTextClass({ active, open, chrome }: { active?: boolean; open?: boolean; chrome?: boolean }) {
   if (open) return "bg-border-subtle text-text-primary";
   if (active) return "text-brand";
-  if (chrome) return "text-chrome hover:opacity-80";
+  if (chrome) return "text-text-secondary hover:opacity-80";
   return "text-text-nav hover:text-text-primary";
 }
 

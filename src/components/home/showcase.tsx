@@ -78,7 +78,7 @@ export function McpShowcase() {
           </Link>
           <Link
             href={mcpShowcase.secondary.href}
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-border-default bg-border-subtle px-4 text-sm leading-4 font-semibold text-text-primary shadow-[inset_0_2px_3px_#FFFFFF0D] backdrop-blur-[12px] transition-colors duration-150 hover:bg-border-default"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-border-default bg-surface-menu px-4 text-sm leading-4 font-semibold text-text-primary shadow-[inset_0_2px_3px_#FFFFFF0D] backdrop-blur-[12px] transition-colors duration-150 hover:bg-border-default"
           >
             {mcpShowcase.secondary.label}
           </Link>
@@ -193,7 +193,7 @@ export function ContestBanner() {
       </div>
       <div className="relative flex w-full max-w-[447px] flex-col items-center gap-6 text-center">
         <div className="flex flex-col items-center gap-3">
-          <p className="font-display text-sm leading-5 font-bold tracking-[0.16em] text-text-nav uppercase">
+          <p className="font-display text-sm leading-5 font-bold tracking-[0.16em] text-text-inverse uppercase">
             {contestBanner.eyebrow}
           </p>
           <h2
@@ -206,18 +206,18 @@ export function ContestBanner() {
           >
             {contest.title}
           </h2>
-          <p className="max-w-[344px] text-xs leading-[18px] font-medium text-text-primary">
+          <p className="max-w-[344px] text-xs leading-[18px] font-medium text-text-inverse">
             {contest.summary}
           </p>
-          <dl className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs leading-[18px] text-text-muted">
+          <dl className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs leading-[18px] text-text-inverse">
             <div className="flex gap-1">
               <dt>{contestBanner.prize}:</dt>
-              <dd className="text-text-primary">{contest.prize}</dd>
+              <dd className="text-text-inverse">{contest.prize}</dd>
             </div>
             {closes !== null && (
               <div className="flex gap-1">
                 <dt>{contestBanner.closesIn}</dt>
-                <dd className="font-mono text-text-primary tabular-nums">
+                <dd className="font-mono text-text-inverse tabular-nums">
                   {left(closes)}
                 </dd>
               </div>

@@ -264,7 +264,7 @@ export function AdsStudio() {
   const done = current?.item.status === "succeeded" ? current.item.assets[0] : undefined;
 
   return (
-    <div className="flex min-h-0 flex-1 bg-[#0A0A0A]">
+    <div className="flex min-h-0 flex-1 bg-surface-sunken">
       {!collapsed ? (
         <aside className="hidden w-[244px] shrink-0 pr-1 md:flex">
           <SidebarBody {...sidebarProps} onCollapse={() => setCollapsed(true)} />

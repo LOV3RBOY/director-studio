@@ -152,7 +152,7 @@ export function VideoDetail({
         </div>
         <div className="flex w-full shrink-0 flex-col gap-4 p-6 pt-14 lg:w-[320px]">
           <div className="flex flex-col gap-1">
-            <p className="text-xs leading-4 font-medium text-[#FFFFFF99]">
+            <p className="text-xs leading-4 font-medium text-text-secondary">
               {t.prompt}
             </p>
             <p className="scroll-quiet max-h-[160px] overflow-y-auto text-sm leading-5 text-text-soft">
@@ -172,7 +172,7 @@ export function VideoDetail({
                   k === t.detail.created && "col-span-2",
                 )}
               >
-                <dt className="text-xs leading-4 font-medium text-[#FFFFFF99]">
+                <dt className="text-xs leading-4 font-medium text-text-secondary">
                   {k}
                 </dt>
                 <dd className="truncate text-sm leading-5 font-medium text-text-soft">

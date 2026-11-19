@@ -174,7 +174,7 @@ export function AccountMenu({ size }: { size: 24 | 32 }) {
   const name = member.name || member.handle || member.email || "";
   return (
     <P.Root open={open} onOpenChange={setOpen}>
-      <P.Trigger aria-label={navWords.account} className={cn("shrink-0 rounded-full", open && "ring-2 ring-brand")}>
+      <P.Trigger aria-label={navWords.account} className={cn("ooo-control grid size-11 shrink-0 place-items-center rounded-full hover:bg-surface-elevated", open && "bg-surface-elevated")}>
         <Avatar name={name} url={member.avatarUrl} size={size} />
       </P.Trigger>
       <P.Portal>
@@ -183,7 +183,7 @@ export function AccountMenu({ size }: { size: 24 | 32 }) {
           sideOffset={8}
           collisionPadding={8}
           aria-label={navWords.account}
-          className="z-50 flex max-h-[calc(100dvh-64px)] w-[290px] animate-rise-in flex-col overflow-y-auto rounded-3xl border border-[#FFFFFF14] bg-[#1C1E20F2] p-[6px] text-text-primary outline-none [box-shadow:#00000066_0px_16px_40px] backdrop-blur-[32px] scroll-quiet"
+          className="z-50 flex max-h-[calc(100dvh-64px)] w-[290px] animate-rise-in flex-col overflow-y-auto rounded-3xl border border-border-default bg-surface-menu p-[6px] text-text-primary outline-none shadow-menu backdrop-blur-[32px] scroll-quiet"
         >
           <AccountPanel onDone={() => setOpen(false)} />
         </P.Content>

@@ -58,7 +58,7 @@ export function ScriptBox({ studio, label, hint, info, onSubmit }: { studio: Stu
         className="scroll-quiet h-[110px] w-full resize-none bg-transparent pb-4 text-xs leading-[18px] text-text-primary outline-none placeholder:text-text-muted"
       />
       {max > 0 ? (
-        <span aria-live="polite" className={cn("absolute right-[13px] bottom-[6px] text-2xs leading-[14px] font-medium tabular-nums", over ? "text-danger" : "text-[#FFFFFF66]")}>
+        <span aria-live="polite" className={cn("absolute right-[13px] bottom-[6px] text-2xs leading-[14px] font-medium tabular-nums", over ? "text-danger" : "text-text-secondary")}>
           {length.toLocaleString("en-US")} / {max.toLocaleString("en-US")}
         </span>
       ) : null}
@@ -251,7 +251,7 @@ function TextBlock({ control, studio }: { control: Text; studio: Studio }) {
         onChange={(e) => studio.setValue(control.id, e.target.value)}
         className="scroll-quiet absolute top-9 left-3 h-[52px] w-[calc(100%-24px)] resize-none bg-transparent pr-1 text-xs leading-[18px] text-text-primary outline-none placeholder:text-text-muted"
       />
-      <span className="absolute right-[13px] bottom-[13px] text-2xs leading-[14px] font-medium text-[#FFFFFF66] tabular-nums">
+      <span className="absolute right-[13px] bottom-[13px] text-2xs leading-[14px] font-medium text-text-secondary tabular-nums">
         {value.length} / {control.maxLength}
       </span>
     </div>

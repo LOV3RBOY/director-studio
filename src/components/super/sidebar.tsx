@@ -67,7 +67,7 @@ function EmptyStack() {
       <div className="absolute top-1 left-[22px] h-[72px] w-[70px] rotate-6 rounded-xl bg-surface-secondary-strong" />
       <div className="absolute top-0 left-[18px] h-[72px] w-[70px] rounded-xl bg-surface-tertiary" />
       <div className="absolute top-[6px] left-[24px] h-[72px] w-[70px] rounded-xl border border-border-subtle bg-surface-secondary-strong" />
-      <div className="absolute bottom-[4px] left-[8px] flex size-[26px] items-center justify-center rounded-full bg-[#6B6D70] text-text-primary">
+      <div className="absolute bottom-[4px] left-[8px] flex size-[26px] items-center justify-center rounded-full bg-brand text-text-inverse">
         <Plus className="size-4" strokeWidth={2} />
       </div>
     </div>
@@ -372,7 +372,7 @@ export function Sidebar({
           >
             <span className="flex h-5 w-[113px] items-center gap-1">
               <LogoMark size={20} />
-              <span className="text-xs leading-5 font-medium text-[#FFFFFFCC]">{superName}</span>
+              <span className="text-xs leading-5 font-medium text-text-secondary">{superName}</span>
             </span>
             <ChevronsUpDown className="size-[10px] text-text-secondary" strokeWidth={2} aria-hidden />
           </Link>
@@ -452,12 +452,12 @@ export function Sidebar({
           href={routes.pricing}
           className="flex h-8 w-[206px] items-center justify-between rounded-full bg-[#FF005B1A] pr-[7px] pl-3 transition-colors duration-150 hover:bg-[#FF005B33]"
         >
-          <span className="flex items-center gap-2 text-sm leading-5 font-medium text-promo">
+          <span className="flex items-center gap-2 text-sm leading-5 font-medium text-promo-ink">
             <TagIcon className="size-4" strokeWidth={1.5} aria-hidden />
             {copy.nav.pricing}
           </span>
           {pricingBadge ? (
-            <span className="flex h-[18px] items-center rounded-full bg-promo px-[6px] text-2xs leading-[14px] font-medium text-text-primary">{pricingBadge}</span>
+            <span className="flex h-[18px] items-center rounded-full bg-promo-ink px-[6px] text-2xs leading-[14px] font-medium text-text-inverse">{pricingBadge}</span>
           ) : null}
         </Link>
         <div className="flex h-9 w-[206px] items-center rounded-md">

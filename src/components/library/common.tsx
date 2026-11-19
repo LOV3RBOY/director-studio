@@ -7,7 +7,7 @@ import { Button, cn, Dialog, DialogContent } from "@/ui";
 import { formatDuration, type Asset } from "./data";
 
 /** The design's hairline panels. */
-export const PANEL = "rounded-2xl border border-[#1F2022] bg-surface-primary";
+export const PANEL = "ooo-panel";
 /** The toolbar's 32-pixel outline boxes (Search, Filter, View). */
 export const BOX =
   "flex h-8 shrink-0 items-center gap-[6px] rounded-md border border-[#2B2C2E] px-2 text-sm leading-5 font-medium text-text-primary transition-colors duration-150 hover:bg-border-subtle data-[state=open]:bg-border-subtle";

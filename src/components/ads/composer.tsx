@@ -199,7 +199,7 @@ export function AdsComposer({ s, textRef }: { s: ComposerState; textRef: RefObje
   return (
     <div className="flex w-full max-w-[672px] rounded-3xl bg-border-default p-1 [box-shadow:#00000029_0px_4px_4px,#00000014_0px_4px_12px]">
       <form
-        className="flex min-w-0 flex-1 flex-col gap-2 rounded-2xl bg-[#0000004C] p-2"
+        className="flex min-w-0 flex-1 flex-col gap-2 ooo-panel p-2"
         onSubmit={(e) => {
           e.preventDefault();
           s.onGenerate();

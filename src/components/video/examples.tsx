@@ -47,11 +47,11 @@ function Tile({
         aria-hidden
         className="absolute inset-0 rounded-2xl [box-shadow:#FFFFFF1A_0px_-8px_36px_inset]"
       />
-      <span className="absolute inset-x-3 bottom-3 flex flex-col gap-2">
-        <span className="line-clamp-2 text-sm leading-5 font-medium text-[#FFFFFFE5]">
+      <span className="absolute inset-x-2 bottom-2 flex flex-col gap-2 rounded-lg bg-[#111116E8] p-2">
+        <span className="line-clamp-2 text-sm leading-5 font-medium text-text-inverse">
           {example.prompt}
         </span>
-        <span className="flex h-7 items-center gap-1 self-start rounded-md bg-[#00000080] px-2 text-xs leading-4 font-medium text-text-primary opacity-0 backdrop-blur-sm transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:opacity-100">
+        <span className="flex h-7 items-center gap-1 self-start rounded-md bg-black/75 px-2 text-xs leading-4 font-medium text-text-inverse opacity-0 backdrop-blur-sm transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:opacity-100">
           {t.useExample}
           <ArrowUpRight className="size-[14px]" strokeWidth={1.5} aria-hidden />
         </span>

@@ -30,7 +30,7 @@ function Knob({ size, face, className, children, ...rest }: { size: 34 | 38 | 44
       <span
         className={cn(
           "mt-[2px] flex items-center justify-center rounded-full",
-          face === "grey" ? "size-[25px] bg-[linear-gradient(180deg,#3A3D42_0%,#202226_100%)] text-text-secondary" : "size-[calc(100%-3px)] bg-[linear-gradient(180deg,#1E2023_0%,#050505_100%)] text-text-primary",
+          face === "grey" ? "size-[25px] bg-[linear-gradient(180deg,#3A3D42_0%,#202226_100%)] text-text-inverse" : "size-[calc(100%-3px)] bg-[linear-gradient(180deg,#1E2023_0%,#050505_100%)] text-text-primary",
         )}
       >
         {children}
@@ -62,9 +62,9 @@ function Screen({ shown, muted }: { shown: Shown | null; muted: boolean }) {
     return (
       <>
         <Artwork name="ads/screen" className="absolute inset-0 size-full" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[#00000059] px-6 text-center">
-          <p className="font-display text-base leading-5 font-bold tracking-[-0.04em] text-text-primary uppercase">{ads.player.idle}</p>
-          <p className="max-w-[300px] text-xs leading-4 text-text-tab">{ads.player.idleHint}</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/75 px-6 text-center">
+          <p className="font-display text-base leading-5 font-bold tracking-[-0.04em] text-text-inverse uppercase">{ads.player.idle}</p>
+          <p className="max-w-[300px] text-xs leading-4 text-text-inverse">{ads.player.idleHint}</p>
         </div>
       </>
     );
@@ -173,7 +173,7 @@ export function Player({
       <div className="relative aspect-[423/238] w-full overflow-clip bg-surface-sunken sm:absolute sm:top-[9.33%] sm:left-[18.6%] sm:w-[62.95%]" data-testid="ads-screen">
         <Screen shown={shown} muted={muted} />
         {shown && many ? (
-          <span className="absolute top-2 left-2 rounded-md bg-[#00000080] px-2 py-[2px] text-2xs leading-4 font-medium text-text-primary backdrop-blur-sm">
+          <span className="absolute top-2 left-2 rounded-md bg-black/75 px-2 py-[2px] text-2xs leading-4 font-medium text-text-inverse backdrop-blur-sm">
             {ads.player.of(index + 1, list.length)} · {shown.formatName}
           </span>
         ) : null}
@@ -184,7 +184,7 @@ export function Player({
             aria-label={shown.item.winner ? ads.player.unwin : ads.player.win}
             title={shown.item.winner ? ads.player.unwin : ads.player.win}
             onClick={() => onWinner(shown.item)}
-            className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-md bg-[#00000080] text-text-primary backdrop-blur-sm transition-colors duration-150 hover:bg-[#000000B3]"
+            className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-md bg-black/75 text-text-inverse backdrop-blur-sm transition-colors duration-150 hover:bg-[#000000B3]"
           >
             <Star className={cn("size-4", shown.item.winner && "fill-brand text-brand")} strokeWidth={1.5} aria-hidden />
           </button>

@@ -162,7 +162,7 @@ export function SuperChat({ id }: { id: string }) {
   return (
     <SuperShell active="chat" activeChat={id}>
       {/* The title sits in the corner row, centred. */}
-      <div className="pointer-events-none absolute top-5 right-20 left-24 z-30 flex h-8 items-center justify-center gap-2 lg:left-28">
+      <div className="pointer-events-none absolute top-0 right-20 left-25 z-30 flex h-[62px] min-w-0 items-center justify-center gap-2 lg:left-28">
         {chat?.pinned ? <Pin className="size-3 shrink-0 text-text-secondary" strokeWidth={1.5} aria-label={copy.chat.pinned} /> : null}
         {chat?.incognito ? <HatGlasses className="size-4 shrink-0 text-brand" strokeWidth={1.5} aria-label={copy.chat.private} /> : null}
         {chat?.agentId && <span className="shrink-0 text-xs font-semibold text-text-primary">{findStudioAgent(chat.agentId)?.name}</span>}

@@ -7,6 +7,7 @@ import { bellWords } from "@/content/shell";
 import { routes } from "@/content/site";
 import { fetcher } from "@/lib/api";
 import { notificationStream, useLiveStream } from "@/lib/live";
+import { useSession } from "@/lib/session";
 import { cn } from "@/ui";
 
 const KEY = "/api/notifications/unread";
@@ -37,7 +38,8 @@ export function useUnread(enabled: boolean): number {
 
 /** The bell: links to the notifications page and shows how many are unread. Members only. */
 export function Bell({ className, size }: { className: string; size: 16 | 20 }) {
-  const unread = useUnread(true);
+  const { user } = useSession();
+  const unread = useUnread(!!user);
   const shown = unread > 99 ? "99+" : String(unread);
   return (
     <Link href={routes.notifications} aria-label={bellWords.label(unread)} className={cn("relative", className)} data-unread={unread}>
@@ -45,7 +47,7 @@ export function Bell({ className, size }: { className: string; size: 16 | 20 }) 
       {unread > 0 ? (
         <span
           aria-hidden
-          className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-promo px-1 text-2xs leading-3 font-semibold text-text-primary tabular-nums ring-2 ring-page"
+          className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-promo-ink px-1 text-2xs leading-3 font-semibold text-text-inverse tabular-nums ring-2 ring-page"
         >
           {shown}
         </span>

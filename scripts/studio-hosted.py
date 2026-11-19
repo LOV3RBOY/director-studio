@@ -45,7 +45,7 @@ def model_gateway(parent, label, port, model, tools, api_key, engine_token):
     home = parent / label
     home.mkdir(exist_ok=True)
     config = {
-        "model": {"default": model, "provider": "anthropic", "context_length": 65536},
+        "model": {"default": model, "provider": "anthropic"},
         "agent": {"max_turns": 8 if tools else 2, "api_max_retries": 0, "auto_recovery_cycles": 0},
         "memory": {"memory_enabled": False, "user_profile_enabled": False},
         "compression": {"enabled": False},

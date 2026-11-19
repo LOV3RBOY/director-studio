@@ -69,24 +69,18 @@ export function useAgo() {
   };
 }
 
-const chip = (on: boolean) =>
-  cn(
-    "inline-flex h-8 shrink-0 items-center gap-1 rounded-full text-sm leading-5 font-medium whitespace-nowrap text-[#FFFFFFCC] transition-colors duration-150",
-    on ? "bg-border-default px-[15px] text-text-primary" : "border border-border-default px-[14px] hover:bg-border-subtle",
-  );
-
-const panel = "rounded-[28px] border border-[#FFFFFF1F] bg-[#23262AB2]";
+const panel = "ooo-panel";
 
 export function NotificationsPage() {
   const { user, loading } = useSession();
   return (
-    <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-6 px-4 pt-8 pb-16">
+    <div className="mx-auto flex w-full max-w-[1120px] flex-col gap-5 px-4 pt-7 pb-16 sm:gap-6 sm:px-7 sm:pt-11">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-2xl leading-8 font-semibold tracking-[-0.02em] text-text-primary">{c.title}</h1>
+          <h1 className="text-[clamp(2rem,6vw,3.5rem)] leading-none font-bold tracking-[-0.055em] text-text-primary">{c.title}</h1>
           <p className="text-sm leading-5 text-text-secondary">{c.intro}</p>
         </div>
-        <Link href={routes.whatsNew} className="inline-flex items-center gap-1 text-sm leading-5 font-medium text-text-nav transition-colors duration-150 hover:text-text-primary">
+        <Link href={routes.whatsNew} className="ooo-pill">
           <Sparkles className="size-4" strokeWidth={1.5} aria-hidden />
           {c.whatsNew}
         </Link>
@@ -177,9 +171,9 @@ function Inbox() {
     <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
       <section aria-label={c.title} className="flex min-w-0 flex-1 flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div role="tablist" aria-label={c.filtersLabel} className="-mx-4 flex min-w-0 items-center gap-2 overflow-x-auto px-4 scroll-none sm:mx-0 sm:px-0">
+          <div role="group" aria-label={c.filtersLabel} className="flex min-w-0 flex-wrap items-center gap-2">
             {c.filters.map((f) => (
-              <button key={f.id} type="button" role="tab" aria-selected={filter.id === f.id} onClick={() => setFilter(f)} className={chip(filter.id === f.id)}>
+              <button key={f.id} type="button" aria-pressed={filter.id === f.id} onClick={() => setFilter(f)} className="ooo-filter ooo-control">
                 {f.label}
               </button>
             ))}
@@ -189,7 +183,7 @@ function Inbox() {
               <Circle className={cn("size-2", live ? "fill-brand text-brand" : "fill-text-tertiary text-text-tertiary")} aria-hidden />
               {live ? c.live : null} {c.unreadCount(unread)}
             </span>
-            <Button variant="soft" size="sm" onClick={markAll} disabled={unread === 0}>
+            <Button variant="soft" size="sm" className="min-h-11" onClick={markAll} disabled={unread === 0}>
               <CheckCheck className="size-4" strokeWidth={1.5} aria-hidden />
               {c.markAll}
             </Button>
@@ -226,24 +220,24 @@ function Inbox() {
               {notices.map((n) => {
                 const Icon = kindIcon[n.kind] ?? Bell;
                 return (
-                  <li key={n.id} data-notice={n.id} data-read={n.read} className="group relative flex min-w-0 items-start gap-3 rounded-xl p-2 transition-colors duration-150 hover:bg-border-subtle">
-                    <span className="relative flex size-11 shrink-0 items-center justify-center rounded-lg bg-border-subtle">
+                  <li key={n.id} data-notice={n.id} data-read={n.read} className="ooo-notice grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 rounded-2xl px-3 py-3 hover:bg-surface-tertiary sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+                    <span className="ooo-icon-tile relative">
                       <Icon className={cn("size-5", n.kind === "generation_failed" ? "text-danger" : "text-text-primary")} strokeWidth={1.5} aria-hidden />
-                      {!n.read ? <span aria-hidden className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-brand ring-2 ring-surface-secondary" /> : null}
+                      {!n.read ? <span aria-hidden className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-[#564c72] ring-2 ring-surface-secondary" /> : null}
                     </span>
-                    <button type="button" onClick={() => void open(n)} className="flex min-w-0 flex-1 flex-col gap-[3px] pt-[3px] text-left">
-                      <span className="flex min-w-0 items-baseline gap-2">
-                        <span className={cn("truncate text-sm leading-5 font-semibold", n.read ? "text-text-nav" : "text-text-primary")}>{n.title}</span>
+                    <button type="button" onClick={() => void open(n)} className="flex min-h-11 min-w-0 flex-col gap-1 rounded-md pt-1 text-left">
+                      <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+                        <span className={cn("text-sm leading-5 font-semibold", n.read ? "text-text-nav" : "text-text-primary")}>{n.title}</span>
                         {!n.read ? <span className="sr-only">(unread)</span> : null}
                         <span className="shrink-0 text-xs leading-[18px] text-text-tertiary">{ago(n.createdAt)}</span>
                       </span>
-                      {n.body ? <span className="line-clamp-2 text-xs leading-[18px] text-text-tab">{n.body}</span> : null}
+                      {n.body ? <span className="text-xs leading-[18px] text-text-secondary">{n.body}</span> : null}
                     </button>
-                    <span className="flex shrink-0 items-center gap-1 sm:opacity-0 sm:transition-opacity sm:duration-150 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100">
-                      <button type="button" aria-label={n.read ? c.markUnread : c.markRead} onClick={() => void setRead(n, !n.read)} className={iconButtonClass(32, "soft")}>
+                    <span className="col-start-2 flex items-center justify-end gap-1 sm:col-start-3">
+                      <button type="button" aria-label={n.read ? c.markUnread : c.markRead} onClick={() => void setRead(n, !n.read)} className={iconButtonClass(44, "soft", "ooo-control")}>
                         {n.read ? <Circle className="size-4" strokeWidth={1.5} aria-hidden /> : <CheckCheck className="size-4" strokeWidth={1.5} aria-hidden />}
                       </button>
-                      <button type="button" aria-label={c.remove} onClick={() => void remove(n)} className={iconButtonClass(32, "soft")}>
+                      <button type="button" aria-label={c.remove} onClick={() => void remove(n)} className={iconButtonClass(44, "soft", "ooo-control")}>
                         <Trash2 className="size-4" strokeWidth={1.5} aria-hidden />
                       </button>
                     </span>
@@ -315,7 +309,7 @@ function Preferences() {
             <div key={g} className="flex flex-col gap-2">
               <span className="text-xs leading-[18px] font-medium text-text-muted">{c.groups[g]}</span>
               {items.map((p) => (
-                <label key={p.kind} className="flex min-h-8 items-center justify-between gap-3">
+                <label key={p.kind} className="flex min-h-11 items-center justify-between gap-3 border-t border-border-subtle">
                   <span className="min-w-0 text-sm leading-5 text-text-primary">{p.label}</span>
                   {p.canMute ? (
                     <Switch checked={p.enabled} onCheckedChange={(v) => void toggle(p, v)} aria-label={p.label} />

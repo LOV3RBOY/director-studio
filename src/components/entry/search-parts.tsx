@@ -194,7 +194,7 @@ export function RowBody({ title, subtitle, tag, active }: { title: string; subti
   return (
     <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
       <span className="flex min-w-0 items-center gap-[6px]">
-        <span className={cn("truncate text-sm leading-5 font-semibold", active ? "text-text-primary" : "text-[#FFFFFFE6]")}>{title}</span>
+        <span className={cn("truncate text-sm leading-5 font-semibold", active ? "text-text-primary" : "text-text-primary")}>{title}</span>
         {tag ? <NewBadge>{tag}</NewBadge> : null}
       </span>
       {subtitle ? <span className="truncate text-xs leading-[18px] text-text-tab">{subtitle}</span> : null}

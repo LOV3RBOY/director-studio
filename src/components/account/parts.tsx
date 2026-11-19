@@ -11,7 +11,7 @@ import { Button, ButtonLink, cn } from "@/ui";
 export const ROW_LINE = "border-t border-[#FFFFFF14]";
 
 /** The menu panel look: 95% surface, 8% white hairline, deep shadow. */
-export const PANEL = "rounded-3xl border border-[#FFFFFF14] bg-[#1C1E20F2] [box-shadow:#00000066_0px_16px_40px]";
+export const PANEL = "rounded-3xl border border-border-default bg-surface-menu shadow-menu";
 
 /** Text field on a card. */
 export const FIELD =

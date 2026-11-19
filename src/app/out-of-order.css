@@ -1,10 +1,3 @@
-.ooo-ground {
-  background:
-    radial-gradient(circle at top right, #e2e0f2 0%, transparent 55%),
-    radial-gradient(#77728430 0.6px, transparent 0.6px) 0 0 / 10px 10px,
-    linear-gradient(#efeff5, #ebeaf4);
-}
-
 .ooo-title {
   font-size: clamp(2.75rem, 9vw, 5.125rem);
   font-weight: 800;
@@ -20,35 +13,155 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 1px solid #ffffffcc;
   border-radius: 9999px;
-  background: #ffffffed;
-  padding: 0 14px;
-  box-shadow: 0 2px 7px #11111413;
   font-size: 0.875rem;
   font-weight: 650;
 }
 
 .ooo-pill:hover { background: #fff; }
-.ooo-primary, .ooo-primary:hover {
-  border-color: #111114;
-  background: linear-gradient(150deg, #2c2c31, #121215 58%, #0a0a0c);
-  color: #fff;
-}
 
 .ooo-tool {
   display: block;
   min-width: 0;
-  border: 1px solid #ffffffd9;
-  border-radius: 24px;
-  background: linear-gradient(156deg, #fff, #f7f6fb);
+  border-radius: 20px;
   padding: 16px;
-  box-shadow: 0 2px 9px #2c22450a;
 }
-
-.ooo-tool:hover { border-color: #aca9bd; }
-.ooo-chat-header { background: linear-gradient(#efeff5 55%, #efeff500); }
 
 @media (max-width: 639px) {
   input:not([type="checkbox"], [type="range"]), textarea, select { font-size: max(16px, 1em); }
+}
+
+/* Shared finishes for the Studio's work surfaces and controls. */
+:root {
+  --studio-seam: #27243e24;
+  --studio-paper: linear-gradient(152deg, #fff 8%, #f8f7fb 75%, #f1eff7);
+  --studio-depth: inset 0 1px 0 #fff, 0 1px 2px #2621360b, 0 12px 30px -22px #26213670;
+  --studio-float: inset 0 1px 0 #fff, 0 3px 7px #26213612, 0 18px 48px -18px #26213654;
+  --studio-motion: 180ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.ooo-ground {
+  background: radial-gradient(ellipse at 75% 0%, #e2e0ee, transparent 48rem), var(--color-page);
+}
+
+.ooo-panel, .ooo-tool, .ooo-pill, .ooo-composer {
+  border: 1px solid var(--studio-seam);
+  background: var(--studio-paper);
+  box-shadow: var(--studio-depth);
+}
+
+.ooo-panel { border-radius: 22px; }
+.ooo-pill, .ooo-tool, .ooo-control, .ooo-tool-arrow {
+  transition: background-color var(--studio-motion), border-color var(--studio-motion),
+    box-shadow var(--studio-motion), color var(--studio-motion), translate var(--studio-motion);
+}
+.ooo-pill { padding-inline: 15px; }
+.ooo-primary, .ooo-primary:hover {
+  border-color: #15151b;
+  background: linear-gradient(155deg, #37363e, #1b1a20 60%, #111116);
+  color: #fff;
+  box-shadow: inset 0 1px 0 #ffffff32, 0 2px 4px #17141f38;
+}
+@media (hover: hover) {
+  .ooo-tool:hover { border-color: #a4a0b4; translate: 0 -2px; box-shadow: var(--studio-float); }
+  .ooo-tool:hover .ooo-tool-arrow { translate: 2px -2px; }
+}
+.ooo-pill:active, .ooo-tool:active, .ooo-control:active { translate: 0 1px; }
+
+.ooo-toolbar {
+  border-bottom: 1px solid var(--studio-seam);
+  background: linear-gradient(180deg, #fcfbfe, #efedf5);
+  box-shadow: 0 4px 16px -12px #211c3b52, inset 0 1px 0 white;
+}
+.ooo-nav-link[aria-current="page"] {
+  background: #dedbe9;
+  box-shadow: inset 0 1px 2px #29243819, 0 1px 0 #fff;
+  color: #16151d;
+}
+.ooo-mark, .ooo-icon-tile {
+  display: grid;
+  flex: none;
+  place-items: center;
+  border: 1px solid #27243e26;
+  background: linear-gradient(145deg, #fcfbff, #e5e2ee);
+  box-shadow: inset 0 1px 0 #fff, 0 2px 3px #30274212;
+}
+.ooo-mark { width: 44px; height: 44px; border-radius: 14px; }
+.ooo-icon-tile { width: 42px; height: 42px; border-radius: 12px; }
+.ooo-control[aria-expanded="true"] { background-color: var(--color-surface-elevated); }
+
+.ooo-hero {
+  border: 1px solid #2c293d34;
+  border-radius: 28px;
+  background: radial-gradient(ellipse at 20% 0%, #fff, transparent 70%), #e7e4f0;
+  box-shadow: var(--studio-float);
+}
+.ooo-hero-art {
+  border: 1px solid #27243e42;
+  background: #211f28;
+  box-shadow: 0 2px 8px #27243e36;
+}
+.ooo-hero-art::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px #ffffff38, inset 0 0 38px #17142148;
+  content: "";
+  pointer-events: none;
+}
+
+.ooo-chat {
+  background: radial-gradient(ellipse at 70% 0%, #e6e2ef, transparent 38rem), #f2f1f7;
+}
+.ooo-chat-header {
+  background: linear-gradient(#f6f5fa 60%, #f6f5faed);
+  border-bottom: 1px solid var(--studio-seam);
+  box-shadow: 0 8px 20px -16px #27243e60;
+  backdrop-filter: blur(14px);
+}
+.ooo-composer {
+  border-radius: 21px;
+  box-shadow: var(--studio-float);
+}
+.ooo-composer:focus-within { border-color: #827b96; }
+.ooo-reply { border-radius: 5px 18px 18px 18px; }
+.ooo-user-note {
+  border: 1px solid #131119;
+  background: linear-gradient(150deg, #33313c, #22202a);
+  box-shadow: inset 0 1px 0 #ffffff24, 0 3px 9px #211b3d21;
+  color: #fff;
+}
+.ooo-filter {
+  flex: none;
+  min-height: 44px;
+  border: 1px solid var(--studio-seam);
+  border-radius: 999px;
+  background-color: #fcfbfe;
+  padding-inline: 14px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ooo-filter:hover { background-color: var(--color-surface-tertiary); }
+.ooo-filter[aria-pressed="true"] {
+  border-color: #22212b;
+  background: linear-gradient(160deg, #383640, #211f28);
+  box-shadow: inset 0 1px 0 #ffffff2d;
+  color: #fff;
+}
+.ooo-notice[data-read="false"] {
+  background: #eeebf6;
+  box-shadow: inset 2px 0 #564c72;
+}
+.ooo-notice[data-read="false"]:hover { background: #e8e4f2; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+  .ooo-tool:hover, .ooo-tool:hover .ooo-tool-arrow,
+  .ooo-pill:active, .ooo-tool:active, .ooo-control:active { translate: none; }
 }

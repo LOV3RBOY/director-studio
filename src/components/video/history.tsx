@@ -81,7 +81,7 @@ function Done({
       />
       <span className="absolute inset-x-3 bottom-3 flex flex-col gap-[2px] opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:opacity-100">
         {job.prompt ? (
-          <span className="line-clamp-2 text-sm leading-5 font-medium text-[#FFFFFFE5]">
+          <span className="line-clamp-2 text-sm leading-5 font-medium text-text-secondary">
             {job.prompt}
           </span>
         ) : null}
@@ -92,7 +92,7 @@ function Done({
       {playing ? null : (
         <span
           aria-hidden
-          className="absolute top-3 left-3 flex size-7 items-center justify-center rounded-full bg-[#00000080] text-text-primary backdrop-blur-sm"
+          className="absolute top-3 left-3 flex size-7 items-center justify-center rounded-full bg-black/75 text-text-inverse backdrop-blur-sm"
         >
           <Play className="size-3 fill-current" strokeWidth={1.5} />
         </span>

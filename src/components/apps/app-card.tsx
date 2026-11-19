@@ -25,7 +25,7 @@ function Badge({ app }: { app: AppSummary }) {
   }
   if (!app.badge) return null;
   return (
-    <span className="absolute bottom-2 left-2 flex h-[18px] items-start rounded-xs bg-brand px-1 font-display text-sm leading-[18px] font-bold text-black uppercase">
+    <span className="absolute bottom-2 left-2 flex h-[18px] items-start rounded-xs bg-brand px-1 font-display text-sm leading-[18px] font-bold text-text-inverse uppercase">
       {appsCopy.badge[app.badge] ?? app.badge}
     </span>
   );
@@ -48,7 +48,7 @@ function PinButton({ app, onPin }: { app: AppSummary } & PinProps) {
       title={label}
       onClick={() => onPin(app)}
       className={cn(
-        "absolute top-2 right-2 z-10 flex size-7 items-center justify-center rounded-md bg-[#00000080] text-text-primary backdrop-blur-sm transition duration-150 hover:bg-[#000000B3] focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100",
+        "absolute top-2 right-2 z-10 flex size-7 items-center justify-center rounded-md bg-black/75 text-text-inverse backdrop-blur-sm transition duration-150 hover:bg-[#000000B3] focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100",
         pinned ? "opacity-100" : "opacity-0",
       )}
     >
@@ -68,7 +68,7 @@ export function FeaturedCard({ app, onPin }: { app: AppSummary } & PinProps) {
       <div className="flex flex-1 flex-col items-stretch justify-center gap-6 px-4">
         <div className="flex h-[68px] min-w-0 flex-col gap-1">
           <h3 className="truncate text-base leading-6 font-semibold text-text-primary">{app.name}</h3>
-          <p className="line-clamp-2 text-sm leading-5 text-[#FFFFFF99]">{app.pitch}</p>
+          <p className="line-clamp-2 text-sm leading-5 text-text-secondary">{app.pitch}</p>
         </div>
         <Link
           href={appHref(app.id)}
@@ -99,7 +99,7 @@ export function AppCard({ app, onPin, fluid }: { app: AppSummary; fluid?: boolea
             {app.name}
           </Link>
         </h3>
-        <p className="line-clamp-2 text-sm leading-5 text-[#FFFFFF99]">{soon && app.note ? app.note : app.pitch}</p>
+        <p className="line-clamp-2 text-sm leading-5 text-text-secondary">{soon && app.note ? app.note : app.pitch}</p>
       </div>
       <PinButton app={app} onPin={onPin} />
     </li>

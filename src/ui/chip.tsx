@@ -34,7 +34,13 @@ export function Tag({ tone = "brand", className, ...rest }: { tone?: "brand" | "
   );
 }
 
-const iconSizes = { 24: "size-6 rounded-lg", 28: "size-7 rounded-md", 32: "size-8 rounded-md", 38: "size-[38px] rounded-full" } as const;
+const iconSizes = {
+  24: "size-6 rounded-lg",
+  28: "size-7 rounded-md",
+  32: "size-8 rounded-md",
+  38: "size-[38px] rounded-full",
+  44: "size-11 rounded-xl",
+} as const;
 
 const iconTones = {
   /** White icon, no plate. */

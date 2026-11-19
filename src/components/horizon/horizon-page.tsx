@@ -7,7 +7,7 @@ import { HorizonSteps } from "./steps";
 /** The Horizon announcement page, section by section. */
 export function HorizonPage() {
   return (
-    <div className="flex w-full min-w-0 flex-col overflow-x-clip bg-black">
+    <div className="flex w-full min-w-0 flex-col ooo-ground overflow-x-clip">
       <HorizonHero />
       <HorizonSteps />
       <HorizonLook />

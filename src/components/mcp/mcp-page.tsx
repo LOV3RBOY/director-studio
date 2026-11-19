@@ -15,9 +15,9 @@ export function McpPage() {
   const AgentIcon = clientIcons[client];
 
   return (
-    <div className="flex flex-col bg-black">
+    <div className="ooo-ground flex flex-col">
       {/* The client bar under the nav. */}
-      <div className="flex h-[47px] shrink-0 justify-center border-b border-border-subtle bg-black pt-3">
+      <div className="flex h-[47px] shrink-0 justify-center ooo-toolbar pt-3">
         <div role="tablist" aria-label="How you connect" className="scroll-none flex h-[34px] max-w-full items-start gap-3 overflow-x-auto px-4">
           {clients.map((c) => {
             const Icon = clientIcons[c.id];
@@ -51,7 +51,7 @@ export function McpPage() {
           aria-hidden
           className="absolute inset-0"
           style={{
-            backgroundImage: "radial-gradient(circle, #FFFFFF26 1px, transparent 1.5px)",
+            backgroundImage: "radial-gradient(circle, #3e325822 1px, transparent 1.5px)",
             backgroundSize: "16px 16px",
             maskImage: "radial-gradient(ellipse 75% 60% at 50% 50%, #000 30%, transparent 85%)",
             WebkitMaskImage: "radial-gradient(ellipse 75% 60% at 50% 50%, #000 30%, transparent 85%)",

@@ -80,7 +80,7 @@ export function PostMedia({ post, playing, className }: { post: Post; playing?: 
 }
 
 const iconBtn =
-  "flex h-7 items-center gap-1 rounded-md bg-[#00000080] px-2 text-xs leading-4 font-medium text-text-primary backdrop-blur-sm transition-colors duration-150 hover:bg-[#000000B3]";
+  "flex h-7 items-center gap-1 rounded-md bg-black/75 px-2 text-xs leading-4 font-medium text-text-inverse backdrop-blur-sm transition-colors duration-150 hover:bg-[#000000B3]";
 
 /** One feed tile: the work, author, like and save. Video plays while hovered. */
 export function PostTile({ post: initial, hideAuthor }: { post: Post; hideAuthor?: boolean }) {

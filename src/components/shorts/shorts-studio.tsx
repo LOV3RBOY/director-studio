@@ -24,10 +24,10 @@ type Tab = "ideas" | "mine";
 function Wordmark() {
   return (
     <h1 className="flex flex-col items-center select-none">
-      <span className="bg-[linear-gradient(180deg,#F1EDFF_0%,#BBA8F4_34%,#8A70D2_58%,#ECE8F6_100%)] bg-clip-text font-display text-[68px] leading-[60px] font-bold tracking-[0.03em] text-transparent uppercase [filter:drop-shadow(0_2px_0_#FFFFFF33)_drop-shadow(0_6px_14px_#7C5CE040)] sm:text-[120px] sm:leading-[88px]">
+      <span className="text-text-primary font-display text-[68px] leading-[60px] font-bold tracking-[-0.045em] uppercase sm:text-[120px] sm:leading-[88px]">
         {copy.hero.word}
       </span>
-      <span className="mt-2 bg-[linear-gradient(180deg,#CFC2FF_0%,#9178DE_100%)] bg-clip-text pl-[1em] font-display text-lg leading-6 font-bold tracking-[1em] text-transparent uppercase sm:text-[26px] sm:leading-[27px]">
+      <span className="mt-2 pl-[.55em] text-text-secondary font-display text-lg leading-6 font-bold tracking-[.55em] uppercase sm:text-[26px] sm:leading-[27px]">
         {copy.hero.sub}
       </span>
     </h1>
@@ -138,13 +138,13 @@ export function ShortsStudio() {
   const openAsset = open?.assets.find((a) => a.id === viewing?.assetId);
 
   return (
-    <div className="scroll-quiet min-h-0 flex-1 overflow-x-hidden overflow-y-auto bg-[#060708]">
+    <div className="scroll-quiet min-h-0 flex-1 overflow-x-hidden overflow-y-auto ooo-ground">
       <div className="flex flex-col items-center px-4 pb-16 sm:pt-12">
         {/* The hero, as drawn: wordmark, one line, two buttons. */}
         <section className="flex w-full flex-col items-center justify-center gap-6 pt-10 pb-6 sm:mt-4 sm:h-[307px] sm:pt-0 sm:pb-0">
           <div className="flex flex-col items-center gap-[19px]">
             <Wordmark />
-            <p className="text-center text-sm leading-5 text-[#FFFFFF80]">{copy.hero.line}</p>
+            <p className="text-center text-sm leading-5 text-text-secondary">{copy.hero.line}</p>
           </div>
           <div className="flex items-center gap-[10px]">
             <button type="button" onClick={openForm} className={cn(LIME_BUTTON, "w-[142px] px-0")}>
@@ -176,7 +176,7 @@ export function ShortsStudio() {
                 <Tabs.Trigger
                   key={value}
                   value={value}
-                  className="inline-flex h-8 items-center gap-1 rounded-full px-4 text-xs leading-4 font-medium text-[#FFFFFF80] transition-colors duration-150 hover:text-text-primary data-[state=active]:bg-text-primary data-[state=active]:text-text-inverse"
+                  className="inline-flex h-8 items-center gap-1 rounded-full px-4 text-xs leading-4 font-medium text-text-secondary transition-colors duration-150 hover:text-text-primary data-[state=active]:bg-text-primary data-[state=active]:text-text-inverse"
                 >
                   <Icon className="size-4" strokeWidth={1.5} aria-hidden />
                   {label}

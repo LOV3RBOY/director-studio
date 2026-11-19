@@ -126,7 +126,7 @@ function EntryCard({ entry: initial, contest, onProblem }: { entry: Entry; conte
         ) : (
           <PostMedia post={p} className="size-full" />
         )}
-        <span className="absolute top-2 left-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-[#000000B3] px-2 font-mono text-xs leading-4 font-semibold text-text-primary backdrop-blur-sm">#{entry.rank}</span>
+        <span className="absolute top-2 left-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-[#000000B3] px-2 font-mono text-xs leading-4 font-semibold text-text-inverse backdrop-blur-sm">#{entry.rank}</span>
       </Link>
       <div className="flex items-center gap-2 p-3">
         <Link href={profileHref(p.author.handle)} className="flex min-w-0 flex-1 items-center gap-2 text-sm leading-5 font-medium text-text-primary hover:underline">
@@ -385,7 +385,7 @@ function Loaded({ initial }: { initial: Contest }) {
 export function ContestView({ slug }: { slug: string }) {
   const { data, error, isLoading, mutate } = useSWR<{ contest: Contest }>(`/api/community/contests/${encodeURIComponent(slug)}`, fetcher, { revalidateOnFocus: false });
   return (
-    <div className="flex flex-1 flex-col bg-black">
+    <div className="ooo-ground flex flex-1 flex-col">
       {isLoading ? (
         <>
           <ContestBar crumb="…" />

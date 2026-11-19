@@ -287,7 +287,7 @@ function ShotView({
             </IconButton>
           </>
         ) : null}
-        <span className="absolute bottom-3 left-3 rounded-full bg-[#00000080] px-2 py-1 font-mono text-2xs leading-[14px] text-text-tab">{position}</span>
+        <span className="absolute bottom-3 left-3 rounded-full bg-black/75 px-2 py-1 font-mono text-2xs leading-[14px] text-text-inverse">{position}</span>
       </div>
 
       <aside className="scroll-quiet flex w-full shrink-0 flex-col gap-5 overflow-y-auto p-5 lg:w-[360px] lg:pt-14">

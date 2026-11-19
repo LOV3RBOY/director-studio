@@ -99,11 +99,11 @@ export function RemixExamples({
                 aria-hidden
                 className="absolute inset-0 rounded-2xl [box-shadow:#FFFFFF1A_0px_-8px_36px_inset]"
               />
-              <span className="absolute inset-x-3 bottom-3 flex flex-col gap-2">
-                <span className="line-clamp-3 text-xs leading-4 text-text-primary opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+              <span className="absolute inset-x-2 bottom-2 flex flex-col gap-1 rounded-lg bg-[#111116E8] p-2">
+                <span className="line-clamp-3 text-xs leading-4 text-text-inverse opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
                   {ex.direction}
                 </span>
-                <span className="flex h-7 items-center gap-[6px] text-sm leading-5 font-medium text-[#FFFFFFE5]">
+                <span className="flex h-7 items-center gap-[6px] text-sm leading-5 font-medium text-text-inverse">
                   <Wand2
                     className="size-4 shrink-0"
                     strokeWidth={1.5}

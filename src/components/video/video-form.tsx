@@ -154,17 +154,17 @@ function ModelCard({
         <button
           type="button"
           onClick={onChange}
-          className="absolute top-[6px] right-[6px] flex h-6 w-[81px] items-start justify-center gap-1 overflow-clip rounded-md border border-[#FFFFFF0F] bg-[#1B1B1B4C] pt-[3px] text-xs leading-4 font-medium text-text-primary backdrop-blur-[4.5px] transition-colors duration-150 hover:bg-[#1B1B1B99]"
+          className="absolute top-[6px] right-[6px] flex h-6 w-[81px] items-start justify-center gap-1 overflow-clip rounded-md border border-white/30 bg-black/75 pt-[3px] text-xs leading-4 font-medium text-text-inverse backdrop-blur-[4.5px] transition-colors duration-150 hover:bg-[#1B1B1B99]"
         >
           <Pencil className="h-4 w-[14px]" strokeWidth={1.5} aria-hidden />
           {t.change}
         </button>
       ) : null}
-      <div className="absolute inset-x-0 bottom-0 flex h-[58px] flex-col items-start pr-3 pl-3">
-        <p className="w-full truncate font-display text-xl leading-[28px] font-bold tracking-[-0.01em] text-brand uppercase">
+      <div className="absolute inset-x-0 bottom-0 flex min-h-[54px] flex-col items-start bg-[#111116EA] px-3 py-1">
+        <p className="w-full truncate font-display text-xl leading-[28px] font-bold tracking-[-0.01em] text-text-inverse uppercase">
           {model?.name ?? "—"}
         </p>
-        <p className="w-full truncate text-xs leading-[18px] text-[#FFFFFFCC]">
+        <p className="w-full truncate text-xs leading-[18px] text-text-inverse">
           {model
             ? model.status === "available"
               ? model.tagline
@@ -252,13 +252,13 @@ function DropZone({ slot, studio }: { slot: MediaSlot; studio: Studio }) {
                 type="button"
                 aria-label={`${t.remove} ${slot.label.toLowerCase()}`}
                 onClick={() => studio.detach(slot.id, asset.id)}
-                className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-md bg-[#00000080] text-text-primary backdrop-blur-sm transition-colors duration-150 hover:bg-[#000000B3]"
+                className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-md bg-black/75 text-text-inverse backdrop-blur-sm transition-colors duration-150 hover:bg-[#000000B3]"
               >
                 <X className="size-4" strokeWidth={1.5} aria-hidden />
               </button>
             </div>
           ))}
-          <span className="pointer-events-none absolute bottom-2 left-2 rounded-xs bg-[#00000080] px-[6px] text-2xs leading-4 font-medium text-text-primary">
+          <span className="pointer-events-none absolute bottom-2 left-2 rounded-xs bg-black/75 px-[6px] text-2xs leading-4 font-medium text-text-inverse">
             {slot.label}
           </span>
         </div>
@@ -273,7 +273,7 @@ function DropZone({ slot, studio }: { slot: MediaSlot; studio: Studio }) {
             sending > 0 && "shimmer bg-surface-secondary",
           )}
         >
-          <span className="relative flex size-9 items-center justify-center rounded-full border border-[#C5C5C54C] bg-[#1C1E20] text-text-primary">
+          <span className="ooo-icon-tile !size-9 !rounded-full text-text-primary">
             {sending > 0 ? (
               <LoaderCircle
                 className="size-4 animate-spin"
@@ -331,7 +331,7 @@ function MiniToggle({
       onClick={onToggle}
       className={cn(
         "relative h-4 w-[28px] shrink-0 overflow-clip rounded-xl transition-colors duration-150",
-        on ? "bg-brand" : "bg-[#5C626A] hover:bg-toggle-track",
+        on ? "bg-brand" : "bg-toggle-track hover:bg-toggle-track",
       )}
     >
       <span
@@ -423,7 +423,7 @@ function RowFace({
   return (
     <>
       <span className="flex min-w-0 flex-1 flex-col items-start">
-        <span className="text-xs leading-4 font-medium text-[#FFFFFF99]">
+        <span className="text-xs leading-4 font-medium text-text-secondary">
           {label}
         </span>
         <span className="flex h-5 w-full min-w-0 items-center gap-1 text-sm leading-5 font-medium text-text-soft">
@@ -451,7 +451,7 @@ function OptionRow({ control, studio }: { control: Control; studio: Studio }) {
         className={cn(row, "h-[54px] justify-between hover:bg-border-subtle")}
       >
         <span className="flex min-w-0 flex-col">
-          <span className="text-xs leading-4 font-medium text-[#FFFFFF99]">
+          <span className="text-xs leading-4 font-medium text-text-secondary">
             {control.label}
           </span>
           <span className="text-sm leading-5 font-medium text-text-soft">
@@ -714,7 +714,7 @@ export function VideoForm({
                 "flex h-9 shrink-0 items-start text-sm leading-5 font-medium transition-colors duration-150",
                 on
                   ? "border-b-2 border-text-primary text-text-primary"
-                  : "text-[#FFFFFF99] hover:text-text-primary",
+                  : "text-text-secondary hover:text-text-primary",
               )}
             >
               {item.label}

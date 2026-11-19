@@ -68,7 +68,7 @@ export function Tools() {
             </ul>
           ) : (
             <div className="flex flex-col items-start gap-3 rounded-2xl border border-border-subtle p-6">
-              <p className="text-sm leading-5 text-[#FFFFFF80]">{toolsSection.empty}</p>
+              <p className="text-sm leading-5 text-text-secondary">{toolsSection.empty}</p>
               <button
                 type="button"
                 onClick={() => {
@@ -95,7 +95,7 @@ function FilterRow({ icon: Icon, label, on, onClick }: { icon: LucideIcon; label
       onClick={onClick}
       className={cn(
         "flex h-9 shrink-0 items-center gap-2 rounded-xl pr-3 pl-[6px] text-sm leading-5 font-medium whitespace-nowrap transition-colors duration-150 lg:w-full",
-        on ? "text-brand" : "text-[#FFFFFFCC] hover:bg-border-subtle",
+        on ? "text-brand" : "text-text-secondary hover:bg-border-subtle",
       )}
     >
       <span
@@ -140,7 +140,7 @@ function ToolRow({ tool }: { tool: ToolInfo }) {
                   </span>
                 ) : null}
               </h3>
-              <p className="max-w-[489px] text-sm leading-5 text-[#FFFFFF80]">{tool.description}</p>
+              <p className="max-w-[489px] text-sm leading-5 text-text-secondary">{tool.description}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex h-7 items-center gap-[6px] rounded-lg border border-border-default px-[10px] text-xs leading-4 font-medium text-text-primary">

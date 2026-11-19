@@ -157,7 +157,7 @@ export function CommunityPage() {
   const open = () => setPublishing(true);
 
   return (
-    <div className="flex flex-1 flex-col bg-black">
+    <div className="ooo-ground flex flex-1 flex-col">
       <CommunitySubNav active={current} onPick={pick} />
       {current === "following" ? <Following onPublish={open} /> : current === "saved" ? <Saved /> : current === "creators" ? <Creators /> : <Discover onPublish={open} />}
       <PublishDialog open={publishing} onOpenChange={setPublishing} />

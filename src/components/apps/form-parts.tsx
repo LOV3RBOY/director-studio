@@ -12,11 +12,11 @@ import type { AppField, AppInput, FieldValue } from "./types";
 
 export const panel = "rounded-2xl bg-surface-primary border border-border-default";
 const box =
-  "w-full rounded-xl bg-[#FFFFFF0A] px-3 text-sm leading-5 text-text-primary outline-none transition-colors duration-150 placeholder:text-[#FFFFFF66] hover:bg-[#FFFFFF0F] focus:bg-[#FFFFFF14]";
+  "w-full rounded-xl bg-surface-tertiary px-3 text-sm leading-5 text-text-primary outline-none transition-colors duration-150 placeholder:text-text-secondary hover:bg-surface-tertiary focus:bg-surface-elevated";
 const chip = (on: boolean) =>
   cn(
     "flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg px-3 text-sm leading-5 font-medium transition-colors duration-150",
-    on ? "bg-[#2E3031] text-text-soft shadow-[#0000000D_0px_1px_2px]" : "bg-[#FFFFFF0A] text-[#FFFFFF99] hover:bg-border-default hover:text-text-primary",
+    on ? "bg-brand text-text-inverse shadow-[#0000000D_0px_1px_2px]" : "bg-surface-tertiary text-text-secondary hover:bg-border-default hover:text-text-primary",
   );
 
 export function Row({ label, hint, htmlFor, extra, children }: { label: string; hint?: string | null; htmlFor?: string; extra?: ReactNode; children: ReactNode }) {
@@ -273,7 +273,7 @@ export function InputTile({
               type="button"
               aria-label={appCopy.remove(input.label)}
               onClick={() => onChange(files.filter((f) => f.id !== a.id))}
-              className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-md bg-[#00000099] text-text-primary hover:bg-[#000000CC]"
+              className="absolute top-1 right-1 flex size-6 items-center justify-center rounded-md bg-black/75 text-text-inverse hover:bg-[#000000CC]"
             >
               <X className="size-3.5" strokeWidth={1.5} aria-hidden />
             </button>
@@ -300,7 +300,7 @@ export function InputTile({
                 <button
                   type="button"
                   aria-label={`${appCopy.fromFiles}: ${input.label}`}
-                  className="flex h-[72px] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-[#FFFFFF0A] text-sm leading-5 font-medium text-text-primary transition-colors duration-150 hover:bg-border-default"
+                  className="flex h-[72px] min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-surface-tertiary text-sm leading-5 font-medium text-text-primary transition-colors duration-150 hover:bg-border-default"
                 >
                   <FolderOpen className="size-4" strokeWidth={1.5} aria-hidden />
                   {appCopy.fromFiles}

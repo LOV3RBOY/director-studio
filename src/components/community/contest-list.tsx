@@ -16,11 +16,11 @@ export function ContestList() {
   const now = useNow();
   const { data, error, isLoading, mutate } = useSWR<{ contests: Contest[] }>("/api/community/contests", fetcher);
   return (
-    <div className="flex flex-1 flex-col bg-black">
+    <div className="ooo-ground flex flex-1 flex-col">
       <ContestBar />
       <div className="mx-auto flex w-full max-w-[1408px] flex-col gap-8 px-4 pt-10 pb-16 desktop:px-0">
         <div className="flex flex-col gap-2">
-          <h1 className="text-chrome font-display text-[40px] leading-[40px] font-bold tracking-[-0.0212em] uppercase md:text-[65.9px] md:leading-[52.7px]">{w.contests.title}</h1>
+          <h1 className="text-text-primary font-display text-[40px] leading-[40px] font-bold tracking-[-0.0212em] uppercase md:text-[65.9px] md:leading-[52.7px]">{w.contests.title}</h1>
           <p className="text-base leading-6 font-medium text-text-nav">{w.contests.intro}</p>
         </div>
         {isLoading ? (
@@ -47,7 +47,7 @@ export function ContestList() {
                     <PhaseTag phase={c.phase} className="absolute top-3 left-3" />
                   </div>
                   <div className="flex flex-1 flex-col gap-2 p-4">
-                    <h2 className="text-chrome font-display text-2xl leading-[28px] font-bold tracking-[-0.05em] uppercase">{c.title}</h2>
+                    <h2 className="text-text-primary font-display text-2xl leading-[28px] font-bold tracking-[-0.05em] uppercase">{c.title}</h2>
                     <p className="line-clamp-2 text-sm leading-5 text-text-nav">{c.summary}</p>
                     <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-2 text-xs leading-4 text-text-secondary">
                       <span className="text-text-primary">{timeLine(c, now)}</span>
@@ -56,7 +56,7 @@ export function ContestList() {
                       </span>
                       <span>{c.kind ? feedKinds.find((k) => k.id === c.kind)?.label : w.contests.anyKind}</span>
                     </div>
-                    <p className="text-xs leading-4 text-[#B8B8B8]">
+                    <p className="text-xs leading-4 text-text-secondary">
                       {w.contests.prize}: <span className="text-text-primary">{c.prize}</span>
                     </p>
                   </div>

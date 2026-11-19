@@ -57,13 +57,13 @@ function SideRow({ id, active, count, tools, onPick }: { id: SectionId; active: 
       onClick={onPick}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex h-9 shrink-0 items-center justify-between gap-2 rounded-xl pl-[6px] text-left transition-colors duration-150 max-md:pr-2.5",
+        "ooo-nav-link ooo-control flex h-10 shrink-0 items-center justify-between gap-2 rounded-xl pl-2 text-left transition-colors duration-150 max-md:pr-2.5",
         tools ? "md:pr-[10px]" : "md:pr-[6px]",
-        active ? "bg-border-subtle" : "hover:bg-[#FFFFFF08]",
+        active ? "bg-surface-elevated" : "hover:bg-surface-tertiary",
       )}
     >
       <span className="flex items-center gap-2">
-        <span className="flex size-6 shrink-0 items-center justify-center rounded-md border border-[#FFFFFF30] bg-[#FFFFFF0F] text-text-primary [box-shadow:#FFFFFF29_0px_0px_6px_inset]">
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border-default bg-surface-secondary text-text-primary shadow-pill">
           {icons[id]}
         </span>
         <span className="text-sm leading-5 font-medium whitespace-nowrap text-text-primary">{library.sections[id]}</span>
@@ -307,7 +307,7 @@ export function Library() {
         ) : null}
 
         {dragging ? (
-          <div className="pointer-events-none absolute inset-2 z-40 flex items-center justify-center rounded-2xl border-2 border-dashed border-brand bg-[#0F1113E6]">
+          <div className="pointer-events-none absolute inset-2 z-40 flex items-center justify-center rounded-2xl border-2 border-dashed border-brand bg-surface-menu/95">
             <span className="flex items-center gap-2 text-sm leading-5 font-medium text-brand">
               <Upload className="size-5" strokeWidth={1.5} aria-hidden />
               {library.dropHere}

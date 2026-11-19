@@ -20,7 +20,7 @@ const badgeIcons = [FileText, Clapperboard];
 export function HorizonHero() {
   const news = useLaunchNews();
   return (
-    <section aria-labelledby="horizon-title" className="relative flex h-[640px] flex-col items-center justify-end overflow-hidden px-4 pb-10 desktop:h-[856px] desktop:px-16">
+    <section aria-labelledby="horizon-title" className="relative flex h-[640px] flex-col items-center justify-end overflow-hidden bg-black px-4 pb-10 desktop:h-[856px] desktop:px-16">
       <Artwork name={copy.art} className="absolute inset-0 size-full" />
       <div aria-hidden className="absolute inset-0 bg-[#00000033]" />
       <div aria-hidden className="absolute inset-x-0 bottom-0 h-[416px]" style={fade} />
@@ -52,7 +52,7 @@ export function HorizonHero() {
             >
               {copy.title}
             </h1>
-            <p className="text-sm leading-6 font-medium text-text-tab desktop:text-base">
+            <p className="text-sm leading-6 font-medium text-text-inverse desktop:text-base">
               {copy.lead} <span className="text-[#FFFFFFE5]">{copy.leadStrong}</span>
             </p>
           </div>

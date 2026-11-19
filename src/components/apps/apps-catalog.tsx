@@ -22,7 +22,7 @@ function SectionHead({ title, sub, onSeeAll }: { title: string; sub: string; onS
     <div className="flex items-end justify-between gap-4">
       <div className="flex min-w-0 flex-col gap-1">
         <h2 className="font-display text-2xl leading-8 font-bold tracking-[-0.02em] text-text-primary uppercase sm:text-3xl sm:leading-[36px]">{title}</h2>
-        <p className="text-sm leading-5 text-[#FFFFFF99]">{sub}</p>
+        <p className="text-sm leading-5 text-text-secondary">{sub}</p>
       </div>
       {onSeeAll ? (
         <button
@@ -117,18 +117,18 @@ export function AppsCatalog() {
 
       <div className="flex w-full flex-col gap-14">
         <div className="flex flex-col gap-3 md:flex-row md:items-start md:gap-8">
-          <label className="flex h-11 w-full shrink-0 items-center gap-2 rounded-xl bg-[#FFFFFF0A] px-4 shadow-[#0000001F_0px_4px_12px] transition-colors duration-150 focus-within:bg-[#FFFFFF14] hover:bg-[#FFFFFF0F] md:w-[237px]">
-            <Search className="size-5 shrink-0 text-[#FFFFFF99]" strokeWidth={1.5} aria-hidden />
+          <label className="flex h-11 w-full shrink-0 items-center gap-2 rounded-xl bg-surface-tertiary px-4 shadow-[#0000001F_0px_4px_12px] transition-colors duration-150 focus-within:bg-surface-elevated hover:bg-surface-tertiary md:w-[237px]">
+            <Search className="size-5 shrink-0 text-text-secondary" strokeWidth={1.5} aria-hidden />
             <span className="sr-only">{appsCopy.searchLabel}</span>
             <input
               type="search"
               value={typed}
               onChange={(e) => setTyped(e.target.value)}
               placeholder={appsCopy.searchPlaceholder}
-              className="h-5 min-w-0 flex-1 bg-transparent text-sm leading-5 text-text-primary outline-none placeholder:text-[#FFFFFF99] [&::-webkit-search-cancel-button]:hidden"
+              className="h-5 min-w-0 flex-1 bg-transparent text-sm leading-5 text-text-primary outline-none placeholder:text-text-secondary [&::-webkit-search-cancel-button]:hidden"
             />
             {typed ? (
-              <button type="button" aria-label={appsCopy.clearSearch} onClick={() => setTyped("")} className="shrink-0 text-[#FFFFFF99] hover:text-text-primary">
+              <button type="button" aria-label={appsCopy.clearSearch} onClick={() => setTyped("")} className="shrink-0 text-text-secondary hover:text-text-primary">
                 <X className="size-4" strokeWidth={1.5} aria-hidden />
               </button>
             ) : null}
@@ -146,7 +146,7 @@ export function AppsCatalog() {
                     onClick={() => pick(p.id)}
                     className={cn(
                       "flex h-9 shrink-0 items-center justify-center rounded-lg px-[17px] text-sm leading-5 font-medium whitespace-nowrap shadow-[#0000000D_0px_1px_2px] transition-colors duration-150",
-                      on ? "bg-[#2E3031] text-text-soft" : "text-[#FFFFFF99] hover:bg-border-subtle hover:text-text-primary",
+                      on ? "bg-brand text-text-inverse" : "text-text-secondary hover:bg-border-subtle hover:text-text-primary",
                     )}
                   >
                     {p.label}

@@ -23,7 +23,7 @@ const t = imageCopy.tile;
 /* Every tile is 474 by 266 as drawn: no radius, 2px apart. */
 const tile = "group relative aspect-[474/266] overflow-clip bg-surface-secondary";
 const overlayButton =
-  "pointer-events-auto flex size-7 items-center justify-center rounded-md bg-[#00000080] text-text-primary backdrop-blur-sm transition-colors duration-150 hover:bg-[#000000B3]";
+  "pointer-events-auto flex size-7 items-center justify-center rounded-md bg-black/75 text-text-inverse backdrop-blur-sm transition-colors duration-150 hover:bg-[#000000B3]";
 const smallButton =
   "inline-flex h-7 items-center gap-1 rounded-md bg-border-subtle px-2 text-xs leading-4 font-medium text-text-primary transition-colors duration-150 hover:bg-border-default";
 

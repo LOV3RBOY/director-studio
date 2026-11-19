@@ -239,14 +239,14 @@ function SearchWindow({ onClose }: { onClose: () => void }) {
         e.preventDefault();
         inputRef.current?.focus();
       }}
-      className="fixed top-1/2 left-1/2 z-50 flex h-[min(642px,calc(100dvh-32px))] w-[min(760px,calc(100vw-16px))] -translate-x-1/2 -translate-y-1/2 animate-fade-in flex-col gap-[6px] overflow-hidden rounded-[28px] border border-[#FFFFFF1F] bg-[#23262AB2] text-text-primary shadow-[0_0_120px_#00000070] outline-none backdrop-blur-[64px]"
+      className="fixed top-1/2 left-1/2 z-50 flex h-[min(642px,calc(100dvh-32px))] w-[min(760px,calc(100vw-16px))] -translate-x-1/2 -translate-y-1/2 animate-fade-in flex-col gap-[6px] overflow-hidden ooo-panel text-text-primary shadow-[0_0_120px_#00000070] outline-none backdrop-blur-[64px]"
     >
       <D.Title className="sr-only">{c.title}</D.Title>
 
       {/* The field and the close button */}
       <div className="-mb-1 flex shrink-0 items-center gap-[6px] px-1 pt-1">
-        <label className="flex h-[52px] min-w-0 flex-1 items-center rounded-4xl bg-[#D9D9D90A] pl-3 transition-colors duration-150 focus-within:bg-[#D9D9D914]">
-          <Search className="size-6 shrink-0 text-[#737475]" strokeWidth={1.5} aria-hidden />
+        <label className="flex h-[52px] min-w-0 flex-1 items-center rounded-4xl bg-surface-tertiary pl-3 transition-colors duration-150 focus-within:bg-surface-elevated">
+          <Search className="size-6 shrink-0 text-text-tertiary" strokeWidth={1.5} aria-hidden />
           <span className="sr-only">{c.title}</span>
           <input
             ref={inputRef}
@@ -266,7 +266,7 @@ function SearchWindow({ onClose }: { onClose: () => void }) {
             placeholder={c.placeholder}
             autoComplete="off"
             spellCheck={false}
-            className="h-7 min-w-0 flex-1 bg-transparent px-2 text-lg leading-7 tracking-[-0.01em] text-text-primary outline-none placeholder:text-[#737475]"
+            className="h-7 min-w-0 flex-1 bg-transparent px-2 text-lg leading-7 tracking-[-0.01em] text-text-primary outline-none placeholder:text-text-tertiary"
           />
           {q ? (
             <button
@@ -284,7 +284,7 @@ function SearchWindow({ onClose }: { onClose: () => void }) {
         </label>
         <D.Close
           aria-label={c.close}
-          className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-[#D9D9D90A] text-text-primary transition-colors duration-150 hover:bg-border-default"
+          className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-surface-tertiary text-text-primary transition-colors duration-150 hover:bg-border-default"
         >
           <X className="size-6" strokeWidth={2} aria-hidden />
         </D.Close>
@@ -307,7 +307,7 @@ function SearchWindow({ onClose }: { onClose: () => void }) {
                 inputRef.current?.focus();
               }}
               className={cn(
-                "inline-flex h-8 shrink-0 items-center gap-1 rounded-full text-sm leading-5 font-medium whitespace-nowrap text-[#FFFFFFCC] transition-colors duration-150",
+                "inline-flex h-8 shrink-0 items-center gap-1 rounded-full text-sm leading-5 font-medium whitespace-nowrap text-text-secondary transition-colors duration-150",
                 on ? "bg-border-default px-[15px] text-text-primary" : "border border-border-default px-[14px] hover:bg-border-subtle",
               )}
             >
@@ -426,7 +426,7 @@ function ModelCard({ id, entry, item, active, onHover }: { id: string; entry: En
       <span aria-hidden className="absolute inset-0 bg-gradient-to-t from-[#00000099] to-transparent" />
       <span className="relative flex h-[26px] items-start justify-between gap-2">
         {maker ? (
-          <span className="inline-flex h-[26px] items-center gap-1 rounded-full bg-border-subtle px-2 text-2xs leading-[14px] font-medium text-[#FFFFFFCC] backdrop-blur-[8px]">
+          <span className="inline-flex h-[26px] items-center gap-1 rounded-full bg-black/75 px-2 text-2xs leading-[14px] font-medium text-text-inverse backdrop-blur-[8px]">
             <span className="flex size-[14px] items-center justify-center">
               <RowTileGlyph maker={maker} />
             </span>
@@ -443,8 +443,8 @@ function ModelCard({ id, entry, item, active, onHover }: { id: string; entry: En
       </span>
       <span className="relative flex min-w-0 flex-col">
         <span className="flex min-w-0 items-center gap-1">
-          <span className="truncate font-display text-base leading-[19px] font-bold text-[#FFFFFFE6] uppercase">{item.title}</span>
-          <ArrowUpRight className="size-[14px] shrink-0 text-[#FFFFFFE6]" strokeWidth={2} aria-hidden />
+          <span className="truncate font-display text-base leading-[19px] font-bold text-text-primary uppercase">{item.title}</span>
+          <ArrowUpRight className="size-[14px] shrink-0 text-text-primary" strokeWidth={2} aria-hidden />
         </span>
         <span className="truncate pt-[3px] text-xs leading-[18px] text-text-tab">{item.subtitle}</span>
       </span>

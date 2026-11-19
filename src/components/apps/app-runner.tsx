@@ -49,7 +49,7 @@ export function AppRunnerSkeleton() {
 
 const tile = "group relative aspect-square overflow-clip rounded-xl bg-surface-secondary";
 const overlayButton =
-  "flex size-7 items-center justify-center rounded-md bg-[#00000080] text-text-primary backdrop-blur-sm transition-colors duration-150 hover:bg-[#000000B3]";
+  "flex size-7 items-center justify-center rounded-md bg-black/75 text-text-inverse backdrop-blur-sm transition-colors duration-150 hover:bg-[#000000B3]";
 
 function Done({ job, asset }: { job: Job; asset: Asset }) {
   return (
@@ -260,7 +260,7 @@ export function AppRunner({ id }: { id: string }) {
     const missing = error instanceof ApiError && error.status === 404;
     return (
       <div className="mx-auto flex w-full max-w-[1280px] flex-col items-start gap-4 px-4 pt-10 pb-20">
-        <Link href={routes.apps} className="flex items-center gap-1 text-sm leading-5 font-medium text-[#FFFFFF99] transition-colors duration-150 hover:text-text-primary">
+        <Link href={routes.apps} className="flex items-center gap-1 text-sm leading-5 font-medium text-text-secondary transition-colors duration-150 hover:text-text-primary">
           <ChevronLeft className="size-4" strokeWidth={1.5} aria-hidden />
           {appCopy.back}
         </Link>
@@ -288,7 +288,7 @@ export function AppRunner({ id }: { id: string }) {
 
   return (
     <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-8 px-4 pt-10 pb-20">
-      <Link href={routes.apps} className="flex w-fit items-center gap-1 rounded-md text-sm leading-5 font-medium text-[#FFFFFF99] transition-colors duration-150 hover:text-text-primary">
+      <Link href={routes.apps} className="flex w-fit items-center gap-1 rounded-md text-sm leading-5 font-medium text-text-secondary transition-colors duration-150 hover:text-text-primary">
         <ChevronLeft className="size-4" strokeWidth={1.5} aria-hidden />
         {appCopy.back}
       </Link>
@@ -300,7 +300,7 @@ export function AppRunner({ id }: { id: string }) {
             <h1 className="font-display text-2xl leading-8 font-bold tracking-[-0.02em] text-text-primary uppercase sm:text-3xl sm:leading-[36px]">{app.name}</h1>
             {!available ? <Tag tone="neutral">{appsCopy.soon}</Tag> : app.badge ? <Tag tone="solid">{appsCopy.badge[app.badge]}</Tag> : null}
           </div>
-          <p className="text-sm leading-5 text-[#FFFFFF99]">{app.pitch}</p>
+          <p className="text-sm leading-5 text-text-secondary">{app.pitch}</p>
           <p className="text-xs leading-4 text-text-tertiary">
             {[app.categoryLabel, appCopy.makes[app.result], app.modelName ? appCopy.madeWith(app.modelName) : null].filter(Boolean).join(" · ")}
           </p>
@@ -349,7 +349,7 @@ export function AppRunner({ id }: { id: string }) {
                         onClick={() => setCount(n)}
                         className={cn(
                           "flex h-9 w-11 items-center justify-center rounded-lg text-sm leading-5 font-medium transition-colors duration-150",
-                          count === n ? "bg-[#2E3031] text-text-soft" : "bg-[#FFFFFF0A] text-[#FFFFFF99] hover:bg-border-default hover:text-text-primary",
+                          count === n ? "bg-brand text-text-inverse" : "bg-surface-tertiary text-text-secondary hover:bg-border-default hover:text-text-primary",
                         )}
                       >
                         {n}
@@ -404,7 +404,7 @@ export function AppRunner({ id }: { id: string }) {
                 </ul>
                 <div className="flex items-center gap-3 text-xs leading-4 text-text-tertiary">
                   <When at={latest.createdAt} />
-                  <button type="button" onClick={() => void refill(latest)} className="rounded-md px-2 py-1 font-medium text-[#FFFFFF99] transition-colors duration-150 hover:bg-border-subtle hover:text-text-primary">
+                  <button type="button" onClick={() => void refill(latest)} className="rounded-md px-2 py-1 font-medium text-text-secondary transition-colors duration-150 hover:bg-border-subtle hover:text-text-primary">
                     {appCopy.useInputs}
                   </button>
                 </div>
@@ -449,7 +449,7 @@ export function AppRunner({ id }: { id: string }) {
                       </div>
                       <div className="flex shrink-0 items-center gap-2 text-xs leading-4 text-text-tertiary">
                         <When at={run.createdAt} />
-                        <button type="button" onClick={() => void refill(run)} className="rounded-md px-2 py-1 font-medium text-[#FFFFFF99] transition-colors duration-150 hover:bg-border-subtle hover:text-text-primary">
+                        <button type="button" onClick={() => void refill(run)} className="rounded-md px-2 py-1 font-medium text-text-secondary transition-colors duration-150 hover:bg-border-subtle hover:text-text-primary">
                           {appCopy.useInputs}
                         </button>
                       </div>
