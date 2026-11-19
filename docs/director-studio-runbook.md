@@ -40,7 +40,7 @@ Use a built app and run `node scripts/studio-local-tls.mjs` with a private IPv4 
 
 Use two private Hermes profiles. Set the Director profile's API server toolset list to empty. The crew profile can list only the Studio MCP server in its API server toolsets. Set its MCP URL to the Studio engine endpoint and share a unique bearer token. Set `STUDIO_LOCAL_MCP_PORT` to make that route available through a loopback-only listener on the Mac. Set `SUPER_ENGINE=hermes`, `HERMES_URL`, `HERMES_API_KEY`, and `SUPER_ENGINE_TOKEN` to route crew chat through it. The agent directory at `/agents` stores the selected role with each chat and uses the same owned library and tool approval flow.
 
-The iPhone needs access to the private network and the Mac must stay online. A .local address cannot serve signed references to MuAPI over the internet. Public rendering requires a reachable HTTPS ingest origin or the provider upload mode, with the user's approval to send assets to MuAPI. Keep server credentials out of the iPhone app.
+The local Mac pilot requires the phone and Mac to share a network. For remote use, deploy the same app and Hermes profiles to a persistent Linux host with a public HTTPS origin. The private test build places Open Studio and device unlock before a stored session, using system trust for a public HTTPS origin. A .local address cannot serve signed references to MuAPI over the internet. Public rendering requires a reachable HTTPS ingest origin or the provider upload mode, with the user's approval to send assets to MuAPI. Keep server credentials out of the iPhone app.
 
 ## Storage, replay, and rollback
 

@@ -13,7 +13,15 @@ struct DirectorStudioApp: App {
                 } else if let api = session.api {
                     ConnectedStudio(session: session, api: api)
                 } else {
+                    #if DEBUG
+                    if session.isPilot {
+                        StudioPilotSignIn(session: session)
+                    } else {
+                        StudioSignIn(session: session)
+                    }
+                    #else
                     StudioSignIn(session: session)
+                    #endif
                 }
             }
             .environment(\.colorScheme, .light)
@@ -57,19 +65,6 @@ private struct StudioSignIn: View {
                     }
                     .padding(.vertical, 12)
                 }
-                #if DEBUG
-                if let pilot = session.pilotAddress {
-                    Section {
-                        Button(working ? "Connecting…" : "Open local studio") {
-                            Task { await connectPilot(pilot) }
-                        }
-                        .disabled(working)
-                        .accessibilityIdentifier("open-local-studio")
-                    } footer: {
-                        Text("Connect to the Studio server on this Mac’s local network.")
-                    }
-                }
-                #endif
                 Section("Studio server") {
                     TextField("https://studio.example.com", text: $session.address)
                         .keyboardType(.URL).textContentType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
@@ -106,25 +101,12 @@ private struct StudioSignIn: View {
                 #if DEBUG
                 if ProcessInfo.processInfo.arguments.contains("--fresh-sign-in") { return }
                 #endif
-                do {
-                    try await session.restore()
-                    #if DEBUG
-                    if session.api == nil, let pilot = session.pilotAddress { await connectPilot(pilot) }
-                    #endif
-                } catch { if !Task.isCancelled { self.error = error.localizedDescription } }
+                do { try await session.restore() }
+                catch { if !Task.isCancelled { self.error = error.localizedDescription } }
             }
             .studioError($error)
         }
     }
-
-    #if DEBUG
-    private func connectPilot(_ pilot: String) async {
-        working = true
-        defer { working = false }
-        do { try await session.connectPilot(pilot) }
-        catch { self.error = error.localizedDescription }
-    }
-    #endif
 
     private func connect() async {
         working = true
@@ -135,3 +117,73 @@ private struct StudioSignIn: View {
         } catch { self.error = error.localizedDescription }
     }
 }
+
+#if DEBUG
+private struct StudioPilotSignIn: View {
+    @Bindable var session: StudioSession
+    @Environment(\.openURL) private var openURL
+    @State private var connecting = false
+    @State private var problem: String?
+    @State private var showNetworkSettings = false
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Image("Wordmark")
+                    .resizable().scaledToFit().frame(width: 140)
+                    .accessibilityLabel("Out of Order")
+                Text("Open the studio.")
+                    .font(.custom("InterTight-Regular", size: 47, relativeTo: .largeTitle).weight(.heavy))
+                    .tracking(-2.5)
+                    .accessibilityAddTraits(.isHeader)
+                Button {
+                    Task { await connect() }
+                } label: {
+                    HStack {
+                        if connecting { ProgressView().tint(.white) }
+                        Label(connecting ? "Connecting…" : "Open Studio", systemImage: "viewfinder")
+                        Spacer()
+                        Image(systemName: "arrow.up.right").accessibilityHidden(true)
+                    }
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .padding(17)
+                    .background(LinearGradient(colors: [Color(white: 0.18), .black], startPoint: .topLeading, endPoint: .bottomTrailing), in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .disabled(connecting)
+                .accessibilityIdentifier("open-local-studio")
+                if let problem {
+                    Text(problem).font(.callout).foregroundStyle(.secondary)
+                    if showNetworkSettings {
+                        Button("Open iPhone Settings") {
+                            if let settings = URL(string: UIApplication.openSettingsURLString) { openURL(settings) }
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+                Button("Open offline demo") { session.inDemo = true }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("open-offline-demo")
+            }
+            .padding(24)
+            .padding(.top, 28)
+            .frame(maxWidth: 460)
+            .frame(maxWidth: .infinity)
+        }
+        .background { StudioGround() }
+    }
+
+    private func connect() async {
+        connecting = true
+        problem = nil
+        showNetworkSettings = false
+        defer { connecting = false }
+        do { try await session.openPilot() }
+        catch {
+            problem = error.localizedDescription
+            if let error = error as? StudioAPIError, case .localNetwork = error { showNetworkSettings = true }
+        }
+    }
+}
+#endif
