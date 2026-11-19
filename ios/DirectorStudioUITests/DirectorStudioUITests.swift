@@ -49,6 +49,9 @@ final class DirectorStudioUITests: XCTestCase {
         password.typeText("fixture-password")
         app.buttons["Sign in"].tap()
 
+        let director = app.tabBars.buttons["Director"]
+        XCTAssertTrue(director.waitForExistence(timeout: 20))
+        director.tap()
         let project = app.staticTexts["iPhone fixture project"]
         XCTAssertTrue(project.waitForExistence(timeout: 20))
         return app

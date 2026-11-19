@@ -1,3 +1,4 @@
+import { findStudioAgent } from "@/config/studio-agents";
 import { badRequest, intParam, readJson, route } from "@/server/http";
 import { listChats, newChat } from "@/server/super/chats";
 import { ensureSuper } from "@/server/super/loop";
@@ -20,13 +21,16 @@ export const GET = route(({ req, user }) => {
   };
 });
 
-/** POST /api/super/chats  { title?, projectId?, skillIds?, incognito? } */
+/** POST /api/super/chats  { title?, projectId?, skillIds?, incognito?, agentId? } */
 export const POST = route(async ({ req, user }) => {
   ensureSuper();
   const body = await readJson(req);
   if (body.projectId != null && typeof body.projectId !== "string") throw badRequest("projectId must be an id.");
+  const agent = findStudioAgent(body.agentId);
+  if (body.agentId != null && !agent) throw badRequest("Choose an agent from the directory.");
   const chat = newChat(user.id, {
     title: text(body.title, "Title", 80),
+    agentId: agent?.id,
     projectId: (body.projectId as string | undefined) ?? null,
     skillIds: idList(body.skillIds, "skillIds", 10),
     incognito: bool(body.incognito, "incognito") ?? false,

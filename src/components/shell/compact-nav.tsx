@@ -154,7 +154,7 @@ export function CompactNav({ active }: { active?: NavId }) {
   return (
     <header className="flex h-11 shrink-0 items-start">
       <nav aria-label="Main" className="flex h-9 w-full items-center gap-3 px-4">
-        <Link href={routes.home} aria-label={`${brand.name} home`} className="shrink-0 rounded-sm">
+        <Link href={routes.studio} aria-label={`${brand.name} home`} className="shrink-0 rounded-sm">
           <LogoMark size={20} />
         </Link>
         <div className="hidden h-7 min-w-0 flex-1 items-center overflow-x-auto scroll-none min-[900px]:flex">

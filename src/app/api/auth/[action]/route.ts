@@ -1,8 +1,20 @@
+import { timingSafeEqual } from "node:crypto";
 import { AccountError, createGuest, endSession, logIn, publicUser, signUp, startSession, type User } from "@/server/auth";
 import { balance } from "@/server/credits";
 import { badRequest, clientKey, notFound, publicRoute, rateLimit, readJson } from "@/server/http";
 
 const HOUR = 3_600_000;
+
+function privatePilot() {
+  const code = process.env.STUDIO_PILOT_CODE;
+  const email = process.env.STUDIO_PILOT_EMAIL;
+  return process.env.COOKIE_SECURE === "1" && code && /^[a-f0-9]{64}$/.test(code) && email ? { code, email } : null;
+}
+
+function pilotCodeMatches(expected: string, supplied: unknown) {
+  if (typeof supplied !== "string" || !/^[a-f0-9]{64}$/.test(supplied)) return false;
+  return timingSafeEqual(Buffer.from(expected, "utf8"), Buffer.from(supplied, "utf8"));
+}
 
 /**
  * POST /api/auth/signup  { email, password, name? }   a guest who signs up keeps their work
@@ -12,10 +24,24 @@ const HOUR = 3_600_000;
  */
 export const POST = publicRoute<{ action: string }>(async ({ req, user, params }) => {
   const who = clientKey(req);
+  const pilot = privatePilot();
+  if (process.env.STUDIO_PILOT_CODE && !["pilot", "logout"].includes(params.action)) throw notFound();
   let next: User | null;
   let body: Record<string, unknown>;
   try {
     switch (params.action) {
+      case "pilot":
+        if (!pilot) throw notFound();
+        rateLimit(`pilot:${who}`, 20, HOUR / 4);
+        body = await readJson(req);
+        if (!pilotCodeMatches(pilot.code, body.code)) throw notFound();
+        try {
+          next = logIn({ email: pilot.email, password: pilot.code });
+        } catch (err) {
+          if (!(err instanceof AccountError)) throw err;
+          next = signUp({ email: pilot.email, password: pilot.code, name: "Studio owner" }, null);
+        }
+        break;
       case "signup":
         rateLimit(`signup:${who}`, 10, HOUR);
         body = await readJson(req);

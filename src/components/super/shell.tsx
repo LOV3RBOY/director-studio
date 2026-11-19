@@ -4,7 +4,6 @@ import { Menu, PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { LogoMark } from "@/components/brand/logo";
-import { routes } from "@/content/site";
 import { copy } from "@/content/super";
 import { cn, Tag } from "@/ui";
 import { useDemoHint, useSuperEvents } from "./data";
@@ -54,8 +53,7 @@ export function SuperShell({
 
       <main className="flex min-w-0 flex-1 flex-col py-1 pr-1 pl-1 lg:pl-0">
         <div className="relative flex min-h-0 flex-1 flex-col overflow-clip rounded-2xl">
-          <div className="pointer-events-none absolute top-0 right-0 left-0 z-20 flex h-[60px] items-start justify-between px-5 pt-5"
-            style={{ backgroundImage: "linear-gradient(180deg, #131416 55%, #13141600 100%)" }}>
+          <div className="ooo-chat-header pointer-events-none absolute top-0 right-0 left-0 z-20 flex h-[60px] items-start justify-between px-5 pt-4">
             <div className="pointer-events-auto flex items-center gap-2">
               <button
                 type="button"
@@ -76,7 +74,7 @@ export function SuperShell({
                 </button>
               ) : null}
               <Link
-                href={routes.home}
+                href="/studio"
                 aria-label={copy.nav.home}
                 className={cn("items-center rounded-md lg:hidden", collapsed ? "lg:flex" : "flex")}
               >

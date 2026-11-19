@@ -1,5 +1,7 @@
 "use client";
 
+import { findStudioAgent } from "@/config/studio-agents";
+
 import { HatGlasses, Pin } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useSWR, { mutate } from "swr";
@@ -163,7 +165,8 @@ export function SuperChat({ id }: { id: string }) {
       <div className="pointer-events-none absolute top-5 right-20 left-24 z-30 flex h-8 items-center justify-center gap-2 lg:left-28">
         {chat?.pinned ? <Pin className="size-3 shrink-0 text-text-secondary" strokeWidth={1.5} aria-label={copy.chat.pinned} /> : null}
         {chat?.incognito ? <HatGlasses className="size-4 shrink-0 text-brand" strokeWidth={1.5} aria-label={copy.chat.private} /> : null}
-        <h1 className="truncate text-sm leading-5 font-medium text-text-primary">{chat?.title || copy.nav.newChat}</h1>
+        {chat?.agentId && <span className="shrink-0 text-xs font-semibold text-text-primary">{findStudioAgent(chat.agentId)?.name}</span>}
+        <h1 className="truncate text-sm leading-5 font-medium text-text-secondary">{chat?.title || copy.nav.newChat}</h1>
         {running ? <Spinner /> : null}
       </div>
       <div

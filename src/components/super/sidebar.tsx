@@ -366,7 +366,7 @@ export function Sidebar({
       <div className="mt-1 flex h-11 shrink-0 items-center justify-center">
         <div className="flex h-11 w-[162px] items-center justify-center rounded-xl">
           <Link
-            href={routes.home}
+            href={routes.studio}
             aria-label={copy.nav.home}
             className="flex h-9 w-[154px] items-center justify-center gap-[9px] rounded-xl bg-border-subtle [box-shadow:#0000000F_0px_2px_8px] transition-colors duration-150 hover:bg-border-default"
           >

@@ -4,7 +4,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import UIKit
 
-let directorAccent = Color(red: 0.91, green: 0.37, blue: 0.20)
+let directorAccent = Color(red: 0.067, green: 0.067, blue: 0.078)
 
 extension View {
     func studioError(_ message: Binding<String?>) -> some View {

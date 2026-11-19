@@ -9,6 +9,8 @@ import { brand } from "@/config/brand";
 /** Every page address. Link with these, never with a typed-out string. */
 export const routes = {
   home: "/",
+  studio: "/studio",
+  agents: "/agents",
   explore: "/explore",
   community: "/community",
   /** One public post: `${routes.post}/<post id>`. */

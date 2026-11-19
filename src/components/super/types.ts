@@ -5,6 +5,7 @@ export interface Chat {
   title: string;
   projectId: string | null;
   skillIds: string[];
+  agentId?: string | null;
   pinned: boolean;
   incognito: boolean;
   state: "idle" | "running" | "waiting";

@@ -7,6 +7,18 @@
         <key>NSAllowsLocalNetworking</key>
         <true/>
     </dict>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>Out of Order connects to your Studio server on your private network.</string>
+    <key>UIAppFonts</key>
+    <array>
+        <string>InterTight-Variable.ttf</string>
+    </array>
+    <key>StudioPilotURL</key>
+    <string>$(STUDIO_PILOT_URL)</string>
+    <key>StudioPilotCertificate</key>
+    <string>$(STUDIO_PILOT_CERTIFICATE)</string>
+    <key>StudioPilotCode</key>
+    <string>$(STUDIO_PILOT_PAIR_CODE)</string>
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>

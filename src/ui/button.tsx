@@ -8,11 +8,11 @@ const base =
 /** The button looks the designs draw. Hover and pressed states are ours: one step lighter or darker. */
 const variants = {
   /** The lime call to action ("Get started"). */
-  lime: "bg-brand text-text-inverse hover:bg-brand-glow active:bg-brand-pressed",
+  lime: "bg-brand bg-gradient-to-br from-[#2C2C31] to-[#0A0A0C] text-text-inverse hover:from-[#3D3D45] active:bg-brand-pressed",
   /** Lime text on a lime wash ("Login"). */
   tint: "bg-brand-tint text-brand shadow-inset-soft hover:bg-brand-chip",
   /** The white pill ("Learn now", the banner button). */
-  white: "bg-text-primary text-text-inverse shadow-pill hover:bg-text-soft",
+  white: "bg-white text-text-primary shadow-pill hover:bg-surface-tertiary",
   /** A hairline box ("View", "Filter"). */
   outline: "border border-border-default text-text-primary hover:bg-border-subtle",
   /** The quiet grey used by chips and menu rows. */

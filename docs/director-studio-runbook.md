@@ -15,11 +15,13 @@ The workflow named **Director Studio checks** packages the iOS sources, unzips t
 | DIRECTOR_MODE | Set explicitly to mock or live. Anything else disables Director. Records and jobs are scoped to their originating mode. |
 | PARALLAX_DATA_DIR | Persistent private directory for SQLite, assets, evidence, and ZIP exports. |
 | PARALLAX_ORIGIN and COOKIE_SECURE=1 | HTTPS origin reachable from the iPhone and MuAPI, with secure session cookies. |
-| DIRECTOR_HERMES_URL and DIRECTOR_HERMES_KEY | Dedicated private Hermes API origin and server credential. Configure xAI and Anthropic credentials in that isolated Hermes profile under its provider settings. |
-| DIRECTOR_HERMES_GROK_MODEL and DIRECTOR_HERMES_GROK_PROVIDER | Optional override for grok-4.7 on xai. Test the configured model and provider with the installed gateway. |
-| DIRECTOR_HERMES_FABLE_MODEL and DIRECTOR_HERMES_FABLE_PROVIDER | Optional override for claude-fable-5-2 on anthropic. Test image input and model identity with the installed gateway. |
+| DIRECTOR_HERMES_URL and DIRECTOR_HERMES_KEY | Dedicated private Hermes API origin and server credential. Configure the model provider credentials in that isolated Hermes profile. |
+| DIRECTOR_HERMES_MODEL and DIRECTOR_HERMES_PROVIDER | Authoring model and provider for the private Hermes gateway. Defaults to claude-fable-5-2 on anthropic. Test structured and image input against the configured profile. |
+| DIRECTOR_HERMES_CHAT_MODEL and DIRECTOR_HERMES_CHAT_PROVIDER | Optional server-side overrides for Director chat. Defaults to the same Hermes model and provider as authoring. |
 | DIRECTOR_DAILY_AUTHORING_JOBS | Positive integer live job cap across learning, planning and chat. Learning can request one additional bounded evidence window. Configure provider ceilings on the dedicated credential and gateway before live use. |
 | DIRECTOR_MUAPI_KEY | Server-side MuAPI credential. |
+| DIRECTOR_MUAPI_REFERENCE_MODE | Set to upload to send approved references to MuAPI's upload endpoint. The default uses signed, expiring links. |
+| DIRECTOR_INGEST_ORIGIN | Optional distinct HTTPS base URL for signed media ingestion. Defaults to the configured Studio origin. |
 | DIRECTOR_MUAPI_OUTPUT_HOSTS | Comma-separated exact HTTPS hostnames approved for MuAPI result files. Verify against the actual response before allowing a host. |
 | DIRECTOR_INGEST_SECRET and DIRECTOR_INGEST_TTL_SECONDS | Random secret of at least 32 characters for scoped asset links. TTL defaults to 900 seconds and supports 60–1,800 seconds. Exclude query strings from ingress access logs. |
 | DIRECTOR_RENDER_RATES | JSON object mapping model/resolution/quality for 2.0 and model/resolution for 2.5 to objects with numeric output and referenceVideo USD rates per second. Example key seedance-2.0/720p/high. Enter approved account rates before enabling renders. |
@@ -31,6 +33,14 @@ The workflow named **Director Studio checks** packages the iOS sources, unzips t
 | DIRECTOR_SUBSCRIPTION_REQUIRED | Optional value 1 requires an active production subscription for new authoring jobs. |
 
 Keep upstream demo seeding and demo billing off in live deployments. Do not place the service keys in the app, exports or CI logs. Scope ingress and application access to the designated workspace. Use an isolated Hermes profile with gateway toolsets disabled, disabled external memory and no connected browser, user shell or other accounts. Director supplies bounded evidence from its own storage and checks the gateway model reported for the turn. Features with missing credentials fail when requested and return a recoverable error. They do not synthesize a live result.
+
+## Private iPhone pilot
+
+Use a built app and run `node scripts/studio-local-tls.mjs` with a private IPv4 interface in `STUDIO_LISTEN_ADDRESS`, an HTTPS .local `PARALLAX_ORIGIN`, `STUDIO_TLS_CERT` and `STUDIO_TLS_KEY` file paths, `COOKIE_SECURE=1`, a dedicated `STUDIO_PILOT_EMAIL`, and a randomly generated 32-byte hex `STUDIO_PILOT_CODE`. Use a dedicated data directory. In this mode signup, guest sessions, and password login are disabled. A Debug iPhone build can pair through **Open local studio** using `STUDIO_PILOT_URL`, the base64 DER leaf certificate in `STUDIO_PILOT_CERTIFICATE`, and `STUDIO_PILOT_PAIR_CODE` matching the server. Pass the code via a private xcconfig outside version control. Only distribute that paired build to the owner. The app pins the certificate for the configured host and port in Debug.
+
+Use two private Hermes profiles. Set the Director profile's API server toolset list to empty. The crew profile can list only the Studio MCP server in its API server toolsets. Set its MCP URL to the Studio engine endpoint and share a unique bearer token. Set `STUDIO_LOCAL_MCP_PORT` to make that route available through a loopback-only listener on the Mac. Set `SUPER_ENGINE=hermes`, `HERMES_URL`, `HERMES_API_KEY`, and `SUPER_ENGINE_TOKEN` to route crew chat through it. The agent directory at `/agents` stores the selected role with each chat and uses the same owned library and tool approval flow.
+
+The iPhone needs access to the private network and the Mac must stay online. A .local address cannot serve signed references to MuAPI over the internet. Public rendering requires a reachable HTTPS ingest origin or the provider upload mode, with the user's approval to send assets to MuAPI. Keep server credentials out of the iPhone app.
 
 ## Storage, replay, and rollback
 

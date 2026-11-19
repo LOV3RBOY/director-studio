@@ -136,7 +136,7 @@ async function perform(row: JobRow) {
     return;
   }
   if (row.mode === "live" && row.state !== "polling") {
-    const prepared = prepareMuapi(row, pack, project.request, input.clip);
+    const prepared = await prepareMuapi(row, pack, project.request, input.clip);
     run("UPDATE director_jobs SET state = 'submitting', updated_at = ? WHERE id = ?", Date.now(), row.id);
     const requestId = await submitMuapi(prepared);
     try {

@@ -3,13 +3,14 @@ import Observation
 import Security
 
 enum StudioAPIError: LocalizedError {
-    case address, session, invalidResponse, uploadSize, keychain(OSStatus)
+    case address, session, invalidResponse, uploadSize, localMode, keychain(OSStatus)
 
     var errorDescription: String? {
         switch self {
         case .address: "Enter an HTTPS Studio server address without a path."
         case .session: "The server did not start a session. Check your sign-in and try again."
         case .invalidResponse: "The server returned an unreadable result."
+        case .localMode: "Live Studio requires an HTTPS server and a signed-in account."
         case .uploadSize: "Choose a file under 30 MB."
         case .keychain: "Keychain could not save the sign-in. Unlock your device and try again."
         }
@@ -86,7 +87,17 @@ struct StudioAPI {
     }
 
     func authenticate(email: String, password: String, signup: Bool) async throws -> String {
-        let (_, response) = try await send("/api/auth/\(signup ? "signup" : "login")", ["email": email, "password": password])
+        try await sessionToken(path: "/api/auth/\(signup ? "signup" : "login")", body: ["email": email, "password": password])
+    }
+
+    #if DEBUG
+    func pilotToken(_ code: String) async throws -> String {
+        try await sessionToken(path: "/api/auth/pilot", body: ["code": code])
+    }
+    #endif
+
+    private func sessionToken(path: String, body: some Encodable) async throws -> String {
+        let (_, response) = try await send(path, body)
         let headers = response.allHeaderFields.reduce(into: [String: String]()) { result, item in
             result[String(describing: item.key)] = String(describing: item.value)
         }
@@ -129,7 +140,37 @@ struct StudioAPI {
     }
 }
 
+enum StudioPilotTrust {
+    static func answer(_ challenge: URLAuthenticationChallenge) -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+        #if DEBUG
+        let protection = challenge.protectionSpace
+        if protection.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+           let rawOrigin = Bundle.main.object(forInfoDictionaryKey: "StudioPilotURL") as? String,
+           let origin = URL(string: rawOrigin), origin.scheme == "https",
+           origin.host?.caseInsensitiveCompare(protection.host) == .orderedSame,
+           (origin.port ?? 443) == protection.port,
+           let encoded = Bundle.main.object(forInfoDictionaryKey: "StudioPilotCertificate") as? String,
+           let certificateData = Data(base64Encoded: encoded),
+           let pin = SecCertificateCreateWithData(nil, certificateData as CFData),
+           let trust = protection.serverTrust {
+            SecTrustSetPolicies(trust, SecPolicyCreateSSL(true, protection.host as CFString))
+            SecTrustSetAnchorCertificates(trust, [pin] as CFArray)
+            SecTrustSetAnchorCertificatesOnly(trust, true)
+            SecTrustSetNetworkFetchAllowed(trust, false)
+            guard SecTrustEvaluateWithError(trust, nil) else { return (.cancelAuthenticationChallenge, nil) }
+            return (.useCredential, URLCredential(trust: trust))
+        }
+        #endif
+        return (.performDefaultHandling, nil)
+    }
+}
+
 private final class NoRedirects: NSObject, URLSessionTaskDelegate {
+    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge) async
+        -> (URLSession.AuthChallengeDisposition, URLCredential?) {
+        StudioPilotTrust.answer(challenge)
+    }
+
     func urlSession(
         _ session: URLSession,
         task: URLSessionTask,
@@ -200,6 +241,31 @@ final class StudioSession {
     var commerce = false
     var inDemo = false
     var address = UserDefaults.standard.string(forKey: "studioAddress") ?? ""
+
+    #if DEBUG
+    var pilotAddress: String? {
+        guard !ProcessInfo.processInfo.arguments.contains("--fresh-sign-in"),
+              let value = Bundle.main.object(forInfoDictionaryKey: "StudioPilotURL") as? String,
+              (try? StudioAPI.address(value)) != nil else { return nil }
+        return value
+    }
+
+    func connectPilot(_ value: String) async throws {
+        let base = try StudioAPI.address(value)
+        let anonymous = StudioAPI(base: base, token: nil)
+        guard base.scheme == "https", let code = Bundle.main.object(forInfoDictionaryKey: "StudioPilotCode") as? String,
+              code.count == 64 else { throw StudioAPIError.localMode }
+        if let existing = SessionsKeychain.read(base) {
+            do {
+                try await open(base: base, token: existing)
+                return
+            } catch let problem as StudioProblem where problem.code == "unauthorized" {
+                SessionsKeychain.delete(base)
+            }
+        }
+        try await open(base: base, token: anonymous.pilotToken(code))
+    }
+    #endif
 
     func restore() async throws {
         guard let base = try? StudioAPI.address(address), let token = SessionsKeychain.read(base) else { return }

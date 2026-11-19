@@ -6,14 +6,6 @@ const nextConfig: NextConfig = {
   // Lets the dev server be opened by address as well as by name (walk-throughs use the address).
   allowedDevOrigins: ["127.0.0.1"],
   partialPrefetching: true,
-  turbopack: {
-    rules: {
-      "*.css": {
-        loaders: ["@tailwindcss/turbopack"],
-        as: "*.css",
-      },
-    },
-  },
 };
 
 export default nextConfig;

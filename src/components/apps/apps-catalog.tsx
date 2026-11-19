@@ -134,7 +134,7 @@ export function AppsCatalog() {
             ) : null}
           </label>
           <div className="relative min-w-0 flex-1">
-            <div role="tablist" aria-label="Categories" className="flex h-11 items-center gap-1 overflow-x-auto scroll-none rounded-xl bg-[#131517] px-1 shadow-[#FFFFFF05_0px_0px_0px_1px] md:w-fit md:max-w-full">
+            <div role="tablist" aria-label="Categories" className="flex h-11 items-center gap-1 overflow-x-auto scroll-none rounded-xl bg-surface-primary px-1 shadow-[#FFFFFF05_0px_0px_0px_1px] md:w-fit md:max-w-full">
               {pills.map((p) => {
                 const on = category === p.id;
                 return (
@@ -164,7 +164,7 @@ export function AppsCatalog() {
         ) : null}
 
         {listError ? (
-          <div role="alert" className="flex flex-col items-start gap-3 rounded-2xl bg-[#131517] p-6">
+          <div role="alert" className="flex flex-col items-start gap-3 rounded-2xl bg-surface-primary p-6">
             <p className="text-sm leading-5 text-text-primary">{appsCopy.loadError}</p>
             <p className="text-sm leading-5 text-text-secondary">{errorMessage(listError)}</p>
             <Button variant="outline" size="sm" onClick={() => void (all.mutate(), list.mutate())}>
@@ -182,7 +182,7 @@ export function AppsCatalog() {
             }
           >
             {list.data && list.data.apps.length === 0 ? (
-              <div className="flex flex-col items-start gap-3 rounded-2xl bg-[#131517] p-6">
+              <div className="flex flex-col items-start gap-3 rounded-2xl bg-surface-primary p-6">
                 <p className="text-sm leading-5 text-text-primary">{appsCopy.emptySearch}</p>
                 <Button variant="outline" size="sm" onClick={() => (setTyped(""), setQ(""), setCategory(null))}>
                   {appsCopy.clearSearch}

@@ -3,11 +3,10 @@ import type { NavId } from "@/content/site";
 import { cn } from "@/ui";
 import { CompactNav } from "./compact-nav";
 import { FullNav } from "./full-nav";
-import { PromoBanner } from "./promo-banner";
 import { SiteFooter } from "./site-footer";
 
 /**
- * The frame around every app page: the offer strip, the nav, then the page.
+ * The frame around every app page: the nav and the page.
  *
  *   <AppShell active="image" fixed>...</AppShell>
  *   <AppShell active="pricing" nav="full" footer>...</AppShell>
@@ -37,7 +36,6 @@ export function AppShell({
 }) {
   return (
     <div className={cn("flex flex-col", fixed ? "h-dvh overflow-hidden" : "min-h-dvh")}>
-      <PromoBanner />
       {nav === "full" ? <FullNav active={active} /> : <CompactNav active={active} />}
       <main className="relative flex min-h-0 flex-1 flex-col">{children}</main>
       {footer && !fixed ? <SiteFooter /> : null}

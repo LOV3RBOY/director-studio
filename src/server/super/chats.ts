@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { StudioAgentId } from "@/config/studio-agents";
 import { all, run } from "@/server/db";
 import { badRequest } from "@/server/errors";
 import { publish } from "./hub";
@@ -38,7 +39,7 @@ export function listChats(userId: string, f: ChatFilter): Chat[] {
   return all<ChatRow>(`SELECT * FROM super_chats WHERE ${where.join(" AND ")} ORDER BY pinned DESC, updated_at DESC LIMIT ?`, ...params, f.limit).map(toChat);
 }
 
-export function newChat(userId: string, input: { title: string; projectId: string | null; skillIds: string[]; incognito: boolean }): Chat {
+export function newChat(userId: string, input: { title: string; projectId: string | null; skillIds: string[]; incognito: boolean; agentId?: StudioAgentId }): Chat {
   if (all("SELECT 1 FROM super_chats WHERE user_id = ? LIMIT ?", userId, limits.maxChats).length >= limits.maxChats) {
     throw badRequest(`You have ${limits.maxChats} chats. Delete some to start new ones.`);
   }

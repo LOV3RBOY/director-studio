@@ -1,10 +1,6 @@
-/**
- * Everything that names the product lives here, so a rename is a one-file change.
- * This is an original brand. It reuses no name, logo, copy or artwork from any other product.
- */
 export const brand = {
-  name: "Parallax",
-  tagline: "One studio for every generative model.",
+  name: "Out of Order",
+  tagline: "Production studio",
   description:
     "An open-source creative studio. Pick a model, set the shot, see the price before you press Generate.",
   /** Shown in the footer and the About dialog. */

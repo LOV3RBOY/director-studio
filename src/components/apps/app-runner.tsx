@@ -38,8 +38,8 @@ export function AppRunnerSkeleton() {
         </div>
       </div>
       <div className="grid gap-6 lg:grid-cols-[400px_minmax(0,1fr)]">
-        <div className="shimmer h-[480px] rounded-2xl bg-[#131517]" />
-        <div className="shimmer h-[360px] rounded-2xl bg-[#131517]" />
+        <div className="shimmer h-[480px] rounded-2xl bg-surface-primary" />
+        <div className="shimmer h-[360px] rounded-2xl bg-surface-primary" />
       </div>
     </div>
   );
@@ -377,7 +377,7 @@ export function AppRunner({ id }: { id: string }) {
               onClick={signedOut ? () => setLoginOpen(true) : undefined}
               disabled={!available || busy || (!signedOut && missingInputs.length > 0)}
               title={missingInputs.length > 0 ? `Add ${missingInputs.map((i) => i.label).join(", ")} first.` : undefined}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-text-primary text-sm leading-5 font-semibold text-[#131517] shadow-[#E6E6E6_0px_1px_0px_inset,#C1C1C1_0px_-2px_0px_inset,#C1C1C1_0px_-3px_0px] transition-colors duration-150 hover:bg-text-soft disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand text-sm leading-5 font-semibold text-text-inverse shadow-pill transition-colors duration-150 hover:bg-brand-glow disabled:cursor-not-allowed disabled:opacity-40"
             >
               {busy ? <Spinner label={appCopy.running} /> : <Play className="size-3 fill-current" strokeWidth={1.5} aria-hidden />}
               {runLabel}

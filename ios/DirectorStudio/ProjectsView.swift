@@ -42,6 +42,8 @@ struct ProjectsView: View {
                 }
                 .refreshable { await reload() }
             }
+            .scrollContentBackground(.hidden)
+            .background { StudioGround() }
             .navigationTitle("Director")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

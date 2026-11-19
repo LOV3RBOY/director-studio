@@ -3,7 +3,7 @@ import { copyFile, mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { usdToMillicredits } from "@/config/economy";
-import { assetFile, fileResponse, type AssetRow } from "../assets";
+import { assetFile, fileResponse, readAsset, type AssetRow } from "../assets";
 import { get, tx } from "../db";
 import { ApiError, badRequest, notFound } from "../errors";
 import { configuredOrigin } from "../origin";
@@ -24,16 +24,41 @@ export class RenderPending extends Error {}
 
 function muapiConfig() {
   const key = process.env.DIRECTOR_MUAPI_KEY?.trim();
-  const secret = process.env.DIRECTOR_INGEST_SECRET;
-  const origin = configuredOrigin();
   const hosts = process.env.DIRECTOR_MUAPI_OUTPUT_HOSTS?.split(",").map((host) => host.trim().toLowerCase()).filter(Boolean);
-  if (!key || !secret || secret.length < 32 || !origin?.startsWith("https://") || !hosts?.length) {
-    throw new ApiError(503, "render_unavailable", "Live rendering needs MuAPI, private media signing, HTTPS and an output host allowlist.");
+  if (!key || !hosts?.length) {
+    throw new ApiError(503, "render_unavailable", "Live rendering needs MuAPI and an output host allowlist.");
   }
-  return { key, secret, origin, hosts };
+  return { key, hosts };
 }
 
-const ratesSchema = z.record(z.string(), z.object({ output: z.number().positive(), referenceVideo: z.number().nonnegative() }));
+function signedMediaConfig() {
+  const secret = process.env.DIRECTOR_INGEST_SECRET;
+  const origin = process.env.DIRECTOR_INGEST_ORIGIN || configuredOrigin();
+  let url: URL;
+  try {
+    url = new URL(origin ?? "");
+  } catch {
+    throw new ApiError(503, "render_unavailable", "Configure a reachable HTTPS address for signed MuAPI references.");
+  }
+  if (!secret || secret.length < 32 || url.protocol !== "https:" || url.hostname.endsWith(".local")
+      || url.username || url.password || url.pathname !== "/" || url.search || url.hash) {
+    throw new ApiError(503, "render_unavailable", "Configure a reachable HTTPS address for signed MuAPI references.");
+  }
+  return { secret, origin: url.origin };
+}
+
+const uploadReferences = () => process.env.DIRECTOR_MUAPI_REFERENCE_MODE === "upload";
+const muapiReferenceLimit = (asset: AssetRow) => (asset.kind === "video" ? 50 : 10) * 1_000_000;
+
+function checkReferences(userId: string, clip: CompiledClip) {
+  const assets = clip.attachments.map((ref) => ({ ref, asset: inspectAsset(userId, ref.assetId) }));
+  if (uploadReferences() && assets.some(({ asset }) => asset.bytes > muapiReferenceLimit(asset))) {
+    throw badRequest("MuAPI supports video references up to 50 MB and other reference files up to 10 MB.");
+  }
+  return assets;
+}
+
+const ratesSchema = z.record(z.string(), z.object({ output: z.number().positive(), referenceVideo: z.number().nonnegative().optional() }));
 const clipAt = (body: PackBody, index: number) => {
   const clip = body.clips[index];
   if (!clip) throw badRequest("Choose an existing clip.");
@@ -48,7 +73,8 @@ function exactQuote(clip: CompiledClip, settings: Settings) {
     const rate = rates[[settings.model, settings.resolution, settings.quality].filter(Boolean).join("/")];
     if (!rate) throw new Error("missing rate");
     const videoSeconds = clip.attachments.reduce((total, file) => total + (file.modality === "video" ? file.duration ?? 0 : 0), 0);
-    const estimatedUsd = Math.ceil(1_000_000 * (clip.duration * rate.output + videoSeconds * rate.referenceVideo)) / 1_000_000;
+    if (videoSeconds > 0 && rate.referenceVideo === undefined) throw new Error("missing video reference rate");
+    const estimatedUsd = Math.ceil(1_000_000 * (clip.duration * rate.output + videoSeconds * (rate.referenceVideo ?? 0))) / 1_000_000;
     return { millicredits: usdToMillicredits(estimatedUsd), estimatedUsd, fixture: false };
   } catch {
     throw new ApiError(503, "render_unpriced", "An approved server price is missing for this model and resolution.");
@@ -58,8 +84,11 @@ function exactQuote(clip: CompiledClip, settings: Settings) {
 export function renderQuote(userId: string, packId: string, index: number) {
   const { pack } = snapshot(userId, packId);
   const clip = clipAt(pack.body, index);
-  clip.attachments.forEach((file) => inspectAsset(userId, file.assetId));
-  return exactQuote(clip, pack.body.settings);
+  const assets = checkReferences(userId, clip);
+  const quote = exactQuote(clip, pack.body.settings);
+  const sendsReferences = assets.length > 0 && !quote.fixture;
+  if (sendsReferences && !uploadReferences()) signedMediaConfig();
+  return { ...quote, sendsReferencesToMuapi: sendsReferences };
 }
 
 export function requestRender(userId: string, packId: string, input: { clip: number; requestKey: string; maxCredits: number }) {
@@ -93,14 +122,14 @@ function signature(secret: string, job: string, asset: string, expiry: string) {
   return createHmac("sha256", secret).update([job, asset, expiry].join("\n")).digest("base64url");
 }
 
-function ingressUrl(config: ReturnType<typeof muapiConfig>, row: JobRow, assetId: string, expires: string) {
+function ingressUrl(config: ReturnType<typeof signedMediaConfig>, row: JobRow, assetId: string, expires: string) {
   const sig = signature(config.secret, row.id, assetId, expires);
   return `${config.origin}/api/director/ingest/${row.id}/${assetId}?expires=${expires}&sig=${sig}`;
 }
 
 export function ingest(jobId: string, assetId: string, req: Request): Response {
   if (directorMode() !== "live") throw notFound();
-  const config = muapiConfig();
+  const config = signedMediaConfig();
   const query = new URL(req.url).searchParams;
   const expiry = query.get("expires") ?? "";
   const received = Buffer.from(query.get("sig") ?? "");
@@ -118,17 +147,65 @@ export function ingest(jobId: string, assetId: string, req: Request): Response {
   return response;
 }
 
-export function prepareMuapi(row: JobRow, pack: Snapshot, brief: Brief, index: number) {
-  const config = muapiConfig();
-  const clip = clipAt(pack.body, index);
-  clip.attachments.forEach((ref) => inspectAsset(row.user_id, ref.assetId));
-  const configuredTtl = Number(process.env.DIRECTOR_INGEST_TTL_SECONDS ?? "900");
-  if (!Number.isInteger(configuredTtl) || configuredTtl < 60 || configuredTtl > 1800) throw badRequest("Configure an ingest duration between 60 and 1800 seconds.");
-  const expiry = String(Date.now() + 1000 * configuredTtl);
-  return { config, clip, body: providerBody(clip, pack.body.settings, brief.aspect, (file) => ingressUrl(config, row, file.assetId, expiry)) };
+async function uploadReference(key: string, asset: AssetRow, filename: string) {
+  try {
+    const bytes = await readAsset(asset);
+    if (bytes.length < 1 || bytes.length > muapiReferenceLimit(asset) || bytes.length !== asset.bytes) {
+      throw badRequest("The reference is missing or its size changed.");
+    }
+    const form = new FormData();
+    form.set("file", new Blob([new Uint8Array(bytes)], { type: asset.mime }), filename);
+    const response = await fetch(`${api}/upload_file`, {
+      method: "POST", redirect: "error", signal: AbortSignal.timeout(90_000),
+      headers: { "x-api-key": key }, body: form,
+    });
+    if (!response.ok) throw new ApiError(422, "render_reference_rejected", `MuAPI declined the reference upload (HTTP ${response.status}).`);
+    const { url } = z.object({ url: z.url({ protocol: /^https$/ }) }).parse(await response.json());
+    return url;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(503, "render_reference_unavailable", "MuAPI did not confirm the reference upload. Try again.");
+  }
 }
 
-export async function submitMuapi(request: ReturnType<typeof prepareMuapi>) {
+async function checkMuapiFunds(key: string, approvedUsd: number) {
+  try {
+    const response = await fetch(`${api}/account/balance`, {
+      headers: { "x-api-key": key }, redirect: "error", signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) throw new Error("balance unavailable");
+    const { balance } = z.object({ balance: z.number().nonnegative() }).parse(await response.json());
+    if (balance < approvedUsd) {
+      throw new ApiError(402, "render_provider_balance", `MuAPI has $${balance.toFixed(2)} available. The approved render estimate is $${approvedUsd.toFixed(2)}.`);
+    }
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(503, "render_provider_balance_unavailable", "MuAPI could not confirm the render balance. Try again.");
+  }
+}
+
+export async function prepareMuapi(row: JobRow, pack: Snapshot, brief: Brief, index: number) {
+  const config = muapiConfig();
+  const clip = clipAt(pack.body, index);
+  const approvedUsd = z.object({ quotedUsd: z.number().positive() }).parse(JSON.parse(row.input)).quotedUsd;
+  await checkMuapiFunds(config.key, approvedUsd);
+  const assets = checkReferences(row.user_id, clip);
+  const urls = new Map<string, string>();
+  if (assets.length && uploadReferences()) {
+    for (const { ref, asset } of assets) {
+      if (!urls.has(ref.assetId)) urls.set(ref.assetId, await uploadReference(config.key, asset, ref.filename));
+    }
+  } else if (assets.length) {
+    const signing = signedMediaConfig();
+    const configuredTtl = Number(process.env.DIRECTOR_INGEST_TTL_SECONDS ?? "900");
+    if (!Number.isInteger(configuredTtl) || configuredTtl < 60 || configuredTtl > 1800) throw badRequest("Configure an ingest duration between 60 and 1800 seconds.");
+    const expiry = String(Date.now() + 1000 * configuredTtl);
+    for (const { ref } of assets) urls.set(ref.assetId, ingressUrl(signing, row, ref.assetId, expiry));
+  }
+  return { config, clip, body: providerBody(clip, pack.body.settings, brief.aspect, (file) => urls.get(file.assetId)!) };
+}
+
+export async function submitMuapi(request: Awaited<ReturnType<typeof prepareMuapi>>) {
   try {
     const response = await fetch(`${api}/${request.clip.endpoint}`, {
       method: "POST", redirect: "error", signal: AbortSignal.timeout(25_000),
@@ -150,7 +227,10 @@ export async function submitMuapi(request: ReturnType<typeof prepareMuapi>) {
 
 const resultSchema = z.object({
   status: z.string(), outputs: z.array(z.union([z.string(), z.object({ url: z.string() })])).optional(),
-  cost: z.number().nonnegative().optional(),
+  cost: z.union([
+    z.number().nonnegative(),
+    z.object({ amount_usd: z.number().nonnegative() }).transform((cost) => cost.amount_usd),
+  ]).nullish(),
 });
 
 export async function pollMuapi(row: JobRow) {

@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { StudioAgentId } from "@/config/studio-agents";
 import { all, get, newId, parseJson, run, tx } from "@/server/db";
 import { notFound } from "@/server/errors";
 import { publish } from "./hub";
@@ -19,6 +20,7 @@ export interface ChatRow {
   title: string;
   project_id: string | null;
   skill_ids: string;
+  agent_id: StudioAgentId | null;
   pinned: number;
   incognito: number;
   state: "idle" | "running" | "waiting";
@@ -33,6 +35,7 @@ export interface Chat {
   title: string;
   projectId: string | null;
   skillIds: string[];
+  agentId: StudioAgentId | null;
   pinned: boolean;
   incognito: boolean;
   state: ChatRow["state"];
@@ -47,6 +50,7 @@ export function toChat(r: ChatRow): Chat {
     id: r.id,
     title: r.title,
     projectId: r.project_id,
+    agentId: r.agent_id,
     skillIds: parseJson<string[]>(r.skill_ids, []),
     pinned: r.pinned === 1,
     incognito: r.incognito === 1,
@@ -94,17 +98,18 @@ export function chatById(chatId: string): ChatRow | undefined {
   return get<ChatRow>("SELECT * FROM super_chats WHERE id = ?", chatId);
 }
 
-export function createChat(userId: string, input: { title?: string; projectId?: string | null; skillIds?: string[]; incognito?: boolean }): Chat {
+export function createChat(userId: string, input: { title?: string; projectId?: string | null; skillIds?: string[]; incognito?: boolean; agentId?: StudioAgentId }): Chat {
   const id = newId("sch");
   const now = Date.now();
   run(
-    "INSERT INTO super_chats (id, user_id, title, project_id, skill_ids, incognito, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO super_chats (id, user_id, title, project_id, skill_ids, incognito, agent_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
     id,
     userId,
     input.title ?? "",
     input.projectId ?? null,
     JSON.stringify(input.skillIds ?? []),
     input.incognito ? 1 : 0,
+    input.agentId ?? null,
     now,
     now,
   );

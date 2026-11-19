@@ -7,29 +7,29 @@
  * and `rounded-xl` is 12px everywhere. See docs/ui/README.md before adding a value.
  */
 @theme {
-  --color-page: #0F1113;
-  --color-surface-primary: #131416;
-  --color-surface-secondary: #1C1E21;
-  --color-surface-secondary-strong: #23262A;
-  --color-surface-tertiary: #2A2D32;
-  --color-surface-elevated: #383E46;
-  --color-toggle-track: #484E56;
-  --color-text-primary: #FFFFFF;
-  --color-text-nav: #A8A8A8;
-  --color-text-secondary: #828282;
-  --color-text-tertiary: #626262;
-  --color-text-inverse: #1A1A1A;
-  --color-border-subtle: #FFFFFF0D;
-  --color-border-default: #FFFFFF1A;
-  --color-border-strong: #FFFFFF33;
-  --color-brand: #D1FE17;
-  --color-brand-pressed: #B2D814;
-  --color-brand-shadow: #829B19;
-  --color-brand-tint: #D1FE1726;
-  --color-promo: #FF005B;
-  --color-promo-soft: #ED1572;
+  --color-page: #EFEFF5;
+  --color-surface-primary: #F4F3F9;
+  --color-surface-secondary: #FFFFFF;
+  --color-surface-secondary-strong: #F5F4F8;
+  --color-surface-tertiary: #E9E8F0;
+  --color-surface-elevated: #DBD9E5;
+  --color-toggle-track: #797785;
+  --color-text-primary: #111114;
+  --color-text-nav: #45454F;
+  --color-text-secondary: #525260;
+  --color-text-tertiary: #656573;
+  --color-text-inverse: #FFFFFF;
+  --color-border-subtle: #2423320C;
+  --color-border-default: #24233223;
+  --color-border-strong: #2423324D;
+  --color-brand: #16161A;
+  --color-brand-pressed: #393941;
+  --color-brand-shadow: #0A0A0C;
+  --color-brand-tint: #11111412;
+  --color-promo: #D8432B;
+  --color-promo-soft: #D8432B;
   /* Ours: the designs draw no error state. */
-  --color-danger: #FF6B6B;
+  --color-danger: #A32819;
   --text-2xs: 10px;
   --text-xs: 12px;
   --text-sm: 14px;
@@ -69,29 +69,29 @@
  */
 @theme {
   /* Text */
-  --color-text-muted: #898A8B;
+  --color-text-muted: #555563;
   --color-text-soft: #F7F7F8;
-  --color-text-idle: #FFFFFF4C; /* a nav link that is not the current page */
-  --color-text-tab: #FFFFFF80; /* a tab that is not selected */
-  --color-ink: #131517; /* text on lime */
+  --color-text-idle: #585864; /* a nav link that is not the current page */
+  --color-text-tab: #45454F; /* a tab that is not selected */
+  --color-ink: #FFFFFF; /* text on lime */
 
   /* Surfaces */
-  --color-surface-shell: #131517; /* sidebar shells, cards on the page */
-  --color-surface-menu: #1C1E20; /* mega menu, popovers */
-  --color-surface-field: #27292C; /* the prompt field */
-  --color-surface-glass: #23262ABF; /* floating chips over media, with backdrop blur */
-  --color-surface-sunken: #18191C;
-  --color-scrim: #000000CC; /* behind a modal */
-  --color-brand-chip: #D1FE173D; /* the small lime "Top" tag */
-  --color-brand-glow: #CDFF00;
+  --color-surface-shell: #EFEFF5; /* sidebar shells, cards on the page */
+  --color-surface-menu: #FFFFFF; /* mega menu, popovers */
+  --color-surface-field: #FFFFFF; /* the prompt field */
+  --color-surface-glass: #FFFFFFD9; /* floating chips over media, with backdrop blur */
+  --color-surface-sunken: #E9E8F0;
+  --color-scrim: #11111470; /* behind a modal */
+  --color-brand-chip: #11111417; /* the small lime "Top" tag */
+  --color-brand-glow: #33333B;
 
   /* Shadows */
   --shadow-composer: #00000026 0px 32px 24px;
   --shadow-menu: #0000004C 0px 20px 25px -5px, #0000004C 0px 8px 10px -6px;
-  --shadow-lime: #829B19 0px -3px 0px inset, #00000040 0px 6px 4px, #00000026 0px 32px 24px;
+  --shadow-lime: #17171C 0px -3px 0px inset, #00000040 0px 6px 4px, #00000026 0px 32px 24px;
   --shadow-lime-deep:
-    #829B19 0px -3px 0px inset, #829B19 0px -2px 0px inset, #00000026 10px 34px 24px, #00000003 8px 21px 6px,
-    #00000040 3px 7px 5px, #0000006E 1px 3px 4px, #0000007D 0px 1px 2px, #D1FE17 0px 1px 0px;
+    #17171C 0px -3px 0px inset, #17171C 0px -2px 0px inset, #00000026 10px 34px 24px, #00000003 8px 21px 6px,
+    #00000040 3px 7px 5px, #0000006E 1px 3px 4px, #0000007D 0px 1px 2px, #777584 0px 1px 0px;
   --shadow-pill: #0000001A 0px 2px 4px;
   --shadow-inset-soft: #FFFFFF0D 0px 2px 4px inset;
 
@@ -131,17 +131,17 @@
 
 /* Fonts are loaded in layout.tsx with next/font and arrive as CSS variables. */
 @theme inline {
-  --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-sans: var(--font-inter-tight), system-ui, sans-serif;
+  --font-display: var(--font-inter-tight), system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
-  --font-racing: var(--font-racing-sans), var(--font-space-grotesk), sans-serif;
-  --font-space-mono: var(--font-space-mono-face), ui-monospace, monospace;
+  --font-racing: var(--font-inter-tight), sans-serif;
+  --font-space-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 @layer base {
   html {
     background: var(--color-page);
-    color-scheme: dark;
+    color-scheme: light;
     font-synthesis: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

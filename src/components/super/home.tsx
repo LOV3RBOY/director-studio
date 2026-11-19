@@ -1,6 +1,7 @@
 "use client";
 
 import { Clapperboard, Gamepad2, HatGlasses, LayoutGrid, LayoutTemplate, Megaphone, Sparkle, Zap } from "lucide-react";
+import { findStudioAgent, type StudioAgentId } from "@/config/studio-agents";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { mutate } from "swr";
@@ -128,7 +129,8 @@ export function IncognitoToggle({ on, onChange }: { on: boolean; onChange: (on: 
 }
 
 /** The Supercomputer home: the headline, the composer with its context row, and the examples. */
-export function SuperHome() {
+export function SuperHome({ agentId }: { agentId?: StudioAgentId } = {}) {
+  const agent = findStudioAgent(agentId);
   const router = useRouter();
   const [text, setText] = useState("");
   const [projectId, setProjectId] = useState<string | null>(null);
@@ -141,7 +143,7 @@ export function SuperHome() {
     try {
       const { chat } = await api<{ chat: Chat }>("/api/super/chats", {
         method: "POST",
-        body: { ...(incognito ? { incognito: true } : { projectId: projectId ?? undefined }), skillIds },
+        body: { ...(incognito ? { incognito: true } : { projectId: projectId ?? undefined }), skillIds, agentId },
       });
       await api(`/api/super/chats/${chat.id}/messages`, { method: "POST", body: input });
       void mutate(keys.chats, (prev: { chats: Chat[] } | undefined) => (prev ? { chats: sortChats([chat, ...prev.chats.filter((c) => c.id !== chat.id)]) } : prev), {
@@ -170,14 +172,15 @@ export function SuperHome() {
           <div className="flex w-full max-w-[694px] flex-col items-center gap-5">
             <h1 className="flex items-center gap-3 text-center font-display text-xl leading-7 font-bold tracking-[-0.025em] text-text-primary uppercase sm:text-3xl sm:leading-8">
               <LogoMark size={40} className="hidden rounded-sm sm:block" />
-              {copy.headline}
+              {agent?.name ?? copy.headline}
             </h1>
+            {agent && <p className="max-w-sm text-center text-sm text-text-secondary">{agent.description}</p>}
             <div className="w-full max-w-[680px]">
               <SuperComposer
                 value={text}
                 onChange={setText}
                 onSend={send}
-                autoFocus
+                autoFocus={!agent}
                 below={
                   incognito ? (
                     <p className="flex h-11 items-center gap-2 px-3 text-xs leading-4 font-medium text-text-secondary">
@@ -194,7 +197,7 @@ export function SuperHome() {
             </div>
           </div>
         </div>
-        <Gallery onUse={useExample} />
+        {!agent && <Gallery onUse={useExample} />}
       </div>
     </SuperShell>
   );

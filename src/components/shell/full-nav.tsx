@@ -183,7 +183,7 @@ export function FullNav({ active }: { active?: NavId }) {
 
   return (
     <header ref={headerRef} className="relative z-40 flex h-[52px] shrink-0 items-center gap-3 bg-page px-4">
-      <Link href={routes.home} aria-label={navWords.home} className="shrink-0 rounded-md">
+      <Link href={routes.studio} aria-label={navWords.home} className="shrink-0 rounded-md">
         <LogoMark size={32} />
       </Link>
 

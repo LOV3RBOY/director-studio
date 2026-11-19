@@ -10,7 +10,7 @@ import type { Control } from "@/registry";
 import { Popover, PopoverContent, PopoverTrigger, Spinner, Switch, cn } from "@/ui";
 import type { AppField, AppInput, FieldValue } from "./types";
 
-export const panel = "rounded-2xl bg-[#131517] shadow-[#FFFFFF05_2px_2px_2px_inset]";
+export const panel = "rounded-2xl bg-surface-primary border border-border-default";
 const box =
   "w-full rounded-xl bg-[#FFFFFF0A] px-3 text-sm leading-5 text-text-primary outline-none transition-colors duration-150 placeholder:text-[#FFFFFF66] hover:bg-[#FFFFFF0F] focus:bg-[#FFFFFF14]";
 const chip = (on: boolean) =>

@@ -229,6 +229,7 @@ struct Quote: Decodable {
     let millicredits: Int
     let estimatedUsd: Double
     let fixture: Bool
+    let sendsReferencesToMuapi: Bool?
 }
 
 struct ImageAttempt: Decodable, Identifiable {

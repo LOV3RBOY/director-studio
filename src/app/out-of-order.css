@@ -1,0 +1,54 @@
+.ooo-ground {
+  background:
+    radial-gradient(circle at top right, #e2e0f2 0%, transparent 55%),
+    radial-gradient(#77728430 0.6px, transparent 0.6px) 0 0 / 10px 10px,
+    linear-gradient(#efeff5, #ebeaf4);
+}
+
+.ooo-title {
+  font-size: clamp(2.75rem, 9vw, 5.125rem);
+  font-weight: 800;
+  letter-spacing: -0.058em;
+  line-height: 0.99;
+}
+
+.ooo-title span { color: #686876; }
+
+.ooo-pill {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #ffffffcc;
+  border-radius: 9999px;
+  background: #ffffffed;
+  padding: 0 14px;
+  box-shadow: 0 2px 7px #11111413;
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+
+.ooo-pill:hover { background: #fff; }
+.ooo-primary, .ooo-primary:hover {
+  border-color: #111114;
+  background: linear-gradient(150deg, #2c2c31, #121215 58%, #0a0a0c);
+  color: #fff;
+}
+
+.ooo-tool {
+  display: block;
+  min-width: 0;
+  border: 1px solid #ffffffd9;
+  border-radius: 24px;
+  background: linear-gradient(156deg, #fff, #f7f6fb);
+  padding: 16px;
+  box-shadow: 0 2px 9px #2c22450a;
+}
+
+.ooo-tool:hover { border-color: #aca9bd; }
+.ooo-chat-header { background: linear-gradient(#efeff5 55%, #efeff500); }
+
+@media (max-width: 639px) {
+  input:not([type="checkbox"], [type="range"]), textarea, select { font-size: max(16px, 1em); }
+}

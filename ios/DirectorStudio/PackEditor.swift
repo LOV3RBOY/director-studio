@@ -87,6 +87,10 @@ struct PackEditor: View {
                     LabeledContent("Quoted credits", value: credits(item.quote.millicredits))
                     LabeledContent("Estimated provider cost", value: item.quote.estimatedUsd.formatted(.currency(code: "USD")))
                     if item.quote.fixture { Text("This workspace uses provider-free fixtures.") }
+                    if item.quote.sendsReferencesToMuapi == true {
+                        Text("Approving sends this clip’s references to MuAPI for rendering.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
                     Button(item.kind == .render ? "Approve render" : "Approve image") {
                         approval = nil
                         Task { await submit(item) }

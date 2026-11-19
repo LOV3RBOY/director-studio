@@ -104,7 +104,7 @@ class Hermes(BaseHTTPRequestHandler):
         else:
             plan_or_chat = json.loads(contents[0]["text"])
             if "current" in plan_or_chat:
-                assert request["model"] == "grok-4.7" and request["provider"] == "xai"
+                assert request["model"] == "claude-fable-5-2" and request["provider"] == "anthropic"
                 response = {"reply": "The loopback Director received the shot note."}
             else:
                 assert request["model"] == "claude-fable-5-2" and request["provider"] == "anthropic"
@@ -192,7 +192,7 @@ def main():
             a.request(f"{API}/packs/{pack['id']}/image-quote/0", status=503)
         assert [entry[:2] for entry in Hermes.turns] == [
             ("claude-fable-5-2", "anthropic"), ("claude-fable-5-2", "anthropic"),
-            ("claude-fable-5-2", "anthropic"), ("grok-4.7", "xai"),
+            ("claude-fable-5-2", "anthropic"), ("claude-fable-5-2", "anthropic"),
         ]
     finally:
         gateway.shutdown()

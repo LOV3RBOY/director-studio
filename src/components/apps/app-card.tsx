@@ -9,7 +9,7 @@ import type { AppSummary } from "./types";
 
 /* Both card looks share the dark plate: #131517, 16 radius, a faint inset light. */
 const plate =
-  "group relative flex flex-col overflow-clip rounded-2xl bg-[#131517] shadow-[#FFFFFF05_2px_2px_2px_inset] transition-colors duration-150 hover:bg-surface-secondary focus-within:bg-surface-secondary";
+  "group relative flex flex-col overflow-clip rounded-2xl bg-surface-primary border border-border-default transition-colors duration-150 hover:bg-surface-secondary focus-within:bg-surface-secondary";
 
 export function appHref(id: string) {
   return `${routes.apps}/${id}`;
@@ -73,7 +73,7 @@ export function FeaturedCard({ app, onPin }: { app: AppSummary } & PinProps) {
         <Link
           href={appHref(app.id)}
           aria-label={`${appsCopy.tryNow}: ${app.name}`}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-text-primary text-sm leading-5 font-semibold text-[#131517] shadow-[#E6E6E6_0px_1px_0px_inset,#C1C1C1_0px_-2px_0px_inset,#00000026_10px_34px_24px,#C1C1C1_0px_-3px_0px] backdrop-blur-md transition-colors duration-150 hover:bg-text-soft"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand text-sm leading-5 font-semibold text-text-inverse shadow-pill backdrop-blur-md transition-colors duration-150 hover:bg-brand-glow"
         >
           <Play className="size-3 fill-current" strokeWidth={1.5} aria-hidden />
           {appsCopy.tryNow}
@@ -109,6 +109,6 @@ export function AppCard({ app, onPin, fluid }: { app: AppSummary; fluid?: boolea
 /** A grey card in the shape of a regular one, while the catalog loads. */
 export function CardSkeleton({ tall, fluid }: { tall?: boolean; fluid?: boolean }) {
   return (
-    <li aria-hidden className={cn("shimmer rounded-2xl bg-[#131517]", tall ? "h-[401px]" : "h-[330px]", fluid ? "w-auto" : "w-[237px] shrink-0 desktop:w-auto")} />
+    <li aria-hidden className={cn("shimmer rounded-2xl bg-surface-primary", tall ? "h-[401px]" : "h-[330px]", fluid ? "w-auto" : "w-[237px] shrink-0 desktop:w-auto")} />
   );
 }
