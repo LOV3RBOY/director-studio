@@ -10,7 +10,7 @@ import type { Contest } from "./types";
 /** The contest bar: breadcrumb on the left, the page's tabs after it, 52 high on black. */
 export function ContestBar({ crumb, tabs }: { crumb?: string; tabs?: ReactNode }) {
   return (
-    <div className="sticky top-0 z-20 bg-black">
+    <div className="ooo-toolbar sticky top-0 z-20">
       <div className="flex min-h-[52px] flex-col gap-0 px-4 md:flex-row md:items-center md:gap-5">
         <nav aria-label="Breadcrumb" className="flex h-[44px] min-w-0 items-center gap-1 text-sm leading-5 font-medium md:h-5 md:w-[580px] md:shrink-0">
           {crumb ? (

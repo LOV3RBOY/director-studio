@@ -77,7 +77,7 @@ function PromoCard() {
 
   return (
     <div className="relative w-full lg:w-[640px] lg:shrink-0">
-      <div className="relative flex min-h-[272px] flex-col overflow-hidden rounded-2xl bg-surface-primary p-4 lg:h-[272px]">
+      <div className="relative flex min-h-[272px] flex-col overflow-hidden rounded-2xl bg-[#260821] p-4 lg:h-[272px]">
         <div
           aria-hidden
           className="absolute inset-0 rounded-2xl"
