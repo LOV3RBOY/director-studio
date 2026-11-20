@@ -107,9 +107,9 @@ export function PostTile({ post: initial, hideAuthor }: { post: Post; hideAuthor
       <div className="pointer-events-none absolute inset-0 flex flex-col justify-end bg-[linear-gradient(in_oklab_180deg,#00000000_39.24%,#131416CC_87.22%)] p-2 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
         <div className="flex items-end justify-between gap-2">
           {hideAuthor ? (
-            <p className="min-w-0 truncate text-xs leading-4 font-medium text-text-primary">{post.title}</p>
+            <p className="min-w-0 truncate text-xs leading-4 font-medium text-white">{post.title}</p>
           ) : (
-            <Link href={profileHref(post.author.handle)} className="pointer-events-auto flex min-w-0 items-center gap-[6px] text-xs leading-4 font-medium text-text-primary">
+            <Link href={profileHref(post.author.handle)} className="pointer-events-auto flex min-w-0 items-center gap-[6px] text-xs leading-4 font-medium text-white">
               <Avatar author={post.author} size={20} />
               <span className="truncate">{post.author.name || post.author.handle}</span>
             </Link>

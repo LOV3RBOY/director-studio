@@ -45,12 +45,12 @@ export function Featured({ onPublish }: { onPublish: () => void }) {
         <div className={cn("relative aspect-[1006/567] w-full rounded-[13.012px] desktop:absolute desktop:top-[5px] desktop:left-6 desktop:h-[567px] desktop:w-[1006px]", card)}>
           {isLoading ? <div className="shimmer size-full bg-surface-secondary" role="status" aria-label={w.feed.loading} /> : main ? <PostMedia key={main.id} post={main} playing className="size-full" /> : <Artwork name="community/featured" className="size-full" />}
           {!isLoading ? (
-            <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center gap-3 px-4 pt-10 pb-4 md:gap-[23px] desktop:h-[260px] desktop:p-0" style={{ backgroundImage: "linear-gradient(in oklab 180deg, #00000000 0%, #000000C4 84.59%)" }}>
+            <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center gap-3 px-4 pt-10 pb-4 md:gap-[23px] desktop:h-[260px] desktop:p-0" style={{ backgroundImage: "linear-gradient(180deg, transparent, rgb(0 0 0 / 76%) 36%, rgb(0 0 0 / 88%))" }}>
               <div className="flex w-full max-w-[591px] flex-col items-center gap-3 text-center">
-                <h2 className="line-clamp-1 max-w-full text-xl leading-6 font-bold tracking-[-0.0375em] text-text-primary md:text-[32px] md:leading-[36px]">
+                <h2 className="line-clamp-1 max-w-full text-xl leading-6 font-bold tracking-[-0.0375em] text-white md:text-[32px] md:leading-[36px]">
                   {main ? main.title || w.featured.label : w.featured.emptyTitle}
                 </h2>
-                <p className="line-clamp-2 hidden w-full max-w-[472px] text-sm leading-5 font-medium text-[#FFFFFF80] md:block">
+                <p className="line-clamp-2 hidden w-full max-w-[472px] text-sm leading-5 font-medium text-white/90 md:block">
                   {main ? main.description || main.prompt || "" : w.featured.emptyBody}
                 </p>
               </div>
@@ -76,8 +76,8 @@ export function Featured({ onPublish }: { onPublish: () => void }) {
                   <Link href={profileHref(main.author.handle)} className="group/by flex min-w-0 items-center gap-[13px]">
                     <Avatar author={main.author} size={31} />
                     <span className="flex min-w-0 flex-col gap-px">
-                      <span className="text-xs leading-4 font-medium text-text-idle">{w.featured.by}</span>
-                      <span className="max-w-[160px] truncate text-base leading-5 font-medium text-text-primary group-hover/by:underline">{main.author.name || main.author.handle}</span>
+                      <span className="text-xs leading-4 font-medium text-white/85">{w.featured.by}</span>
+                      <span className="max-w-[160px] truncate text-base leading-5 font-medium text-white group-hover/by:underline">{main.author.name || main.author.handle}</span>
                     </span>
                   </Link>
                 ) : null}

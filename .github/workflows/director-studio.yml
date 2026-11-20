@@ -46,7 +46,7 @@ jobs:
           UI_SIZE: '390 720'
         run: |
           export CHROME_BIN="$(command -v google-chrome)"
-          python3 tests/run.py tests/ui/workspace.mjs tests/ui/library.mjs tests/ui/studio-polish.mjs
+          python3 tests/run.py tests/ui/workspace.mjs tests/ui/library.mjs tests/ui/studio-polish.mjs tests/ui/community.mjs
 
   iphone:
     runs-on: macos-15

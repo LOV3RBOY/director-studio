@@ -17,7 +17,7 @@ export function viewHref(view: CommunityView) {
  */
 export function CommunitySubNav({ active, onPick }: { active?: CommunityView; onPick?: (view: CommunityView) => void }) {
   return (
-    <div className="ooo-toolbar sticky top-0 z-20">
+    <div className="ooo-toolbar studio-sticky-toolbar">
       <div className="flex h-[52px] items-center gap-[87px] px-4 md:pl-8">
         <Link href={routes.community} className="hidden w-[260px] shrink-0 md:block">
           <span className="text-text-primary font-display text-[19px] leading-[17px] font-bold tracking-[0.04em] uppercase">{w.wordmark}</span>

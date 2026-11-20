@@ -18,8 +18,7 @@ export function SectionHeading({ slot, children, extra }: { slot: string; childr
       <div className="flex min-w-0 items-center gap-4">
         <Artwork name={slot} className="size-[52px] shrink-0 rounded-md" />
         <h2
-          className="min-w-0 bg-clip-text font-display text-2xl leading-[28px] font-bold tracking-[-0.05em] text-transparent uppercase"
-          style={{ backgroundImage: "linear-gradient(in oklab 180deg, #FFFFFF 10%, #FFFFFF4C 90%)" }}
+          className="min-w-0 font-display text-2xl leading-[28px] font-bold tracking-[-0.05em] text-text-primary uppercase"
         >
           {children}
         </h2>

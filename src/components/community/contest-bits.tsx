@@ -10,7 +10,7 @@ import type { Contest } from "./types";
 /** The contest bar: breadcrumb on the left, the page's tabs after it, 52 high on black. */
 export function ContestBar({ crumb, tabs }: { crumb?: string; tabs?: ReactNode }) {
   return (
-    <div className="ooo-toolbar sticky top-0 z-20">
+    <div className="ooo-toolbar studio-sticky-toolbar">
       <div className="flex min-h-[52px] flex-col gap-0 px-4 md:flex-row md:items-center md:gap-5">
         <nav aria-label="Breadcrumb" className="flex h-[44px] min-w-0 items-center gap-1 text-sm leading-5 font-medium md:h-5 md:w-[580px] md:shrink-0">
           {crumb ? (
@@ -73,4 +73,4 @@ export function PhaseTag({ phase, className }: { phase: Contest["phase"]; classN
 
 /** The metallic call-to-action as drawn under the contest title. */
 export const chromeButton =
-  "flex h-[48px] items-center justify-center rounded-xl border border-[#F2F2F2] bg-origin-border px-5 text-base leading-5 font-semibold text-text-inverse [box-shadow:#00000066_0px_-1px_1px_inset,#FFFFFFE6_0px_1px_1px_inset,#00000059_0px_4px_8px] transition-[filter] duration-150 hover:brightness-110 disabled:opacity-50 bg-[linear-gradient(in_oklab_180deg,#FAFAFA_0%,#C2C2C2_14%,#F0F0F0_43%,#E5E5E5_49%,#C4C4C4_69%,#F0F0F0_100%)]";
+  "flex h-[48px] items-center justify-center rounded-xl border border-[#F2F2F2] bg-origin-border px-5 text-base leading-5 font-semibold text-text-primary [box-shadow:#00000066_0px_-1px_1px_inset,#FFFFFFE6_0px_1px_1px_inset,#00000059_0px_4px_8px] transition-[filter] duration-150 hover:brightness-110 disabled:opacity-50 bg-[linear-gradient(in_oklab_180deg,#FAFAFA_0%,#C2C2C2_14%,#F0F0F0_43%,#E5E5E5_49%,#C4C4C4_69%,#F0F0F0_100%)]";
