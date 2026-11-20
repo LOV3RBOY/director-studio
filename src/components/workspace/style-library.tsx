@@ -8,9 +8,10 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import useSWR, { mutate } from "swr";
 import { api, errorMessage, fetcher, type Asset } from "@/lib/api";
 import { useSession } from "@/lib/session";
-import type { StyleProfile } from "@/server/director/contracts";
+import type { Brief, StyleProfile } from "@/server/director/contracts";
 import type { PackBody } from "@/server/director/compiler";
 import { Button, Spinner } from "@/ui";
+import { StyleProof } from "./style-proof";
 
 type Job = { kind: string; state: string; error: { message: string } | null };
 type StyleVersion = { id: string; version: number; saved: boolean; profile: StyleProfile };
@@ -19,7 +20,9 @@ type StyleDetail = { id: string; title: string; versions: StyleVersion[]; analys
 type ProjectSummary = { id: string; title: string };
 type ProjectDetail = {
   project: ProjectSummary;
-  pinnedStyle: { title: string; version: number };
+  brief: Brief;
+  pinnedStyle: StyleVersion & { title: string; styleId: string };
+  reviewedAt: number | null;
   pack: { id: string; version: number; body: PackBody } | null;
   jobs: Job[];
 };
@@ -226,24 +229,18 @@ function StyledProject({ id }: { id: string }) {
   if (resource.error) return <Problem message={errorMessage(resource.error)} />;
   if (!project) return <p role="status">Loading project…</p>;
   return (
-    <section className="ooo-panel flex flex-col gap-4 p-5 sm:p-6">
-      <h2 className={heading}>{project.project.title}</h2>
-      <p className="text-sm text-text-secondary">Pinned style · {project.pinnedStyle.title} v{project.pinnedStyle.version}</p>
-      {pending(plan) && <p role="status" className="flex items-center gap-2"><Spinner /> Building the storyboard…</p>}
-      {plan?.state === "failed" && <><Problem message={plan.error?.message} /><Button disabled={busy} onClick={() => void retry()} className="self-start">Retry storyboard</Button></>}
-      <Problem message={problem} />
-      {project.pack && (
-        <>
-          <Link href={`/cinema?project=${project.project.id}`} className="ooo-pill ooo-primary self-start">Open storyboard in Cinema <ArrowUpRight size={15} aria-hidden /></Link>
-          {project.pack.body.clips.map((clip, i) => (
-            <details key={i} className="rounded-xl border border-border-default p-3">
-              <summary className="font-semibold">Clip {i + 1} · Seedance prompt</summary>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-text-secondary">{clip.prompt}</p>
-            </details>
-          ))}
-        </>
-      )}
-    </section>
+    <div className="flex min-w-0 flex-col gap-4">
+      <section className="ooo-panel flex min-w-0 flex-col gap-3 p-5 sm:p-6">
+        <h2 className={heading}>{project.project.title}</h2>
+        {!project.pack && <p className="text-sm text-text-secondary">Pinned style · {project.pinnedStyle.title} v{project.pinnedStyle.version}</p>}
+        {pending(plan) && <p role="status" className="flex items-center gap-2"><Spinner /> Building the storyboard…</p>}
+        {plan?.state === "failed" && <><Problem message={plan.error?.message} /><Button disabled={busy} onClick={() => void retry()} className="self-start">Retry storyboard</Button></>}
+        <Problem message={problem} />
+        {project.pack && <Link href={`/cinema?project=${project.project.id}`} className="ooo-pill ooo-primary self-start">Open storyboard in Cinema <ArrowUpRight size={15} aria-hidden /></Link>}
+      </section>
+      {project.pack && <StyleProof key={project.pack.id} pack={project.pack} style={project.pinnedStyle} cast={project.brief.cast} reviewedAt={project.reviewedAt}
+        onReviewed={(reviewedAt) => void resource.mutate((current) => current && current.pack?.id === project.pack?.id ? { ...current, reviewedAt } : current)} />}
+    </div>
   );
 }
 

@@ -198,3 +198,23 @@
 @media (max-width: 639px) {
   .studio-director-panel { right: 6px; bottom: 6px; width: calc(100vw - 12px); height: min(720px, calc(100dvh - 12px)); }
 }
+
+.studio-workspace-bar + .studio-pages [data-site-menu-trigger] {
+  display: none;
+}
+
+.studio-navigation-panel {
+  top: 8px;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  width: min(430px, calc(100vw - 16px));
+  max-height: none;
+  translate: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+html:has(.studio-workspace-bar) {
+  scroll-padding-top: 57px;
+}

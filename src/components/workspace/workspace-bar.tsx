@@ -12,6 +12,7 @@ import { workspaceLabel } from "@/config/studio-workspace";
 import { api } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { DialogContent } from "@/ui";
+import { WorkspaceMenu } from "./workspace-menu";
 
 const DockChat = dynamic(() => import("@/components/super/chat").then((module) => module.SuperChat));
 
@@ -78,13 +79,14 @@ function MemberWorkspaceBar({ memberId }: { memberId: string }) {
   return (
     <div className="studio-workspace-bar">
       <nav aria-label="Studio workspace" className="mx-auto flex h-full max-w-[1600px] items-center gap-2 px-2 sm:px-4">
+        <WorkspaceMenu visit={visit} />
         {pathname === "/studio" ? null : (
           <button type="button" onClick={back} className="ooo-control flex h-11 shrink-0 items-center gap-1.5 rounded-xl px-2.5 font-semibold hover:bg-surface-elevated">
             <ArrowLeft size={16} aria-hidden /> Back
           </button>
         )}
-        <Link href="/studio" className="ooo-control flex h-11 shrink-0 items-center rounded-xl px-2 font-semibold hover:bg-surface-elevated">Studio</Link>
-        {pathname !== "/studio" && <span className="min-w-0 flex-1 truncate text-xs text-text-secondary">{label}</span>}
+        <Link href="/studio" className="ooo-control hidden min-[350px]:flex h-11 shrink-0 items-center rounded-xl px-2 font-semibold hover:bg-surface-elevated">Studio</Link>
+        {pathname !== "/studio" && <span className="hidden min-w-0 flex-1 truncate text-xs min-[390px]:inline text-text-secondary">{label}</span>}
         <Dialog.Root open={open} onOpenChange={toggle}>
           <Dialog.Trigger className="ooo-pill ooo-primary ml-auto !min-h-9 !gap-1.5 !px-3">
             <Clapperboard size={15} aria-hidden /> Director

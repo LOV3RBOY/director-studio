@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, PanelLeft, X } from "lucide-react";
+import { Menu, PanelLeft, ScanLine, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { LoginDialog } from "@/components/entry/login-dialog";
@@ -92,6 +92,7 @@ function Below() {
 }
 
 function Workspace() {
+  const { board, projectId } = useCinema();
   const [collapsed, setCollapsed] = useState(false);
   const [sheet, setSheet] = useState(false);
 
@@ -136,6 +137,9 @@ function Workspace() {
           </button>
         ) : null}
         <div id="cinema-top" className="scroll-quiet flex min-h-0 flex-1 flex-col items-center overflow-x-hidden overflow-y-auto px-2 pt-6 pb-16 sm:px-[10px] lg:pt-[108px]">
+          {projectId && board.data?.hasStyleProof && (
+            <Link href={`/style-library?project=${projectId}`} className="ooo-pill mb-3"><ScanLine size={16} aria-hidden /> Style Proof</Link>
+          )}
           <Stage />
           <div className="mt-6 flex w-full flex-col items-center gap-3 sm:mt-[38px]">
             <CinemaComposer />

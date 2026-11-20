@@ -124,6 +124,7 @@ export interface Scene {
 
 export interface Storyboard {
   project: Project;
+  hasStyleProof?: boolean;
   elements: CinemaElement[];
   scenes: Scene[];
   summary: {

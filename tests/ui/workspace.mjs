@@ -55,6 +55,21 @@ try {
       await pick(replacement.name);
       await b.until(`fetch("/api/cinema/projects").then(r => r.json()).then(data => data.projects[0].stillModelId === ${JSON.stringify(replacement.id)})`);
     }],
+    ["the Studio menu reaches the entire workspace and supports search", async () => {
+      await b.click(`${workspace} button[aria-label="Open Studio navigation"]`);
+      await b.until('!!document.querySelector(\'[role="dialog"] nav[aria-label="All Studio sections"]\')');
+      const hrefs = await b.evaluate('[...document.querySelectorAll(\'nav[aria-label="All Studio sections"] a\')].map(a => a.getAttribute("href"))');
+      for (const href of ["/cinema", "/style-library", "/apps", "/library?upload=1", "/supercomputer/schedules", "/developer", "/settings/notifications", "/enterprise"]) assert.ok(hrefs.includes(href), href);
+      assert.equal(await b.evaluate('document.querySelector(\'[role="dialog"] [aria-current="page"]\')?.getAttribute("href")'), "/cinema");
+      await b.shot("02-navigation");
+      await b.click(`${dialog} input[aria-label="Find a section"]`);
+      await b.type("style library");
+      await b.until('document.querySelectorAll(\'[role="dialog"] nav a\').length === 1');
+      await b.click(`${dialog} a[href="/style-library"]`);
+      await b.until('location.pathname === "/style-library" && !document.querySelector(\'[role="dialog"]\')');
+      await b.click(`${workspace} button`, "Back");
+      await b.until('location.pathname === "/cinema"');
+    }],
     ["Director offers scoped navigation and keeps its conversation as you go back", async () => {
       await b.click(`${workspace} button`, "Director");
       await b.until('!!document.querySelector(\'[role="dialog"] #super-prompt\')');
@@ -107,8 +122,20 @@ try {
       const project = await api(`/api/director/projects/${projectId}`);
       assert.equal(project.pinnedStyle.id, saved.id);
       assert.equal(project.pack.body.clips.length > 0, true);
+      await b.until('!!document.querySelector("#style-proof-title")');
+      await b.click("summary", "Composition");
+      await b.until('!!document.querySelector(\'details[open] img[alt="Source frame 1"]\')');
+      await b.click("summary", "Exact render prompt and references");
+      await b.until('document.querySelector(\'details[open] button\')?.textContent.includes("Copy prompt")');
+      await b.shot("04-style-proof");
+      await b.click("button", "Mark pack reviewed");
+      await b.until('document.body.innerText.includes("Pack v1 reviewed")');
+      assert.ok((await api(`/api/director/projects/${projectId}`)).reviewedAt);
+      await b.reload();
+      await b.until('document.body.innerText.includes("Pack v1 reviewed")');
       await b.click('a[href^="/cinema?project="]');
       await b.until('location.pathname === "/cinema" && document.querySelector("h1")?.textContent.includes("Glass city")', 20000, "the correct storyboard");
+      await b.until('!!document.querySelector(\'a[href^="/style-library?project="]\')', 5000, "Style Proof link in Cinema");
     }],
     ["workspace stays within the viewport", async () => {
       assert.ok(await b.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'));

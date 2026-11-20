@@ -4,7 +4,7 @@ import { ApiError, badRequest, notFound } from "../errors";
 import { createElement, createProject, createShot, ownedProject, scenesOf, toProject } from "../cinema/store";
 import { compilePack, inspectAsset, type PackBody } from "./compiler";
 import { requireAuthoringEntitlement } from "./commerce";
-import { type Brief, type Guidance, type Plan, type Settings, type StyleProfile, verifyGuidance } from "./contracts";
+import { reusableStyleRules, type Brief, type Guidance, type Plan, type Settings, type StyleProfile, verifyGuidance } from "./contracts";
 import { directorMode, hermesConfig, type DirectorMode } from "./runtime";
 
 export interface StyleRow {
@@ -126,10 +126,26 @@ export function projectDetail(userId: string, id: string) {
   const project = projectRow(userId, id);
   const jobs = all<JobRow>("SELECT * FROM director_jobs WHERE user_id = ? AND project_id = ? AND mode = ? ORDER BY rowid DESC LIMIT 100", userId, id, project.mode);
   const versions = all<Pick<PackRow, "id" | "version" | "created_at">>("SELECT id, version, created_at FROM director_packs WHERE user_id = ? AND project_id = ? ORDER BY version DESC", userId, id);
+  const pack = currentPack(userId, id);
   return {
     project: toProject(ownedProject(userId, id)), brief: project.request, pinnedStyle: projectProfile(userId, project),
-    pack: currentPack(userId, id), versions, jobs: jobs.map(toJob),
+    pack, reviewedAt: pack ? packReviewTime(pack.id) : null, versions, jobs: jobs.map(toJob),
   };
+}
+
+function packReviewTime(snapshotId: string) {
+  return get<{ reviewed_at: number }>("SELECT reviewed_at FROM director_pack_reviews WHERE snapshot_id = ?", snapshotId)?.reviewed_at ?? null;
+}
+
+export function markPackReviewed(userId: string, snapshotId: string) {
+  return tx(() => {
+    const { project } = snapshot(userId, snapshotId);
+    if (currentPack(userId, project.id)?.id !== snapshotId) {
+      throw new ApiError(409, "version_conflict", "Open the current pack to record a review.");
+    }
+    run("INSERT INTO director_pack_reviews VALUES (?, ?) ON CONFLICT(snapshot_id) DO NOTHING", snapshotId, Date.now());
+    return { reviewedAt: packReviewTime(snapshotId) };
+  });
 }
 
 export function writePack(userId: string, projectId: string, plan: Plan, settings: Settings, expectedId: string | null) {
@@ -137,6 +153,15 @@ export function writePack(userId: string, projectId: string, plan: Plan, setting
     const project = projectRow(userId, projectId);
     const existing = currentPack(userId, projectId);
     if ((existing?.id ?? null) !== expectedId) throw new ApiError(409, "version_conflict", "Reload the latest pack before applying edits.");
+    const rules = new Set(reusableStyleRules(projectProfile(userId, project).profile.rules).map(({ index }) => index));
+    for (const clip of plan.clips) {
+      for (const shot of clip.shots) {
+        const citations = shot.styleRuleIndices ?? [];
+        if (new Set(citations).size !== citations.length || citations.some((index) => !rules.has(index))) {
+          throw badRequest("A shot cites a duplicate or inapplicable rule from the pinned style guide.");
+        }
+      }
+    }
     const pack = compilePack(userId, project.request, plan, settings);
     const version = (existing?.version ?? 0) + 1;
     const id = newId("dpk");

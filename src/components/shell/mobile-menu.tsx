@@ -48,6 +48,7 @@ export function MobileMenu({ active, onAsk, size }: { active?: NavId; onAsk: (mo
   return (
     <D.Root open={open} onOpenChange={setOpen}>
       <D.Trigger
+        data-site-menu-trigger
         aria-label={navWords.openMenu}
         className={cn(
           "flex shrink-0 items-center justify-center text-text-primary transition-colors duration-150 hover:bg-border-default min-[900px]:hidden",

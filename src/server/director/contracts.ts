@@ -40,6 +40,10 @@ export const guidance = z.object({
 });
 export type Guidance = z.infer<typeof guidance>;
 
+export function reusableStyleRules(rules: Guidance["rules"]) {
+  return rules.flatMap((rule, index) => rule.reuse !== "exclude" && rule.basis !== "unknown" ? [{ ...rule, index }] : []);
+}
+
 export interface EvidenceFrame {
   ordinal: number;
   seconds: number | null;
@@ -101,6 +105,7 @@ const shot = z.object({
   continuity: text(450),
   sound: z.string().trim().max(450).default(""),
   transition: z.enum(["continuous", "cut"]),
+  styleRuleIndices: z.array(z.number().int().min(0).max(31)).max(8).optional(),
 });
 
 export const plan = z.object({

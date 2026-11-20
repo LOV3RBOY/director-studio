@@ -112,6 +112,12 @@ def main(directory):
     project = f"{API}/projects/{req['projectId']}"
     b.request(project, status=404)
     original = a.request(project)["pack"]
+    assert original["body"]["plan"]["clips"][0]["shots"][0]["styleRuleIndices"]
+    review_url = f"{API}/packs/{original['id']}/review"
+    b.request(review_url, {}, status=404)
+    reviewed = a.request(review_url, {})
+    assert reviewed["reviewedAt"] and a.request(review_url, {}) == reviewed
+    assert a.request(project)["reviewedAt"] == reviewed["reviewedAt"]
     edit_style = a.request(style_url + "/save", {"previousId": saved["id"], "guide": "Edited guide. Preserve the rules."})["version"]
     assert edit_style["version"] == 3
     assert a.request(project)["pinnedStyle"]["id"] == saved["id"]
@@ -143,8 +149,13 @@ def main(directory):
     bad = copy.deepcopy(changed)
     bad["clips"][0]["shots"][0]["transition"] = "cut"
     a.request(project + "/pack", {"previousId": original["id"], "plan": bad, "settings": settings}, status=400)
+    bad = copy.deepcopy(changed)
+    bad["clips"][0]["shots"][0]["styleRuleIndices"] = [31]
+    a.request(project + "/pack", {"previousId": original["id"], "plan": bad, "settings": settings}, status=400)
     v2 = a.request(project + "/pack", {"previousId": original["id"], "plan": changed, "settings": settings})["pack"]
     assert v2["version"] == 2
+    assert a.request(project)["reviewedAt"] is None
+    a.request(review_url, {}, status=409)
     pack = f"{API}/packs/{v2['id']}"
     assert a.request(pack + "/quote/0") == {"millicredits": 0, "estimatedUsd": 0, "fixture": True}
     submit = {"clip": 0, "requestKey": "same-approved-request-001", "maxCredits": 0}

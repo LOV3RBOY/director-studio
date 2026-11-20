@@ -20,12 +20,13 @@ export function studioDestination(id: unknown) {
 }
 
 export function workspaceLabel(path: string) {
+  if (path === "/") return "Home";
   const section = path.split("/")[1];
   const secondary = {
     supercomputer: "Agent chat", notifications: "Notifications", "whats-new": "What’s new",
-    settings: "Settings", search: "Search", wallet: "Wallet", explore: "Explore",
+    settings: "Settings", enterprise: "Enterprise", search: "Search", wallet: "Wallet", explore: "Explore",
     community: "Community", horizon: "Horizon", guide: "Guide", mcp: "MCP",
-    developer: "Developer", contests: "Contests", pricing: "Plans", invite: "Invite",
+    developer: "Developer", contests: "Contests", pricing: "Plans", invite: "Invite", u: "Profile",
   } as const;
   if (section && Object.hasOwn(secondary, section)) return secondary[section as keyof typeof secondary];
   return studioDestinations.find(({ href }) => href === `/${section}`)?.label;

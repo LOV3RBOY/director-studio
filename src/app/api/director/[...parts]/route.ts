@@ -9,7 +9,7 @@ import { imageAttempts, imageQuote, requestImage } from "@/server/director/image
 import { evidenceFrame } from "@/server/director/media";
 import { directorMode } from "@/server/director/runtime";
 import {
-  currentPack, evidenceFor, listProjects, listStyles, ownedJob, projectDetail, projectRow, queue, reanalyzeStyle,
+  currentPack, evidenceFor, listProjects, listStyles, markPackReviewed, ownedJob, projectDetail, projectRow, queue, reanalyzeStyle,
   retryPlan, saveStyle, snapshot, startProject, startStyle, styleDetail, toJob, writePack,
 } from "@/server/director/store";
 import { ensureDirectorWorker } from "@/server/director/worker";
@@ -109,6 +109,7 @@ export const POST = publicRoute<Params>(async (ctx) => {
     }
   }
   if (surface === "packs" && count === 3) {
+    if (action === "review") return markPackReviewed(user.id, id);
     if (action === "render") return { job: requestRender(user.id, id, valid(renderInput, body)) };
     if (action === "images") return requestImage(user, id, valid(imageInput, body));
     if (action === "export") {
