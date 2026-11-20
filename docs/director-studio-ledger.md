@@ -41,7 +41,8 @@ None.
 ### Phase A acceptance
 
 - A1 synthetic media verified known cut times, two colors by CIEDE2000, sine loudness, 120 BPM tempo, a camera push with vidstabdetect, and identical repeated measurements. The standard Mac FFmpeg exercised the luma-motion fallback.
-- A2 new profiles contain measured evidence at schema version 2, mock guide rules cite metrics, and unknown metric paths fail validation. Actual profiles at versions 1 and 2 decoded in Swift.
+- A2 new profiles contain measured evidence at schema version 2, mock guide rules cite metrics, and missing or null metric values fail citation validation. Actual profiles at versions 1 and 2 decoded in Swift.
 - A3 migration 170 backfilled the source in an isolated upgraded database. The mock API verified ownership, order, aggregate measurements, and source-aware frame citations. The phone-width web flow accepted and saved two references. The unsigned iPhone build and all three simulator tests passed against migrated version 1 data.
 - Verification passed on Node 22 in mock mode: `npm run check:registry`, `npm run typecheck`, `npm run build`, and all 36 files in `npm test`. A separate phone-width browser check loaded the migrated version 1 guide and its evidence.
-- Phase A uses its own review branch targeting `codex/director-studio`. The existing hosted workflow runs on pushes to the target branch.
+- Phase A uses its own review branch targeting `codex/director-studio`. The hosted workflow runs on pushes to that branch and on pull requests targeting it. [Run 44709271841](https://github.com/LOV3RBOY/director-studio/actions/runs/44709271841) confirmed the pull request trigger.
+- Phase A follow-up `a576ccb` passed `python3 tests/run.py tests/director_style_metrics.py` in mock mode with Ubuntu FFmpeg `6.1.1-3ubuntu5` and with the checksum-verified CI FFmpeg `n8.1.3-27-g8dca1586f4-20261031`. The camera push fixture passed on both the legacy default and the explicit ASCII option. A separate forced `vidstabdetect` failure returned `Camera motion analysis failed.` and preserved motion energy.
