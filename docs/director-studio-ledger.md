@@ -34,9 +34,20 @@
 - [x] A3 — Learn a style from up to eight references and preserve existing clients.
   Files: migration 170, `contracts.ts`, `store.ts`, `media.ts`, `worker.ts`, `style-library.tsx`, `StudioModels.swift`, and the runbook. Added source ordering, aggregate measurements, evidence ownership, citation, and immutable save checks in `tests/director_style_metrics.py`.
 
+### Phase B — Style Kit
+
+- [ ] B1 — Validate exemplar selections and materialize full-resolution images and a bounded silent motion clip as owned assets when saving a style version.
+- [ ] B2 — Inject kit references within model limits with cast identity first, preserve legacy compilation, and show kit references separately in Style Proof.
+
 ### Open questions
 
-None.
+- B1 — **Blocked.** Section 5 permits image exemplars with role `motion`, but `compiler.ts` permits that role only for video. Sections 1.2 and B2 require the existing role–modality validations to stay unchanged. Confirm whether image exemplars must use only `lighting` or `composition`, with `motion` reserved for the optional video window, or whether the compiler's allowed modalities should change. Section 0 requires stopping when the spec and code disagree.
+- B2 — **Blocked** pending the B1 role contract. Compiler injection and its acceptance tests have not started.
+
+### Phase B status
+
+- PR #2 merged at `223a8fb` after both hosted checks passed on `e9444c4`. Pulled `codex/director-studio` and created `codex/director-upgrade-phase-b` from that merge.
+- Read the full upgrade spec, then `AGENTS.md`, and added the Phase B checklist before implementation. Phase B is blocked on the role contract above. No implementation or test files changed, and Phase B verification commands have not run.
 
 ### Phase A acceptance
 
