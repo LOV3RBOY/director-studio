@@ -4,7 +4,7 @@ import { randomBytes } from "node:crypto";
 import http from "node:http";
 import https from "node:https";
 import appRoutes from "./app-routes.json";
-import { saveAsset, toAsset } from "../assets";
+import { saveAsset, toAsset, UPLOAD_LIMIT } from "../assets";
 import { hashToken, type User } from "../auth";
 import { run } from "../db";
 import { ApiError, badRequest } from "../errors";
@@ -16,7 +16,7 @@ import { checkResolves, guardedLookup, isAllowedLocal, UrlRefused } from "./netg
  */
 
 /** Paths an agent may never call: sign-in, keys, account settings, billing and the MCP endpoint itself. */
-const DENIED = ["/api/auth", "/api/developer", "/api/mcp", "/api/account", "/api/billing", "/api/wallet/topup", "/api/v1"];
+const DENIED = ["/api/auth", "/api/developer", "/api/mcp", "/api/account", "/api/billing", "/api/wallet/topup", "/api/v1", "/api/director/store"];
 const METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 const MAX_REPLY = 60_000;
 
@@ -58,26 +58,40 @@ export async function appRequest(user: User, input: { method?: unknown; path?: u
     hashToken(token), user.id, now, now + 120_000, "Agent (API key)", now,
   );
   try {
+    // Write actions always get a JSON object: several handlers read one even when they need no fields.
+    const sends = method !== "GET" && method !== "DELETE";
     const response = await fetch(base(requestUrl) + path, {
       method, redirect: "manual", signal: AbortSignal.timeout(90_000),
-      headers: { cookie: `px_session=${token}`, ...(input.body === undefined ? {} : { "content-type": "application/json" }) },
-      body: input.body === undefined || method === "GET" ? undefined : JSON.stringify(input.body),
+      headers: { cookie: `px_session=${token}`, ...(sends ? { "content-type": "application/json" } : {}) },
+      body: sends ? JSON.stringify(input.body ?? {}) : undefined,
     });
     const type = response.headers.get("content-type") ?? "";
-    if (type.includes("json")) {
-      const text = await response.text();
-      return text.length > MAX_REPLY
-        ? { status: response.status, truncated: true, body: text.slice(0, MAX_REPLY) }
-        : { status: response.status, body: text ? JSON.parse(text) : null };
+    if (!type.includes("json") || !response.body) {
+      await response.body?.cancel();
+      return { status: response.status, contentType: type || null, note: "Files, streams and pages are not returned. Open them in the app." };
     }
-    const bytes = (await response.arrayBuffer()).byteLength;
-    return { status: response.status, contentType: type || null, bytes, note: "Binary or page content is not returned. Open it in the app." };
+    // Read at most MAX_REPLY characters, then stop the transfer.
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let text = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      text += decoder.decode(value, { stream: true });
+      if (text.length > MAX_REPLY) {
+        await reader.cancel();
+        return { status: response.status, truncated: true, body: text.slice(0, MAX_REPLY) };
+      }
+    }
+    text += decoder.decode();
+    return { status: response.status, body: text ? JSON.parse(text) : null };
   } finally {
     run("DELETE FROM sessions WHERE token_hash = ?", hashToken(token));
   }
 }
 
-const FILE_LIMIT = 100 * 1024 * 1024;
+/** The Library's own upload limit: 30 MB for video, 20 MB for images and audio. */
+const FILE_LIMIT = Math.max(...Object.values(UPLOAD_LIMIT));
 
 function download(url: URL): Promise<Buffer> {
   const local = isAllowedLocal(url);
@@ -95,7 +109,7 @@ function download(url: URL): Promise<Buffer> {
         size += chunk.length;
         if (size > FILE_LIMIT) {
           req.destroy();
-          reject(new ApiError(413, "import_failed", "That file is larger than 100 MB."));
+          reject(new ApiError(413, "import_failed", "That file is too large: the limit is 30 MB for video and 20 MB for images and audio."));
           return;
         }
         chunks.push(chunk);

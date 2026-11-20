@@ -34,6 +34,7 @@ def tools(key):
 
 def main(folder):
     clip = folder / "reference.mp4"
+    (folder / "big.mp4").write_bytes(b"\0" * (31 * 1024 * 1024))
     subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=128x72:rate=12", "-f", "lavfi", "-i", "sine=frequency=330",
                     "-t", "2", "-c:v", "libx264", "-c:a", "aac", str(clip)], check=True)
     files = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(folder)))
@@ -51,10 +52,13 @@ def main(folder):
         failed, index = mcp(full, "app_routes", {"query": "director projects"})
         assert not failed and any(r["method"] == "POST" and r["path"] == "/api/director/projects" for r in index["routes"]), index
         failed, index = mcp(full, "app_routes", {})
-        assert not any(r["path"].startswith(("/api/auth", "/api/developer", "/api/account", "/api/billing")) for r in index["routes"])
+        assert not any(r["path"].startswith(("/api/auth", "/api/developer", "/api/account", "/api/billing", "/api/director/store")) for r in index["routes"])
+        paths = {(r["method"], r["path"]) for r in index["routes"]}
+        assert {("GET", "/api/jobs/:id"), ("DELETE", "/api/jobs/:id")} <= paths and not any("[" in p for _, p in paths)
 
         for method, path in [("POST", "/api/auth/logout"), ("GET", "/api/developer/keys"), ("DELETE", "/api/account"),
-                             ("GET", "/api/director/../auth/me"), ("GET", "http://example.com/api/jobs")]:
+                             ("GET", "/api/director/../auth/me"), ("GET", "http://example.com/api/jobs"),
+                             ("GET", "/api/director/store"), ("POST", "/api/director/store/transactions")]:
             failed, text = mcp(full, "app_request", {"method": method, "path": path})
             assert failed, (path, text)
 
@@ -73,12 +77,19 @@ def main(folder):
             time.sleep(0.25)
         assert read["body"]["job"]["state"] == "succeeded", read
         assert owner.request(f"{API}/styles")["styles"][0]["title"] == "Agent style"
+        # A write action with no body still reaches its handler.
+        failed, retried = mcp(full, "app_request", {"method": "POST", "path": f"{API}/styles/{made['body']['styleId']}/retry"})
+        assert not failed and retried["status"] == 200, retried
+        failed, raw = mcp(full, "app_request", {"method": "GET", "path": f"/api/assets/{asset}/file"})
+        assert not failed and raw["status"] == 200 and "body" not in raw, raw
 
         # Each call's session is gone afterwards; the owner's own session is untouched.
         sessions = owner.request("/api/account/sessions")["sessions"]
         assert len(sessions) == 1 and all("Agent" not in (s.get("userAgent") or "") for s in sessions), sessions
         failed, text = mcp(full, "import_file", {"url": "file:///etc/passwd"})
         assert failed, text
+        failed, text = mcp(full, "import_file", {"url": f"http://127.0.0.1:{files.server_address[1]}/big.mp4"})
+        assert failed and "30 MB" in json.dumps(text), text
     files.shutdown()
     print("PASS: full-account agent access — route index, acting as the owner, file import and limits")
 
