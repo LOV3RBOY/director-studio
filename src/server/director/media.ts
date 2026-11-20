@@ -470,13 +470,20 @@ export async function measureStyle(asset: AssetRow): Promise<StyleMetrics> {
     });
     const filters = duration === null ? null : await attempt(async () => (await runMedia("ffmpeg", ["-hide_banner", "-filters"], options)).stdout);
     const canStabilize = /\bvidstabdetect\b/.test(filters ?? "");
-    const camera = !canStabilize ? null : await attempt(async () => {
-      await runMedia("ffmpeg", [...input, "-an", "-vf",
-        "fps=12,scale=256:144,format=yuv420p,vidstabdetect=accuracy=15:stepsize=3:mincontrast=0.15:fileformat=ascii:result=motion.trf",
-        "-f", "null", "-"], { ...options, env: { ...process.env, OMP_NUM_THREADS: "1" } });
-      return cameraMotion(await readFile(path.join(directory, "motion.trf"), "utf8"), 256, 144);
-    });
-    if (!camera) reasons.motion = duration === null ? "Still references have no camera motion." : canStabilize
+    let camera: ReturnType<typeof cameraMotion> = null;
+    if (canStabilize) {
+      try {
+        const help = await runMedia("ffmpeg", ["-hide_banner", "-h", "filter=vidstabdetect"], options);
+        const fileFormat = /^\s*fileformat\b/m.test(`${help.stdout}\n${help.stderr}`) ? ":fileformat=ascii" : "";
+        await runMedia("ffmpeg", [...input, "-an", "-vf",
+          `fps=12,scale=256:144,format=yuv420p,vidstabdetect=accuracy=15:stepsize=3:mincontrast=0.15${fileFormat}:result=motion.trf`,
+          "-f", "null", "-"], { ...options, env: { ...process.env, OMP_NUM_THREADS: "1" } });
+        camera = cameraMotion(await readFile(path.join(directory, "motion.trf"), "utf8"), 256, 144);
+      } catch {
+        reasons.motion = "Camera motion analysis failed.";
+      }
+    }
+    if (!camera) reasons.motion ??= duration === null ? "Still references have no camera motion." : canStabilize
       ? "Too few reliable motion fields were available." : "FFmpeg vidstabdetect is unavailable.";
     if (motionEnergy === null) reasons["motion.motionEnergy"] = "No consecutive video samples could be compared.";
     const motion = { ...(camera ?? { translation: null, rotation: null, zoom: null, jitter: null, camera: null }), motionEnergy };

@@ -123,6 +123,9 @@ def main(directory):
     invalid[0]["measures"] = ["tone.fake"]
     save = {"previousId": version["id"], "guide": version["profile"]["guide"]}
     a.request(url + "/save", {**save, "rules": invalid}, status=400)
+    assert combined["metrics"]["editing"]["cutTimes"] is None
+    invalid[0]["measures"] = ["editing.cutTimes"]
+    a.request(url + "/save", {**save, "rules": invalid}, status=400)
     invalid[0] = {**rules[0], "basis": "observed", "reuse": "signature", "evidence": [0]}
     a.request(url + "/save", {**save, "rules": invalid}, status=400)
     invalid[0]["evidence"].append(frame["ordinal"])

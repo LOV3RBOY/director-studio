@@ -3,6 +3,8 @@ name: Director Studio checks
 on:
   push:
     branches: [codex/director-studio]
+  pull_request:
+    branches: [codex/director-studio]
 
 permissions:
   contents: read

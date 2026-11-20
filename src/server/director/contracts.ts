@@ -149,7 +149,10 @@ export function verifyGuidance(value: Guidance, evidence: Evidence): Guidance {
     if (rule.evidence.some((ordinal) => !evidence.frames.some((frame) => frame.ordinal === ordinal))) {
       throw badRequest("The style guide cites a frame outside its evidence.");
     }
-    if (rule.measures?.some((path) => metricAt(evidence.metrics, path) === undefined)) {
+    if (rule.measures?.some((path) => {
+      const metric = metricAt(evidence.metrics, path);
+      return metric === undefined || metric === null;
+    })) {
       throw badRequest("The style guide cites a metric outside its evidence.");
     }
     if ((evidence.sources?.length ?? 0) >= 2 && rule.reuse === "signature") {
