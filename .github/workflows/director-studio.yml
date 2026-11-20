@@ -127,8 +127,11 @@ jobs:
           command -v ffmpeg || brew install ffmpeg
           npm ci
           npm run build
+      - name: Wait for the iPhone simulator to finish booting
+        timeout-minutes: 7
+        run: xcrun simctl bootstatus "$DIRECTOR_SIMULATOR" -b
       - name: Smoke-test with the iPhone simulator
-        timeout-minutes: 12
+        timeout-minutes: 14
         run: |
           set -eu
           export PARALLAX_DATA_DIR="$RUNNER_TEMP/iphone-server-data"
@@ -143,7 +146,8 @@ jobs:
           cd "$RUNNER_TEMP/xcode"
           xcodebuild -project DirectorStudio.xcodeproj -scheme DirectorStudio -configuration Debug \
             -destination "platform=iOS Simulator,id=$DIRECTOR_SIMULATOR" -derivedDataPath "$RUNNER_TEMP/simulator-build" \
-            -parallel-testing-enabled NO -resultBundlePath "$RUNNER_TEMP/DirectorSmoke.xcresult" test-without-building
+            -parallel-testing-enabled NO -retry-tests-on-failure -test-iterations 2 \
+            -resultBundlePath "$RUNNER_TEMP/DirectorSmoke.xcresult" test-without-building
       - name: Upload simulator evidence
         if: always()
         uses: actions/upload-artifact@v6

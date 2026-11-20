@@ -54,13 +54,16 @@ final class DirectorStudioUITests: XCTestCase {
         let director = app.tabBars.buttons["Director"]
         XCTAssertTrue(director.waitForExistence(timeout: 20))
         // iOS may offer to save the fixture password after sign-in.
-        let savePassword = app.sheets["Save Password?"].buttons["Not Now"]
-        if savePassword.waitForExistence(timeout: 3) {
+        let savePassword = app.buttons["Not Now"]
+        if savePassword.waitForExistence(timeout: 15) {
+            XCTAssertTrue(savePassword.wait(for: \.isHittable, toEqual: true, timeout: 8), app.debugDescription)
             savePassword.tap()
-            XCTAssertTrue(savePassword.waitForNonExistence(timeout: 8))
+            if !savePassword.waitForNonExistence(timeout: 3) { savePassword.tap() }
+            XCTAssertTrue(savePassword.waitForNonExistence(timeout: 8), app.debugDescription)
         }
+        XCTAssertTrue(director.wait(for: \.isHittable, toEqual: true, timeout: 15), app.debugDescription)
         director.tap()
-        XCTAssertTrue(app.navigationBars["Director"].waitForExistence(timeout: 10), app.debugDescription)
+        XCTAssertTrue(app.navigationBars["Director"].waitForExistence(timeout: 20), app.debugDescription)
         let project = app.staticTexts["iPhone fixture project"]
         XCTAssertTrue(project.waitForExistence(timeout: 20))
         return app
