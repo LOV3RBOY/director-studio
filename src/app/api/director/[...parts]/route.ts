@@ -93,7 +93,7 @@ export const POST = publicRoute<Params>(async (ctx) => {
   if (surface === "projects" && count === 1) return startProject(user.id, valid(projectsInput, body));
   const id = valid(identifier, rawId);
   if (surface === "styles" && count === 3) {
-    if (action === "save") return { version: saveStyle(user.id, id, valid(styleEdit, body)) };
+    if (action === "save") return { version: await saveStyle(user.id, id, valid(styleEdit, body)) };
     if (action === "retry") return { job: reanalyzeStyle(user.id, id) };
   }
   if (surface === "projects" && count === 3) {

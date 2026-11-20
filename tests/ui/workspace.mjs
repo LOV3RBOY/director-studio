@@ -123,6 +123,9 @@ try {
       assert.equal(project.pinnedStyle.id, saved.id);
       assert.equal(project.pack.body.clips.length > 0, true);
       await b.until('!!document.querySelector("#style-proof-title")');
+      await b.until('document.body.innerText.includes("Style Kit references")', 8000, "kit references in Style Proof");
+      assert.ok(project.pack.body.clips[0].attachments.some((file) => saved.profile.kit.images.includes(file.assetId)));
+      assert.equal(await b.evaluate('document.body.textContent.includes("The original style source is attached")'), false);
       await b.click("summary", "Composition");
       await b.until('!!document.querySelector(\'details[open] img[alt="Source frame 1"]\')');
       await b.click("summary", "Exact render prompt and references");

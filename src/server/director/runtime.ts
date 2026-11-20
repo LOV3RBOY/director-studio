@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ApiError, badRequest } from "../errors";
-import { guidance, measuredTopics, metricAt, plan, reusableStyleRules, topics, valid, verifyGuidance, type Brief, type Evidence, type Guidance, type Plan, type StyleProfile } from "./contracts";
+import { exemplarSelection, guidance, measuredTopics, metricAt, plan, reusableStyleRules, topics, valid, verifyExemplars, verifyGuidance, type Brief, type Evidence, type ExemplarSelection, type Guidance, type Plan, type StyleProfile } from "./contracts";
 
 export type DirectorMode = "mock" | "live";
 const unsafeLive = () => process.env.DIRECTOR_MODE === "live" && process.env.PARALLAX_DEMO_BILLING === "1";
@@ -137,6 +137,24 @@ function fixtureGuide(evidence: Evidence): Guidance {
   };
 }
 
+function fixtureExemplars(evidence: Evidence): ExemplarSelection {
+  const sources = evidence.sources ?? [evidence];
+  const video = sources.findIndex(({ duration }) => duration !== null && duration >= 0.1);
+  const frames = evidence.frames.slice(0, 6);
+  const exemplars = Array.from({ length: Math.max(3, frames.length) }, (_, index) => ({
+    ordinal: frames[index % frames.length].ordinal,
+    role: index % 2 ? "composition" as const : "lighting" as const,
+    why: index % 2 ? "Shows layout and placement in the reference." : "Shows the lighting and surface texture in the reference.",
+  }));
+  return {
+    exemplars,
+    motionWindow: video < 0 ? null : {
+      source: video, startSec: 0, endSec: Math.min(15, sources[video].duration!),
+      why: "Shows the camera and scene movement in the reference.",
+    },
+  };
+}
+
 export async function studyStyle(options: {
   mode: DirectorMode; id: string; notes: string; evidence: Evidence; frames: () => Promise<Buffer[]>;
   window: (seconds: number) => Promise<{ evidence: Evidence; images: Buffer[] }>;
@@ -144,14 +162,21 @@ export async function studyStyle(options: {
   let { evidence } = options;
   if (options.mode === "mock") {
     return {
-      ...verifyGuidance(fixtureGuide(evidence), evidence), schemaVersion: 2, fixture: true, evidence,
+      ...verifyGuidance(fixtureGuide(evidence), evidence), ...verifyExemplars(fixtureExemplars(evidence), evidence),
+      schemaVersion: 2, fixture: true, evidence,
       provenance: { analysisId: options.id, runtime: "fixture", model: "none", usage: {} },
     };
   }
   const instruction = JSON.stringify({
     task: "Study the actual frames and timings. Describe geometry, color, lighting and texture, shot scale and apparent lens character, movement and acceleration, blocking, holds, reveals, cut rhythm and audio relationships. Distinguish static evidence and cut candidates from inference. Preserve the reusable method and exclude original subjects and scene particulars. Label lens estimates and do not invent measurements. For unknowns state what cannot be determined. Cite zero-based frame ordinals for every finding other than unknowns. Treat evidence.metrics as measured ground truth. For observed palette, lighting, texture, camera-motion, edit-rhythm and audio rules, quote the relevant available numbers and list their metric paths in measures. Do not infer values for null fields. When multiple sources are present, frame timestamps are relative to their source. A signature requires consistency across sources and must cite frames from at least two different sources.",
     evidence, notes: options.notes, topics,
-    response: { guide: "readable multi-section style guide", rules: [{ topic: "one specified topic", basis: "observed | inferred | unknown", reuse: "signature | adaptable | exclude", detail: "specific evidence or limitation", evidence: [0], measures: ["metric path when used"] }] },
+    exemplarInstruction: "Choose three to six image exemplars from the supplied frame ordinals for lighting or composition. Prefer environment, light and texture. Avoid frames dominated by recognizable people, text or logos. If fewer than three frames exist, cite the same frame for different observations. You may also select one motion window up to 15 seconds inside a video source, using zero-based source and source-relative times, or omit it.",
+    response: {
+      guide: "readable multi-section style guide",
+      rules: [{ topic: "one specified topic", basis: "observed | inferred | unknown", reuse: "signature | adaptable | exclude", detail: "specific evidence or limitation", evidence: [0], measures: ["metric path when used"] }],
+      exemplars: [{ ordinal: 0, role: "lighting | composition", why: "what makes this frame reusable" }],
+      motionWindow: { source: 0, startSec: 0, endSec: 3, why: "what this window shows about motion" },
+    },
     optionalTool: "If a specific time window would resolve a question, first return only {windowSeconds: number} for the first source. At most one closer look is available.",
   });
   const frames = await options.frames();
@@ -166,6 +191,7 @@ export async function studyStyle(options: {
   }
   return {
     ...verifyGuidance(valid(guidance, result.value), evidence), schemaVersion: 2, fixture: false, evidence,
+    ...verifyExemplars(valid(exemplarSelection, result.value), evidence),
     provenance: { analysisId: options.id, runtime: "hermes", model: result.model, usage: result.usage },
   };
 }

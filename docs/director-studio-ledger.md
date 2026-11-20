@@ -34,9 +34,30 @@
 - [x] A3 — Learn a style from up to eight references and preserve existing clients.
   Files: migration 170, `contracts.ts`, `store.ts`, `media.ts`, `worker.ts`, `style-library.tsx`, `StudioModels.swift`, and the runbook. Added source ordering, aggregate measurements, evidence ownership, citation, and immutable save checks in `tests/director_style_metrics.py`.
 
+### Phase B — Style Kit
+
+- [x] B1 — Validate exemplar selections and materialize full-resolution images and a bounded silent motion clip as owned assets when saving a style version.
+  Updated `contracts.ts`, `runtime.ts`, `media.ts`, `store.ts`, and the Director route. `director_style_kit.py` checks validation, source dimensions, codec, duration, audio exclusion, ownership, and immutable saves. The loopback Hermes fixture returns exemplar selections.
+- [x] B2 — Inject kit references within model limits with cast identity first, preserve legacy compilation, and show kit references separately in Style Proof.
+  Updated `contracts.ts`, `compiler.ts`, `store.ts`, `style-proof.tsx`, `StudioModels.swift`, and the runbook. `director_style_kit.py` checks reference order, both models’ limits and remaining capacity, and byte equality for v1, v2, and explicit opt-out renderer output.
+
 ### Open questions
 
 None.
+
+### Phase B status
+
+- PR #2 merged at `223a8fb` after both hosted checks passed on `e9444c4`. Pulled `codex/director-studio` and created `codex/director-upgrade-phase-b` from that merge.
+- The revised spec resolves the B1 and B2 questions. Image exemplars use `lighting` or `composition`, and the optional `motionWindow` produces the single video with role `motion` under the existing compiler rules.
+- Cinema CI follow-up in `tests/ui/cinema.mjs` waits for a visible, enabled Shot options button before each click. Each menu wait has an 8-second deadline and retries the click once at 3 seconds if the menu is still closed. All five consecutive local runs of `python3 tests/run.py tests/ui/cinema.mjs` passed in mock mode.
+
+### Phase B acceptance
+
+- The provider-free Style Kit test passed with Ubuntu FFmpeg `6.1.1-3ubuntu5` and the checksum-verified CI build `n8.1.3-27-g8dca1586f4-20261031`. Both extracted full-resolution images from different sources and one silent H.264 clip capped at 15 seconds. Invalid frame and motion selections were rejected, and an unrelated account could not download the derived assets.
+- Both builds verified cast-first attachment order, lighting and composition roles, the fixed style scope, and the kit caps and remaining reference slots for Seedance 2.0 and 2.5. Pack compilation and provider request bytes matched the Phase A baseline for v1 and v2 profiles without a kit and for `styleRefs: false`. The pack snapshot retains the explicit opt-out as an editing preference.
+- A single still can support multiple observations. Repeated ordinals share one derived asset, which the compiler attaches once. Saving changes to the guide retains the kit on a new immutable version.
+- The phone-width workspace test displayed the kit references in Style Proof as a separate row. A separate phone-width check opened a saved v1 guide, its evidence and its compiled pack. The iPhone simulator passed all three smoke tests, including opening the v1 guide and rendering and playing its mock take.
+- `npm run check:registry`, `npm run typecheck`, `npm run build`, and all 37 files in `npm test` passed locally with Node 22.23.5 in mock mode.
 
 ### Phase A acceptance
 

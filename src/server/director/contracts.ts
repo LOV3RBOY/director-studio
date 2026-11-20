@@ -53,6 +53,21 @@ export const guidance = z.object({
 });
 export type Guidance = z.infer<typeof guidance>;
 
+export const exemplarSelection = z.object({
+  exemplars: z.array(z.object({
+    ordinal: z.number().int().nonnegative(),
+    role: z.enum(["lighting", "composition"]),
+    why: text(450),
+  })).min(3).max(6),
+  motionWindow: z.object({
+    source: z.number().int().nonnegative(),
+    startSec: z.number().nonnegative(),
+    endSec: z.number().positive(),
+    why: text(450),
+  }).nullish(),
+});
+export type ExemplarSelection = z.infer<typeof exemplarSelection>;
+
 export function reusableStyleRules(rules: Guidance["rules"]) {
   return rules.flatMap((rule, index) => rule.reuse !== "exclude" && rule.basis !== "unknown" ? [{ ...rule, index }] : []);
 }
@@ -116,6 +131,24 @@ export interface StyleProfile extends Guidance {
   fixture: boolean;
   evidence: Evidence;
   provenance: { runtime: string; model: string; analysisId: string; usage: Record<string, number> };
+  exemplars?: ExemplarSelection["exemplars"];
+  motionWindow?: ExemplarSelection["motionWindow"];
+  kit?: { images: string[]; motion: string | null };
+}
+
+export function verifyExemplars(selection: ExemplarSelection, evidence: Evidence): ExemplarSelection {
+  if (selection.exemplars.some(({ ordinal }) => !evidence.frames.some((frame) => frame.ordinal === ordinal))) {
+    throw badRequest("A style exemplar cites a frame outside its evidence.");
+  }
+  const window = selection.motionWindow;
+  if (window) {
+    const source = (evidence.sources ?? [evidence])[window.source];
+    const length = window.endSec - window.startSec;
+    if (!source?.duration || window.endSec > source.duration || length <= 0 || length > 15) {
+      throw badRequest("Choose a motion window of up to 15 seconds inside a video reference.");
+    }
+  }
+  return selection;
 }
 
 export const measuredTopics = {
@@ -210,6 +243,7 @@ export const packSettings = z.object({
   resolution: z.enum(["480p", "720p", "1080p", "4k"]),
   quality: z.enum(["basic", "high"]).optional(),
   seed: z.number().int().min(-1).max(2_147_483_647).optional(),
+  styleRefs: z.boolean().optional(),
 });
 export type Settings = z.infer<typeof packSettings>;
 export const packInput = z.object({ plan, settings: packSettings, previousId: identifier });

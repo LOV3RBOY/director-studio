@@ -16,6 +16,14 @@ Measurements come from FFmpeg and FFprobe. Camera classification requires a buil
 
 Multi-reference guides include metrics per source, pooled palette weights, and a mean and population standard deviation for comparable numeric measurements. Cut times are local to each reference. Frame citations use global ordinals, with their source and local timestamp shown in the library. Signature rules cite at least two sources when available. The initial analysis receives at most ten reference frames, with the existing optional closer look limited to four additional frames from the first reference.
 
+## Style Kit
+
+When you save a new analysis, Director creates owned, full-resolution JPEGs for its lighting and composition exemplars. It can also save one silent H.264 motion clip up to 15 seconds long. A still may support several exemplar observations. Observations from the same frame share one derived asset. Editing a saved guide retains its kit, and reanalysis can produce a new one.
+
+Director adds kit references to each clip after the storyboard references, with cast identity first. Seedance 2.0 can receive up to two kit images. Seedance 2.5 can receive up to four kit images and one kit video. Available model slots can reduce those counts. Style Proof lists the kit references used for the selected clip while flagging any original source that was attached directly.
+
+Pack edits can set `settings.styleRefs` to `false` to use the storyboard references alone. Omit the setting or set it to `true` to use the kit. Saved profiles without a kit continue to compile with their storyboard references. Reanalyze and save an older guide to create a new version with a kit.
+
 ## Environment variables
 
 | Variable | Purpose |

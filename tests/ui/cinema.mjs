@@ -9,6 +9,62 @@ const b = await launch({ width: Number(W), height: Number(H), out });
 const takes = `ul[aria-label="Takes"] li`;
 const shotCards = `#cinema-storyboard li.group`;
 
+// The storyboard re-renders and shifts while its data refreshes, so a click sent during a
+// refresh can land where the target was a moment earlier. Count the page's own requests and
+// click only once none is running and the target has stopped moving.
+async function trackRequests() {
+  await b.evaluate(`(() => {
+    if (window.__inflight !== undefined) return 0;
+    window.__inflight = 0;
+    const original = window.fetch;
+    window.fetch = async (...args) => {
+      window.__inflight++;
+      try { return await original(...args); } finally { window.__inflight--; }
+    };
+    return 1;
+  })()`);
+}
+
+async function settle(selector, text) {
+  const position = `(() => {
+    const want = ${JSON.stringify(text ?? null)};
+    const all = [...document.querySelectorAll(${JSON.stringify(selector)})].filter((e) => e.getClientRects().length > 0);
+    const el = want === null ? all[0] : all.find((e) => ((e.getAttribute("aria-label") || "") + " " + e.textContent).toLowerCase().includes(want.toLowerCase()));
+    if (!el) return "";
+    const r = el.getBoundingClientRect();
+    return [r.x, r.y, r.width, r.height].map(Math.round).join(",");
+  })()`;
+  let last = null;
+  const deadline = Date.now() + 8000;
+  while (Date.now() < deadline) {
+    const [busy, at] = JSON.parse(await b.evaluate(`JSON.stringify([window.__inflight || 0, ${position}])`));
+    if (!busy && at && at === last) return;
+    last = at;
+    await b.sleep(150);
+  }
+  throw new Error(`timed out waiting for: ${text ?? selector} to settle`);
+}
+
+/** Clicks once the page is settled; clicks again only if nothing happened (no request ran and `done` is still false). */
+async function clickUntil(selector, text, done, what) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await settle(selector, text);
+    await b.click(selector, text);
+    try {
+      await b.until(done, 2500, what);
+      return;
+    } catch (error) {
+      if (!String(error.message).startsWith("timed out")) throw error;
+    }
+    await settle(selector, text);
+    if (await b.evaluate(done)) return;
+  }
+  throw new Error(`timed out waiting for: ${what}`);
+}
+
+const shotMenu = `!!document.querySelector('[role="menuitemradio"]')`;
+const openShotMenu = (card = shotCards) => clickUntil(`${card} button[aria-label^="Shot options"]`, undefined, shotMenu, "shot menu");
+
 const wide = () => b.evaluate(`document.documentElement.scrollWidth > window.innerWidth + 1`);
 async function noSideways() {
   if (await wide()) throw new Error("page is wider than the window");
@@ -121,25 +177,23 @@ try {
       await b.until(`!!document.querySelector('${takes}:last-child button[aria-pressed="true"]')`, 5000, "chosen");
     }],
     ["storyboard: add, duplicate, reorder and delete shots", async () => {
-      await b.click("#cinema-storyboard button", "Add shot");
-      await b.until(`document.querySelectorAll('${shotCards}').length === 2`, 8000, "two shots");
-      await b.click(`${shotCards} button[aria-label^="Shot options"]`);
-      await b.until(`!!document.querySelector('[role="menuitemradio"]')`, 3000, "shot menu");
+      await trackRequests();
+      await clickUntil("#cinema-storyboard button", "Add shot", `document.querySelectorAll('${shotCards}').length >= 2`, "two shots");
+      await b.until(`document.querySelectorAll('${shotCards}').length === 2`, 3000, "exactly two shots");
+      await openShotMenu();
       await b.click('[role="menuitemradio"]', "Duplicate");
       await b.until(`document.querySelectorAll('${shotCards}').length === 3`, 8000, "three shots");
       const before = await b.evaluate(`[...document.querySelectorAll('${shotCards}')].map((l) => l.dataset.shot).join("|")`);
       await b.sleep(400);
-      await b.click(`${shotCards} button[aria-label^="Shot options"]`);
-      await b.until(`!!document.querySelector('[role="menuitemradio"]')`, 3000, "shot menu");
+      await openShotMenu();
       await b.click('[role="menuitemradio"]', "Move later");
       await b.until(`[...document.querySelectorAll('${shotCards}')].map((l) => l.dataset.shot).join("|") !== ${JSON.stringify(before)}`, 8000, "order changed");
       await b.sleep(400);
-      await b.click(`${shotCards}:nth-child(3) button[aria-label^="Shot options"]`);
-      await b.until(`!!document.querySelector('[role="menuitemradio"]')`, 3000, "shot menu");
+      await openShotMenu(`${shotCards}:nth-child(3)`);
       await b.click('[role="menuitemradio"]', "Delete");
       await b.until(`document.querySelectorAll('${shotCards}').length === 2`, 8000, "two shots again");
-      await b.click("#cinema-storyboard button", "Add scene");
-      await b.until(`document.querySelectorAll('#cinema-storyboard [data-scene]').length === 2`, 8000, "two scenes");
+      await clickUntil("#cinema-storyboard button", "Add scene", `document.querySelectorAll('#cinema-storyboard [data-scene]').length >= 2`, "two scenes");
+      await b.until(`document.querySelectorAll('#cinema-storyboard [data-scene]').length === 2`, 3000, "exactly two scenes");
       await b.evaluate(`document.getElementById("cinema-storyboard").scrollIntoView()`);
       await b.sleep(400);
       await b.shot("09-storyboard");

@@ -5,10 +5,11 @@ import { readFile, readdir, mkdir, mkdtemp, rename, rm, writeFile } from "node:f
 import path from "node:path";
 import { promisify } from "node:util";
 import { z } from "zod";
-import { assetFile, type AssetRow } from "../assets";
+import { assetFile, removeAsset, saveAsset, type AssetRow } from "../assets";
 import { dataDir } from "../db";
 import { ApiError, badRequest } from "../errors";
-import { metricAt, styleMetrics, type Evidence, type StyleMetrics } from "./contracts";
+import { inspectAsset } from "./compiler";
+import { exemplarSelection, metricAt, styleMetrics, valid, verifyExemplars, type Evidence, type StyleMetrics, type StyleProfile } from "./contracts";
 
 export const runMedia = promisify(execFile);
 const bounded = { timeout: 45_000, maxBuffer: 2_000_000 };
@@ -29,6 +30,69 @@ export async function temporary<T>(ownerId: string, run: (directory: string) => 
     return await run(directory);
   } finally {
     await rm(directory, { recursive: true, force: true });
+  }
+}
+
+export async function materializeStyleKit<T>(
+  userId: string, profile: StyleProfile, commit: (kit: NonNullable<StyleProfile["kit"]>) => T,
+): Promise<T> {
+  const { evidence } = profile;
+  const { exemplars, motionWindow } = verifyExemplars(valid(exemplarSelection, profile), evidence);
+  const sources = evidence.sources ?? [evidence];
+  const assetAt = (source: number) => inspectAsset(userId, sources[source].assetId);
+  const created: string[] = [];
+  try {
+    return await temporary(userId, async (directory) => {
+      const extract = async (asset: AssetRow, start: number | null, options: string[], filename: string) => {
+        const output = path.join(directory, filename);
+        try {
+          await runMedia("ffmpeg", [
+            "-nostdin", "-v", "error", "-protocol_whitelist", "file,pipe",
+            ...(start === null ? [] : ["-ss", start.toFixed(6)]),
+            "-i", assetFile(asset), "-map", "0:v:0", "-an", "-sn", "-dn", ...options, output,
+          ], bounded);
+          return await readFile(output);
+        } catch {
+          throw new ApiError(422, "media_analysis_failed", "Could not extract a style reference. Check that the source media plays.");
+        }
+      };
+      const images: string[] = [];
+      const byOrdinal = new Map<number, string>();
+      for (const { ordinal } of exemplars) {
+        const previous = byOrdinal.get(ordinal);
+        if (previous) {
+          images.push(previous);
+          continue;
+        }
+        const frame = evidence.frames.find((item) => item.ordinal === ordinal);
+        if (!frame) throw badRequest("A style exemplar cites a frame outside its evidence.");
+        // The evidence timestamp is rounded, so seek just before it to retain the selected frame.
+        const start = frame.seconds === null ? null : Math.max(0, frame.seconds - 0.00001);
+        const bytes = await extract(assetAt(frame.source ?? 0), start,
+          ["-frames:v", "1", "-q:v", "2", "-threads", "1", "-update", "1"], `exemplar-${ordinal}.jpg`);
+        const image = await saveAsset({ userId, bytes, source: "generated", accept: ["image"], title: "Style exemplar" });
+        created.push(image.id);
+        byOrdinal.set(ordinal, image.id);
+        images.push(image.id);
+      }
+      let motion: string | null = null;
+      if (motionWindow) {
+        const windowSeconds = motionWindow.endSec - motionWindow.startSec;
+        const frames = Math.min(360, Math.max(1, Math.floor(windowSeconds * 24)));
+        const bytes = await extract(assetAt(motionWindow.source), motionWindow.startSec, [
+          "-vf", "fps=24,pad=ceil(iw/2)*2:ceil(ih/2)*2", "-frames:v", String(frames),
+          "-c:v", "libx264", "-preset", "fast", "-pix_fmt", "yuv420p", "-threads", "2", "-movflags", "+faststart",
+        ], "motion.mp4");
+        const video = await saveAsset({ userId, bytes, source: "generated", accept: ["video"], title: "Style motion exemplar" });
+        created.push(video.id);
+        if (!video.duration || video.duration > 15) throw badRequest("The style motion clip must be at most 15 seconds.");
+        motion = video.id;
+      }
+      return { images, motion };
+    }).then(commit);
+  } catch (error) {
+    for (const id of created) removeAsset(userId, id);
+    throw error;
   }
 }
 

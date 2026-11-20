@@ -35,7 +35,11 @@ export function StyleProof({ pack, style, cast, reviewedAt, onReviewed }: {
   const linked = shot.styleRuleIndices ?? [];
   const cited = new Set(clips.flatMap((item) => item.shots.flatMap((row) => row.styleRuleIndices ?? [])));
   const uncited = rules.filter((rule, index) => rule.reuse === "signature" && rule.basis !== "unknown" && !cited.has(index));
-  const hasSource = compiled.attachments.some((attachment) => attachment.assetId === style.profile.evidence.assetId);
+  const rawSources = new Set(style.profile.evidence.sources?.map(({ assetId }) => assetId) ?? [style.profile.evidence.assetId]);
+  const hasSource = compiled.attachments.some((attachment) => rawSources.has(attachment.assetId));
+  const kit = style.profile.kit;
+  const kitFiles = kit ? new Set([...kit.images, kit.motion]) : null;
+  const kitReferences = kitFiles ? compiled.attachments.filter(({ assetId }) => kitFiles.has(assetId)) : [];
   const missingCast = (cast ?? []).filter((member) => !compiled.attachments.some((attachment) => attachment.role === "identity" && member.assetIds.includes(attachment.assetId)));
   const details = [
     ["Start frame", shot.start], ["Action", shot.action], ["Camera", shot.movement], ["End frame", shot.end],
@@ -160,6 +164,17 @@ export function StyleProof({ pack, style, cast, reviewedAt, onReviewed }: {
             {!!missingCast.length && <li>Clip {clipIndex + 1} has no identity reference for {missingCast.map(({ name }) => name).join(", ")}. Check this if they appear in the clip.</li>}
           </ul>
         </details>
+      )}
+
+      {kitReferences.length > 0 && (
+        <div className={panel}>
+          <p className="font-bold">Style Kit references</p>
+          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-text-secondary">
+            {kitReferences.map(({ assetId, modality, index, role }) => (
+              <li key={assetId} className="capitalize">{modality} {index} · {role}</li>
+            ))}
+          </ul>
+        </div>
       )}
 
       <details className={panel}>

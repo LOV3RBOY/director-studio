@@ -6,6 +6,7 @@ import { createElement, createProject, createShot, ownedProject, scenesOf, toPro
 import { compilePack, inspectAsset, type PackBody } from "./compiler";
 import { requireAuthoringEntitlement } from "./commerce";
 import { reusableStyleRules, type Brief, type Guidance, type learnInput, type Plan, type Settings, type StyleProfile, verifyGuidance } from "./contracts";
+import { materializeStyleKit } from "./media";
 import { directorMode, hermesConfig, type DirectorMode } from "./runtime";
 
 export interface StyleRow {
@@ -82,17 +83,22 @@ export function addStyleVersion(userId: string, styleId: string, profile: StyleP
   });
 }
 
-export function saveStyle(userId: string, id: string, input: { previousId: string; guide: string; rules?: Guidance["rules"] }) {
-  return tx(() => {
-    const style = styleRow(userId, id);
-    const previous = styleVersion(userId, input.previousId, style.mode);
+export async function saveStyle(userId: string, id: string, input: { previousId: string; guide: string; rules?: Guidance["rules"] }) {
+  const style = styleRow(userId, id);
+  const previous = styleVersion(userId, input.previousId, style.mode);
+  if (previous.style_id !== style.id) throw notFound();
+  const requireLatest = () => {
     const latest = get<VersionRow>("SELECT * FROM director_style_versions WHERE user_id = ? AND style_id = ? ORDER BY version DESC LIMIT 1", userId, id);
-    if (previous.style_id !== style.id) throw notFound();
     if (latest?.id !== previous.id) throw new ApiError(409, "version_conflict", "Reload the latest style guide before saving.");
-    const profile = profileOf(previous);
-    const edits = verifyGuidance({ guide: input.guide, rules: input.rules ?? profile.rules }, profile.evidence);
-    return addStyleVersion(userId, id, { ...profile, ...edits }, true);
+  };
+  requireLatest();
+  const profile = profileOf(previous);
+  const edits = verifyGuidance({ guide: input.guide, rules: input.rules ?? profile.rules }, profile.evidence);
+  const save = (kit = profile.kit) => tx(() => {
+    requireLatest();
+    return addStyleVersion(userId, id, { ...profile, ...edits, ...(kit ? { kit } : {}) }, true);
   });
+  return profile.exemplars && !profile.kit ? materializeStyleKit(userId, profile, save) : save();
 }
 
 export function projectRow(userId: string, id: string, mode = directorMode()) {
@@ -156,7 +162,8 @@ export function writePack(userId: string, projectId: string, plan: Plan, setting
     const project = projectRow(userId, projectId);
     const existing = currentPack(userId, projectId);
     if ((existing?.id ?? null) !== expectedId) throw new ApiError(409, "version_conflict", "Reload the latest pack before applying edits.");
-    const rules = new Set(reusableStyleRules(projectProfile(userId, project).profile.rules).map(({ index }) => index));
+    const { profile } = projectProfile(userId, project);
+    const rules = new Set(reusableStyleRules(profile.rules).map(({ index }) => index));
     for (const clip of plan.clips) {
       for (const shot of clip.shots) {
         const citations = shot.styleRuleIndices ?? [];
@@ -165,7 +172,9 @@ export function writePack(userId: string, projectId: string, plan: Plan, setting
         }
       }
     }
-    const pack = compilePack(userId, project.request, plan, settings);
+    const pack = compilePack(userId, project.request, plan, settings, profile);
+    // Preserve the opt-out for edits without adding it to the compiler's renderer output.
+    if (settings.styleRefs === false) pack.settings.styleRefs = false;
     const version = (existing?.version ?? 0) + 1;
     const id = newId("dpk");
     run("INSERT INTO director_packs VALUES (?, ?, ?, ?, ?, ?)", id, userId, projectId, version, JSON.stringify(pack), Date.now());

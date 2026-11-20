@@ -100,6 +100,10 @@ class Hermes(BaseHTTPRequestHandler):
                         {"topic": topic, "basis": "inferred", "reuse": "adaptable", "detail": f"Concrete fixture interpretation for the {topic} topic.", "evidence": [len(contents) - 2]}
                         for topic in analyzed["topics"]
                     ],
+                    "exemplars": [
+                        {"ordinal": ordinal, "role": role, "why": "Shows the fixture's lighting or composition."}
+                        for ordinal, role in [(0, "lighting"), (1, "composition"), (len(contents) - 2, "lighting")]
+                    ],
                 }
         else:
             plan_or_chat = json.loads(contents[0]["text"])
@@ -218,4 +222,5 @@ def main():
     print("Director recovery passed: mock restart, mode isolation, missing credentials, scoped Hermes requests, supplemental evidence, ambiguous live attempt and replay.")
 
 
-main()
+if __name__ == "__main__":
+    main()
