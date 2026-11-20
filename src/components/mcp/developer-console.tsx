@@ -10,6 +10,7 @@ import { routes } from "@/content/site";
 import { useQueryParam } from "@/lib/browser";
 import { useSession } from "@/lib/session";
 import { Button, ButtonLink, cn } from "@/ui";
+import { AgentConnect } from "./agent-connect";
 import { KeysPanel } from "./dev-keys";
 import { ReferencePanel } from "./dev-reference";
 import { UsagePanel } from "./dev-usage";
@@ -79,7 +80,10 @@ export function DeveloperConsole() {
           ) : !member ? (
             <SignedOut guest={!!user} />
           ) : tab === "keys" ? (
-            <KeysPanel />
+            <div className="flex flex-col gap-6">
+              <AgentConnect />
+              <KeysPanel />
+            </div>
           ) : tab === "usage" ? (
             <UsagePanel />
           ) : (

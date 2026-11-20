@@ -5,6 +5,7 @@ import { ApiError } from "../errors";
 import { sameOrigin } from "../origin";
 import { errorResponse, logRequest, missingScope, openKey, rateHeaders, rateLimited, type RateState } from "./api";
 import type { KeyAuth, Scope } from "./keys";
+import { appRequest, importFile, listRoutes } from "./agent";
 import { balanceOut, createGeneration, findModel, getGeneration, listFiles, listGenerations, listModels, modelDetail, quoteDraft } from "./service";
 
 /**
@@ -24,7 +25,9 @@ const SERVER_INFO = { name: "parallax", title: "Parallax", version: "1.0.0" };
 const INSTRUCTIONS =
   "Parallax makes images, video and audio. Call list_models to find a model, get_model to see its controls and media slots, " +
   "quote to check the price, then generate. Generations run in the background: poll get_generation until the status is " +
-  "succeeded or failed. Prices are in millicredits (1000 = 1 credit).";
+  "succeeded or failed. Prices are in millicredits (1000 = 1 credit). With an account key, app_routes lists every app action " +
+  "(Director styles, projects, storyboards, renders, Library, studios) and app_request performs one as the account owner; " +
+  "import_file saves a public file link into the Library so it can be used as a reference.";
 
 type Json = Record<string, unknown>;
 type Id = string | number | null;
@@ -57,7 +60,7 @@ interface Tool {
   scope: Scope;
   inputSchema: Json;
   readOnly: boolean;
-  run(auth: KeyAuth, args: Json): { out: Json; credits?: number };
+  run(auth: KeyAuth, args: Json, req: NextRequest): { out: Json; credits?: number } | Promise<{ out: Json; credits?: number }>;
 }
 
 const num = (v: unknown, fallback: number, min: number, max: number) => {
@@ -146,15 +149,51 @@ const TOOLS: Tool[] = [
     inputSchema: { type: "object", properties: {} },
     run: (a) => ({ out: balanceOut(a.user) }),
   },
+  {
+    name: "app_routes",
+    title: "List app actions",
+    description: "Every action in the app's own API (method, path, body and what it does), optionally filtered by words such as \"director render\". Use with app_request.",
+    scope: "account",
+    readOnly: true,
+    inputSchema: { type: "object", properties: { query: s("Words to filter by, e.g. \"director project\" or \"library\".") } },
+    run: (_a, args) => ({ out: listRoutes(args.query) }),
+  },
+  {
+    name: "app_request",
+    title: "Use the app",
+    description: "Performs one app action as the account owner: anything the owner can do in the app, from learning a style to rendering a Director clip. Paths come from app_routes; replace :params with ids. Sign-in, keys, account settings and billing are not available.",
+    scope: "account",
+    readOnly: false,
+    inputSchema: {
+      type: "object",
+      properties: {
+        method: { type: "string", enum: ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+        path: s("The path, starting with /api/, e.g. /api/director/projects."),
+        body: { type: "object", description: "The JSON body for POST, PUT and PATCH.", additionalProperties: true },
+      },
+      required: ["method", "path"],
+    },
+    run: async (a, args, req) => ({ out: await appRequest(a.user, args, req.url) }),
+  },
+  {
+    name: "import_file",
+    title: "Import a file",
+    description: "Downloads a public image, video or audio link (up to 100 MB) into the owner's Library and returns its file id, for use as a reference.",
+    scope: "account",
+    readOnly: false,
+    inputSchema: { type: "object", properties: { url: s("A direct https link to the file."), title: s("A name for the Library.") }, required: ["url"] },
+    run: async (a, args) => ({ out: await importFile(a.user, args) }),
+  },
 ];
 
-export const toolList = () =>
-  TOOLS.map((t) => ({
+/** The tools a key can use: an account-scope tool is listed only for keys that hold that scope. */
+export const toolList = (scopes: readonly Scope[] = ["read", "generate"]) =>
+  TOOLS.filter((t) => t.scope !== "account" || scopes.includes("account")).map((t) => ({
     name: t.name,
     title: t.title,
     description: t.description,
     inputSchema: t.inputSchema,
-    annotations: { readOnlyHint: t.readOnly, destructiveHint: false, openWorldHint: false },
+    annotations: { readOnlyHint: t.readOnly, destructiveHint: t.name === "app_request", openWorldHint: t.name === "import_file" },
   }));
 
 /* -------------------------------- transport -------------------------------- */
@@ -242,7 +281,7 @@ export async function handleMcp(req: NextRequest, authorization: string | null):
           instructions: INSTRUCTIONS,
         });
       case "tools/list":
-        return ok({ tools: toolList() });
+        return ok({ tools: toolList(auth.key.scopes) });
       case "tools/call": {
         const tool = TOOLS.find((t) => t.name === params.name);
         if (!tool) return json(rpcError(id, -32602, `Unknown tool: ${String(params.name).slice(0, 80)}`));
@@ -250,7 +289,7 @@ export async function handleMcp(req: NextRequest, authorization: string | null):
         const args = (params.arguments && typeof params.arguments === "object" && !Array.isArray(params.arguments) ? params.arguments : {}) as Json;
         try {
           if (!auth.key.scopes.includes(tool.scope)) throw missingScope(tool.scope);
-          const r = tool.run(auth, args);
+          const r = await tool.run(auth, args, req);
           credits = r.credits ?? 0;
           return ok({ content: [{ type: "text", text: JSON.stringify(r.out) }], structuredContent: r.out, isError: false });
         } catch (err) {
