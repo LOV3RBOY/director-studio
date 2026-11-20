@@ -3,13 +3,18 @@ import { copyFile, mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { usdToMillicredits } from "@/config/economy";
+import { assetRef, getModel, quoteJob } from "@/registry";
 import { assetFile, fileResponse, readAsset, type AssetRow } from "../assets";
-import { get, tx } from "../db";
+import type { User } from "../auth";
+import { get, run, tx } from "../db";
 import { ApiError, badRequest, notFound } from "../errors";
 import { configuredOrigin } from "../origin";
-import { inspectAsset, providerBody, type CompiledClip, type PackBody } from "./compiler";
+import { frameRequest, inspectAsset, providerBody, type CompiledClip, type PackBody } from "./compiler";
 import type { Brief, Settings } from "./contracts";
+import { submitJobs } from "../jobs";
+import { tregMode } from "../treg";
 import { privateDirectory, runMedia, temporary } from "./media";
+import { directorModel } from "./models";
 import { directorMode } from "./runtime";
 import { queue, replay, snapshot, toJob, type JobRow, type Snapshot } from "./store";
 
@@ -81,8 +86,26 @@ function exactQuote(clip: CompiledClip, settings: Settings) {
   }
 }
 
+/** A frame model's clip goes through the shared generation pipeline, priced by the registry. */
+function frameRender(userId: string, packId: string, index: number) {
+  const { project, pack } = snapshot(userId, packId);
+  const clip = clipAt(pack.body, index);
+  const model = getModel(pack.body.settings.model);
+  if (!model || project.mode !== tregMode() || (project.mode === "live" && !process.env.TREG_TOKEN)) {
+    throw new ApiError(503, "render_unavailable", "This video model is unavailable for this workspace mode.");
+  }
+  const request = frameRequest(clip, pack.body.settings, project.request.aspect);
+  const media = Object.fromEntries(clip.attachments.map((file) => [file.slot!, [assetRef(inspectAsset(userId, file.assetId).id, file.mime)]]));
+  const quote = quoteJob(model, { prompt: request.prompt, values: request.values, media, filled: request.filled, count: 1 });
+  return { project, request, quote };
+}
+
 export function renderQuote(userId: string, packId: string, index: number) {
   const { pack } = snapshot(userId, packId);
+  if (directorModel(pack.body.settings.model).engine === "frames") {
+    const { project, quote } = frameRender(userId, packId, index);
+    return { millicredits: quote.millicredits, estimatedUsd: project.mode === "mock" ? 0 : quote.usdPerJob, fixture: project.mode === "mock" };
+  }
   const clip = clipAt(pack.body, index);
   const assets = checkReferences(userId, clip);
   const quote = exactQuote(clip, pack.body.settings);
@@ -91,13 +114,29 @@ export function renderQuote(userId: string, packId: string, index: number) {
   return { ...quote, sendsReferencesToMuapi: true };
 }
 
-export function requestRender(userId: string, packId: string, input: { clip: number; requestKey: string; maxCredits: number }) {
+export function requestRender(user: User, packId: string, input: { clip: number; requestKey: string; maxCredits: number }) {
+  const userId = user.id;
   const { project, pack } = snapshot(userId, packId);
   return tx(() => {
     const previous = replay(userId, "render", input.requestKey);
     if (previous) {
       if (previous.snapshot_id !== packId || JSON.parse(previous.input).clip !== input.clip) throw badRequest("That approval belongs to another clip.");
       return toJob(previous);
+    }
+    if (directorModel(pack.body.settings.model).engine === "frames") {
+      const { request, quote } = frameRender(userId, packId, input.clip);
+      if (quote.millicredits > input.maxCredits) throw new ApiError(409, "quote_changed", "The render quote changed. Review the new price.");
+      // The shared pipeline holds and settles the credits, so the Director reserves nothing.
+      const [job] = submitJobs(user, {
+        modelId: request.modelId, prompt: request.prompt, values: request.values, inputs: request.inputs, count: 1, surface: "director",
+        meta: { packId, clip: input.clip },
+      });
+      const row = queue({
+        userId, kind: "render", projectId: project.id, snapshotId: pack.id, requestKey: input.requestKey,
+        body: { clip: input.clip, quotedUsd: project.mode === "mock" ? 0 : quote.usdPerJob, jobId: job.id },
+      });
+      run("UPDATE director_jobs SET state = 'polling', provider_id = ?, next_run = ? WHERE id = ?", job.id, Date.now() + 1_000, row.id);
+      return toJob({ ...row, state: "polling", provider_id: job.id });
     }
     const quote = renderQuote(userId, packId, input.clip);
     if (quote.millicredits > input.maxCredits) throw new ApiError(409, "quote_changed", "The render quote changed. Review the new price.");

@@ -50,6 +50,14 @@
 
 **Decision (C1):** fidelity scores run in their own `director_fidelity` queue instead of a new `director_jobs` kind. Adding the kind requires rebuilding `director_jobs`; with foreign keys on, dropping it inside the migration transaction would cascade-delete `director_render_reviews` rows, which Section 6 names as the stop condition. The separate queue keeps the same restart recovery and is not billable.
 
+### Phase D — Model adapters and any registry video model
+
+- [x] D1 — Snapshot Seedance output, then move model limits into adapters (`models.ts`). Seedance 2.0 and 2.5 compiled packs and provider bodies stayed byte-identical across six fixture packs (both models, with and without Style Kit, ids normalized).
+- [x] D2 — Let a project use any eligible registry video model. Added `GET /api/director/models`, frame-model compilation, registry rendering through `submitJobs`, worker polling of the shared job, and limit-aware planning, project start and pack edits. `tests/director_models.py` checks eligibility, limits, clip splitting, keyframe slots, a single charge and delivery.
+- [x] D3 — Model pickers on the web and iOS project forms and the iOS pack editor, driven by the server list.
+
+**Decision (D2):** registry renders reserve nothing in `director_jobs`; the shared pipeline holds and settles credits, so a take is never charged twice. The Director job stores the shared job id in `provider_id` and finishes with that job's asset.
+
 ### Open questions
 
 None.

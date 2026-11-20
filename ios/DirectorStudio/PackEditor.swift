@@ -18,6 +18,8 @@ struct PackEditor: View {
     @State private var sharing: TemporaryFile?
     @State private var attempts: [ImageAttempt] = []
     @State private var imageWatch = 0
+    @State private var models = DirectorModelOption.seedance
+    private var option: DirectorModelOption? { models.first { $0.id == settings.model } }
     private var endpoint: String { "/api/director/packs/\(snapshot.id)" }
     private var changed: Bool { plan != snapshot.body.plan || settings != snapshot.body.settings }
 
@@ -46,7 +48,7 @@ struct PackEditor: View {
                     }
                 }
                 ClipEditor(clip: $plan.clips[selected]) { showReference = true }
-                Section("Seedance prompt") {
+                Section("Render prompt") {
                     if changed {
                         Text("Save your changes to compile the exact request.").font(.footnote).foregroundStyle(.secondary)
                     } else {
@@ -131,22 +133,30 @@ struct PackEditor: View {
     private var settingsView: some View {
         Section("Render settings") {
             Picker("Model", selection: $settings.model) {
-                Text("Seedance 2.0").tag("seedance-2.0")
-                Text("Seedance 2.5").tag("seedance-2.5")
+                ForEach(models) { item in Text(item.name).tag(item.id) }
+                if option == nil { Text(settings.model).tag(settings.model) }
             }
-            .onChange(of: settings.model) { _, model in
-                settings.quality = model == "seedance-2.0" ? "high" : nil
-                settings.seed = model == "seedance-2.5" ? -1 : nil
+            .onChange(of: settings.model) { _, _ in
+                guard let option else { return }
+                settings.quality = option.quality ? "high" : nil
+                settings.seed = option.seed ? -1 : nil
+                if !option.resolutions.contains(settings.resolution) { settings.resolution = option.defaultResolution }
+            }
+            .task {
+                if let response: DirectorModelsResponse = try? await api.get("/api/director/models") {
+                    let available = response.models.filter(\.available)
+                    if !available.isEmpty { models = available }
+                }
             }
             Picker("Resolution", selection: $settings.resolution) {
-                ForEach(["480p", "720p", "1080p", "4k"], id: \.self) { Text($0) }
+                ForEach(option?.resolutions ?? [settings.resolution], id: \.self) { Text($0) }
             }
-            if settings.model == "seedance-2.0" {
+            if option?.quality == true {
                 Picker("Quality", selection: Binding(get: { settings.quality ?? "high" }, set: { settings.quality = $0 })) {
                     Text("High").tag("high")
                     Text("Basic").tag("basic")
                 }
-            } else {
+            } else if option?.seed == true {
                 TextField("Seed (-1 for random)", value: Binding(get: { settings.seed ?? -1 }, set: { settings.seed = $0 }), format: .number.grouping(.never))
                     .keyboardType(.numbersAndPunctuation)
             }

@@ -10,6 +10,7 @@ import { api, errorMessage, fetcher, type Asset } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import type { Brief, StyleProfile } from "@/server/director/contracts";
 import type { PackBody } from "@/server/director/compiler";
+import type { DirectorModel } from "@/server/director/models";
 import { Button, Spinner } from "@/ui";
 import { StyleProof } from "./style-proof";
 import type { DeliveredTake } from "./take-fidelity";
@@ -170,8 +171,17 @@ function ReviewStyle({ id, onSaved }: { id: string; onSaved: () => void }) {
   );
 }
 
+const allAspects = ["16:9", "9:16", "1:1", "4:3", "3:4", "21:9"];
+const lengths = (durations: number[]) => durations.length > 2 && durations.every((n, i) => !i || n === durations[i - 1] + 1)
+  ? `${durations[0]}–${durations.at(-1)} s` : `${durations.join(", ")} s`;
+
 function NewStyledProject({ version }: { version: StyleVersion }) {
   const router = useRouter();
+  const choices = useSWR<{ models: (DirectorModel & { available: boolean })[] }>("/api/director/models", fetcher).data?.models.filter((item) => item.available);
+  const [modelId, setModelId] = useState("seedance-2.0");
+  const [aspect, setAspect] = useState("16:9");
+  const chosen = choices?.find((item) => item.id === modelId);
+  const aspects = chosen?.aspects ?? allAspects;
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -185,7 +195,7 @@ function NewStyledProject({ version }: { version: StyleVersion }) {
         method: "POST",
         body: {
           styleVersionId: version.id, title: data.get("title"), brief: data.get("brief"),
-          duration: Number(data.get("duration")), aspect: data.get("aspect"), model: data.get("model"),
+          duration: Number(data.get("duration")), aspect: aspects.includes(aspect) ? aspect : aspects[0], model: modelId,
         },
       });
       void mutate("/api/director/projects");
@@ -205,9 +215,21 @@ function NewStyledProject({ version }: { version: StyleVersion }) {
       <Field label="New creative brief"><textarea name="brief" required maxLength={3500} rows={4} className={field} /></Field>
       <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Length in seconds"><input name="duration" type="number" min={4} max={60} defaultValue={10} required className={field} /></Field>
-        <Field label="Aspect ratio"><select name="aspect" defaultValue="16:9" className={field}>{["16:9", "9:16", "1:1", "4:3", "3:4", "21:9"].map((value) => <option key={value}>{value}</option>)}</select></Field>
-        <Field label="Render model"><select name="model" defaultValue="seedance-2.0" className={field}><option value="seedance-2.0">Seedance 2.0</option><option value="seedance-2.5">Seedance 2.5</option></select></Field>
+        <Field label="Aspect ratio"><select name="aspect" value={aspects.includes(aspect) ? aspect : aspects[0]} onChange={(event) => setAspect(event.target.value)} className={field}>{aspects.map((value) => <option key={value}>{value}</option>)}</select></Field>
+        <Field label="Render model">
+          <select name="model" value={modelId} onChange={(event) => setModelId(event.target.value)} className={field}>
+            {(choices ?? [{ id: "seedance-2.0", name: "Seedance 2.0" }, { id: "seedance-2.5", name: "Seedance 2.5" }]).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+          </select>
+        </Field>
       </div>
+      {chosen && (
+        <p className="text-sm leading-6 text-text-secondary">
+          {chosen.name} renders {lengths(chosen.durations)} clips.{" "}
+          {chosen.engine === "omni"
+            ? "It follows identity, style, motion and sound references."
+            : `It renders from the prompt${chosen.slots.length ? ` and ${chosen.slots.length === 2 ? "start and end keyframes" : "a start keyframe"}` : ""}; the style travels in the prompt.`}
+        </p>
+      )}
       <Problem message={problem} />
       <Button type="submit" variant="lime" size="md" disabled={busy} className="self-start">{busy ? <><Spinner /> Starting storyboard…</> : "Create styled project"}</Button>
     </form>

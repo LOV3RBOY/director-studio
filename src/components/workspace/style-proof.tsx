@@ -4,6 +4,7 @@ import { ArrowUpRight, Check, Clipboard, ScanLine } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { api, errorMessage } from "@/lib/api";
+import { getModel } from "@/registry";
 import type { PackBody } from "@/server/director/compiler";
 import type { Brief, StyleProfile } from "@/server/director/contracts";
 import { Button, cn } from "@/ui";
@@ -13,6 +14,7 @@ type Pack = { id: string; version: number; body: PackBody };
 type PinnedStyle = { id: string; styleId: string; title: string; version: number; profile: StyleProfile };
 
 const seconds = (ms: number) => `${Number((ms / 1000).toFixed(3))}s`;
+const modelName = (id: string) => ({ "seedance-2.0": "Seedance 2.0", "seedance-2.5": "Seedance 2.5" } as Record<string, string>)[id] ?? getModel(id)?.name ?? id;
 const topic = (value: string) => value.replaceAll("-", " ");
 const panel = "rounded-2xl border border-border-default bg-surface-secondary p-4";
 
@@ -99,7 +101,7 @@ export function StyleProof({ pack, style, cast, reviewedAt, onReviewed, projectI
       </div>
 
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-y border-border-default py-2 text-xs text-text-secondary">
-        <span>{pack.body.settings.model === "seedance-2.0" ? "Seedance 2.0" : "Seedance 2.5"}</span>
+        <span>{modelName(pack.body.settings.model)}</span>
         <span>{pack.body.settings.resolution}</span>
         <span>{compiled.duration}s</span>
         <span>{clip.mode === "continuous" ? "Continuous take" : "Edited sequence"}</span>
