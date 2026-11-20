@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ApiError, badRequest } from "../errors";
-import { guidance, plan, reusableStyleRules, topics, valid, verifyGuidance, type Brief, type Evidence, type Guidance, type Plan, type StyleProfile } from "./contracts";
+import { guidance, measuredTopics, metricAt, plan, reusableStyleRules, topics, valid, verifyGuidance, type Brief, type Evidence, type Guidance, type Plan, type StyleProfile } from "./contracts";
 
 export type DirectorMode = "mock" | "live";
 const unsafeLive = () => process.env.DIRECTOR_MODE === "live" && process.env.PARALLAX_DEMO_BILLING === "1";
@@ -114,12 +114,26 @@ function fixtureGuide(evidence: Evidence): Guidance {
     evidence.hasAudio ? "The source has an audio stream. Fixture beats suggest a restrained ambience and one clear synchronized cue." : "The source has no audio stream. Treat native audio as a fresh decision for the project.",
   ];
   return {
-    guide: "Provider-free fixture. Dimensions, sampled timestamps, cut candidates and audio stream presence come from the actual file. The creative rules below are sample directions for exercising the workflow.",
-    rules: topics.map((topic, index) => ({
-      topic, basis: index === 2 || index === 13 ? "observed" : "unknown",
-      reuse: index === 8 || index === 10 ? "signature" : "adaptable",
-      detail: fixtureNotes[index], evidence: index === 2 || index === 13 ? [0] : [],
-    })),
+    guide: "Provider-free fixture. Dimensions, frames and numeric measurements come from the uploaded media. The creative rules are examples for testing the workflow.",
+    rules: topics.map((topic, index) => {
+      const paths: readonly string[] = topic in measuredTopics ? measuredTopics[topic as keyof typeof measuredTopics] : [];
+      const values = paths.flatMap((path) => {
+        const value = metricAt(evidence.metrics, path);
+        return typeof value === "number" ? [{ path, text: `${path} = ${value.toFixed(4)}` }] : [];
+      });
+      const palette = topic === "palette" ? evidence.metrics?.palette : null;
+      if (palette?.length) values.push({ path: "palette", text: palette.map(({ hex, weight }) => `${hex} at ${(weight * 100).toFixed(1)}%`).join(", ") });
+      const measured = values.length > 0 || index === 2;
+      const cited = measured ? [evidence.frames[0].ordinal] : [];
+      const otherSource = evidence.frames.find((frame) => frame.source === 1);
+      const signature = topic === "camera-motion" && measured && (evidence.sources?.length ?? 1) === 1;
+      if (otherSource && measured) cited.push(otherSource.ordinal);
+      return {
+        topic, basis: measured ? "observed" : "unknown", reuse: signature ? "signature" : "adaptable",
+        detail: values.length ? `Measured from the reference: ${values.map(({ text }) => text).join("; ")}.` : fixtureNotes[index],
+        evidence: cited, ...(values.length ? { measures: values.map(({ path }) => path) } : {}),
+      };
+    }),
   };
 }
 
@@ -130,15 +144,15 @@ export async function studyStyle(options: {
   let { evidence } = options;
   if (options.mode === "mock") {
     return {
-      ...verifyGuidance(fixtureGuide(evidence), evidence), schemaVersion: 1, fixture: true, evidence,
+      ...verifyGuidance(fixtureGuide(evidence), evidence), schemaVersion: 2, fixture: true, evidence,
       provenance: { analysisId: options.id, runtime: "fixture", model: "none", usage: {} },
     };
   }
   const instruction = JSON.stringify({
-    task: "Study the actual frames and timings. Describe geometry, color, lighting and texture, shot scale and apparent lens character, movement and acceleration, blocking, holds, reveals, cut rhythm and audio relationships. Distinguish static evidence and cut candidates from inference. Preserve the reusable method and exclude original subjects and scene particulars. Label lens estimates and do not invent measurements. For unknowns state what cannot be determined. Cite zero-based frame ordinals for every finding other than unknowns.",
+    task: "Study the actual frames and timings. Describe geometry, color, lighting and texture, shot scale and apparent lens character, movement and acceleration, blocking, holds, reveals, cut rhythm and audio relationships. Distinguish static evidence and cut candidates from inference. Preserve the reusable method and exclude original subjects and scene particulars. Label lens estimates and do not invent measurements. For unknowns state what cannot be determined. Cite zero-based frame ordinals for every finding other than unknowns. Treat evidence.metrics as measured ground truth. For observed palette, lighting, texture, camera-motion, edit-rhythm and audio rules, quote the relevant available numbers and list their metric paths in measures. Do not infer values for null fields. When multiple sources are present, frame timestamps are relative to their source. A signature requires consistency across sources and must cite frames from at least two different sources.",
     evidence, notes: options.notes, topics,
-    response: { guide: "readable multi-section style guide", rules: [{ topic: "one specified topic", basis: "observed | inferred | unknown", reuse: "signature | adaptable | exclude", detail: "specific evidence or limitation", evidence: [0] }] },
-    optionalTool: "If a specific time window would resolve a question, first return only {windowSeconds: number}. At most one closer look is available.",
+    response: { guide: "readable multi-section style guide", rules: [{ topic: "one specified topic", basis: "observed | inferred | unknown", reuse: "signature | adaptable | exclude", detail: "specific evidence or limitation", evidence: [0], measures: ["metric path when used"] }] },
+    optionalTool: "If a specific time window would resolve a question, first return only {windowSeconds: number} for the first source. At most one closer look is available.",
   });
   const frames = await options.frames();
   let result = await turn("analysis", instruction, frames);
@@ -151,7 +165,7 @@ export async function studyStyle(options: {
     for (const [name, value] of Object.entries(previousUsage)) result.usage[name] = (result.usage[name] ?? 0) + value;
   }
   return {
-    ...verifyGuidance(valid(guidance, result.value), evidence), schemaVersion: 1, fixture: false, evidence,
+    ...verifyGuidance(valid(guidance, result.value), evidence), schemaVersion: 2, fixture: false, evidence,
     provenance: { analysisId: options.id, runtime: "hermes", model: result.model, usage: result.usage },
   };
 }

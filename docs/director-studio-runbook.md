@@ -8,6 +8,14 @@ Use Node 22.13 or later, Python 3, FFmpeg, FFprobe, and Info-ZIP. Run npm ci wit
 
 The workflow named **Director Studio checks** packages the iOS sources, unzips them into a clean directory, compiles the iPhone target without signing, and runs a simulator smoke test. Use the workflow artifact for the matching commit. See [the device install guide](../ios/INSTALL.md).
 
+## Measured style guides
+
+New style analyses save schema version 2. In the web Style Library, select one to eight owned images or videos in upload order. The create API accepts `assetIds` in that order or the legacy `assetId` for one reference. Saved guides retain their measurements when edited. Existing version 1 guides remain readable and usable. Migration 170 records their original asset as the first source.
+
+Measurements come from FFmpeg and FFprobe. Camera classification requires a build with `vidstabdetect`. On builds without it, the guide records why camera fields are unavailable and reports frame-to-frame luma motion energy for video. Camera translation and jitter are measured in pixels at the analysis resolution, rotation is in radians, and zoom is a scale change per frame. Tempo is reported only when measured confidence reaches 0.35.
+
+Multi-reference guides include metrics per source, pooled palette weights, and a mean and population standard deviation for comparable numeric measurements. Cut times are local to each reference. Frame citations use global ordinals, with their source and local timestamp shown in the library. Signature rules cite at least two sources when available. The initial analysis receives at most ten reference frames, with the existing optional closer look limited to four additional frames from the first reference.
+
 ## Environment variables
 
 | Variable | Purpose |

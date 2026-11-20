@@ -18,9 +18,21 @@ export const projectsInput = z.object({
 export type Brief = z.infer<typeof projectsInput>;
 
 export const learnInput = z.object({
-  assetId: identifier,
+  assetId: identifier.optional(),
+  assetIds: z.array(identifier).min(1).max(8).optional(),
   title: text(120),
   notes: z.string().trim().max(2400).default(""),
+}).transform(({ assetId, assetIds, title, notes }, ctx) => {
+  if (Boolean(assetId) === Boolean(assetIds)) {
+    ctx.addIssue({ code: "custom", message: "Supply either assetId or assetIds." });
+    return z.NEVER;
+  }
+  const sources = assetIds ?? [assetId!];
+  if (new Set(sources).size !== sources.length) {
+    ctx.addIssue({ code: "custom", message: "Choose distinct references." });
+    return z.NEVER;
+  }
+  return { assetIds: sources, title, notes };
 });
 
 export const topics = [
@@ -36,6 +48,7 @@ export const guidance = z.object({
     reuse: z.enum(["signature", "adaptable", "exclude"]),
     detail: z.string().trim().min(25).max(900),
     evidence: z.array(z.number().int().nonnegative()).max(8),
+    measures: z.array(z.string().max(80)).max(20).optional(),
   })).min(topics.length).max(32),
 });
 export type Guidance = z.infer<typeof guidance>;
@@ -44,11 +57,44 @@ export function reusableStyleRules(rules: Guidance["rules"]) {
   return rules.flatMap((rule, index) => rule.reuse !== "exclude" && rule.basis !== "unknown" ? [{ ...rule, index }] : []);
 }
 
+const measured = z.number().nullable();
+const lab = z.tuple([z.number(), z.number(), z.number()]);
+const paletteColor = z.object({ hex: z.string().regex(/^#[0-9a-f]{6}$/), lab, weight: z.number().min(0).max(1) });
+export const styleMetrics = z.object({
+  editing: z.object({
+    cutTimes: z.array(z.number()).max(400).nullable(),
+    shotLengths: z.object({ mean: measured, median: measured, p10: measured, p90: measured }),
+    cutsPer10s: measured,
+  }),
+  palette: z.array(paletteColor).max(6).nullable(),
+  tone: z.object({ p5: measured, p50: measured, p95: measured, contrast: measured, saturation: measured, warmth: measured }),
+  grain: measured,
+  motion: z.object({
+    translation: z.object({ x: z.number(), y: z.number() }).nullable(),
+    rotation: measured, zoom: measured, jitter: measured, motionEnergy: measured,
+    camera: z.enum(["static", "pan", "tilt", "push", "pull", "handheld", "mixed"]).nullable(),
+  }),
+  audio: z.object({ integratedLufs: measured, loudnessRange: measured, tempo: measured, confidence: measured }),
+  reasons: z.record(z.string(), z.string()),
+});
+export type StyleMetrics = z.infer<typeof styleMetrics>;
+
+export interface EvidenceSource {
+  assetId: string;
+  digest: string;
+  duration: number | null;
+  width: number;
+  height: number;
+  hasAudio: boolean;
+  metrics: StyleMetrics;
+}
+
 export interface EvidenceFrame {
   ordinal: number;
   seconds: number | null;
   cutCandidate: boolean;
   filename?: string;
+  source?: number;
 }
 
 export interface Evidence {
@@ -60,13 +106,35 @@ export interface Evidence {
   hasAudio: boolean;
   audioCues?: { seconds: number; type: "silence-start" | "silence-end" }[];
   frames: EvidenceFrame[];
+  metrics?: StyleMetrics;
+  metricSpread?: Record<string, number>;
+  sources?: EvidenceSource[];
 }
 
 export interface StyleProfile extends Guidance {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   fixture: boolean;
   evidence: Evidence;
   provenance: { runtime: string; model: string; analysisId: string; usage: Record<string, number> };
+}
+
+export const measuredTopics = {
+  palette: ["palette"],
+  lighting: ["tone.p5", "tone.p50", "tone.p95", "tone.contrast"],
+  texture: ["grain"],
+  "camera-motion": ["motion.translation.x", "motion.translation.y", "motion.rotation", "motion.zoom", "motion.jitter", "motion.motionEnergy"],
+  "edit-rhythm": ["editing.shotLengths.mean", "editing.shotLengths.median", "editing.shotLengths.p10", "editing.shotLengths.p90", "editing.cutsPer10s"],
+  audio: ["audio.integratedLufs", "audio.loudnessRange", "audio.tempo", "audio.confidence"],
+} satisfies Partial<Record<(typeof topics)[number], readonly string[]>>;
+
+export function metricAt(metrics: StyleMetrics | undefined, path: string): unknown {
+  if (path === "reasons" || path.startsWith("reasons.")) return undefined;
+  let value: unknown = metrics;
+  for (const part of path.split(".")) {
+    if (!value || typeof value !== "object" || !Object.hasOwn(value, part) || part === "length") return undefined;
+    value = (value as Record<string, unknown>)[part];
+  }
+  return value;
 }
 
 export function verifyGuidance(value: Guidance, evidence: Evidence): Guidance {
@@ -80,6 +148,16 @@ export function verifyGuidance(value: Guidance, evidence: Evidence): Guidance {
     if (rule.basis !== "unknown" && rule.evidence.length === 0) throw badRequest("Cite a frame for each observation or inference.");
     if (rule.evidence.some((ordinal) => !evidence.frames.some((frame) => frame.ordinal === ordinal))) {
       throw badRequest("The style guide cites a frame outside its evidence.");
+    }
+    if (rule.measures?.some((path) => {
+      const metric = metricAt(evidence.metrics, path);
+      return metric === undefined || metric === null;
+    })) {
+      throw badRequest("The style guide cites a metric outside its evidence.");
+    }
+    if ((evidence.sources?.length ?? 0) >= 2 && rule.reuse === "signature") {
+      const sources = new Set(evidence.frames.filter((frame) => rule.evidence.includes(frame.ordinal)).map((frame) => frame.source ?? 0));
+      if (sources.size < 2) throw badRequest("Cite at least two references for a signature rule.");
     }
   }
   return value;

@@ -1,10 +1,11 @@
+import type { output } from "zod";
 import { balance, hold, release, settle } from "../credits";
 import { all, get, newId, run, tx } from "../db";
 import { ApiError, badRequest, notFound } from "../errors";
 import { createElement, createProject, createShot, ownedProject, scenesOf, toProject } from "../cinema/store";
 import { compilePack, inspectAsset, type PackBody } from "./compiler";
 import { requireAuthoringEntitlement } from "./commerce";
-import { reusableStyleRules, type Brief, type Guidance, type Plan, type Settings, type StyleProfile, verifyGuidance } from "./contracts";
+import { reusableStyleRules, type Brief, type Guidance, type learnInput, type Plan, type Settings, type StyleProfile, verifyGuidance } from "./contracts";
 import { directorMode, hermesConfig, type DirectorMode } from "./runtime";
 
 export interface StyleRow {
@@ -66,8 +67,10 @@ export function evidenceFor(userId: string, styleId: string, versionId: string, 
   const row = styleVersion(userId, versionId, style.mode);
   if (row.style_id !== style.id) throw notFound();
   const { evidence } = profileOf(row);
-  if (!evidence.frames.some((frame) => frame.ordinal === ordinal)) throw notFound();
-  return { asset: inspectAsset(userId, evidence.assetId), evidence };
+  const frame = evidence.frames.find((item) => item.ordinal === ordinal);
+  if (!frame) throw notFound();
+  const source = evidence.sources?.[frame.source ?? 0]?.assetId ?? evidence.assetId;
+  return { asset: inspectAsset(userId, source), evidence };
 }
 
 export function addStyleVersion(userId: string, styleId: string, profile: StyleProfile, saved: boolean) {
@@ -239,19 +242,29 @@ export function queue(input: {
   });
 }
 
-export function startStyle(userId: string, input: { assetId: string; title: string; notes: string }) {
-  const asset = inspectAsset(userId, input.assetId);
-  if (asset.kind === "audio") throw badRequest("Choose an image or video to study.");
+export function styleAssets(userId: string, style: StyleRow) {
+  const sources = all<{ asset_id: string }>(
+    `SELECT source.asset_id FROM director_style_sources source JOIN director_styles style ON style.id = source.style_id
+     WHERE style.user_id = ? AND style.id = ? AND style.mode = ? ORDER BY source.ordinal`,
+    userId, style.id, style.mode,
+  );
+  return sources.map(({ asset_id }) => inspectAsset(userId, asset_id));
+}
+
+export function startStyle(userId: string, input: output<typeof learnInput>) {
+  const assets = input.assetIds.map((id) => inspectAsset(userId, id));
+  if (assets.some((asset) => asset.kind === "audio")) throw badRequest("Choose images or videos to study.");
   return tx(() => {
     const id = newId("dst");
-    run("INSERT INTO director_styles VALUES (?, ?, ?, ?, ?, ?, ?)", id, userId, input.assetId, directorMode(), input.title, input.notes, Date.now());
+    run("INSERT INTO director_styles VALUES (?, ?, ?, ?, ?, ?, ?)", id, userId, assets[0].id, directorMode(), input.title, input.notes, Date.now());
+    assets.forEach((asset, ordinal) => run("INSERT INTO director_style_sources VALUES (?, ?, ?)", id, asset.id, ordinal));
     return { styleId: id, job: toJob(queue({ userId, kind: "analysis", body: { styleId: id } })) };
   });
 }
 
 export function reanalyzeStyle(userId: string, id: string) {
   const style = styleRow(userId, id);
-  inspectAsset(userId, style.asset_id);
+  styleAssets(userId, style);
   return tx(() => {
     const active = get<JobRow>(
       "SELECT * FROM director_jobs WHERE user_id = ? AND mode = ? AND kind = 'analysis' AND json_extract(input, '$.styleId') = ? AND state IN ('queued', 'running')",

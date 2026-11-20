@@ -3,6 +3,9 @@
 // Run it with: python3 tests/run.py tests/ui/pricing.mjs
 // (the runner starts the app in mock mode and calls: node tests/ui/pricing.mjs <base-url> <out-dir> [width] [height])
 import { launch, scenario } from "./browser.mjs";
+import { tsImport } from "tsx/esm/api";
+
+const { promo } = await tsImport("../../src/content/site.ts", import.meta.url);
 
 const [base, out, W = "1440", H = "900"] = process.argv.slice(2);
 const b = await launch({ width: Number(W), height: Number(H), out });
@@ -36,9 +39,18 @@ try {
       return shown;
     }],
     ["the offer banner counts down", async () => {
+      const endsAt = Date.parse(promo.endsAt);
+      if (!promo.enabled || await b.evaluate(`Date.now() >= ${endsAt}`)) {
+        await b.until(`!document.querySelector('[role="timer"]')`, 5000, "no inactive offer countdown");
+        return;
+      }
       await b.until(`!!document.querySelector('[role="timer"]')`, 5000, "the countdown");
       const a = await b.evaluate(`document.querySelector('[role="timer"]').innerText`);
       await b.sleep(1300);
+      if (await b.evaluate(`Date.now() >= ${endsAt}`)) {
+        await b.until(`!document.querySelector('[role="timer"]')`, 5000, "expired offer countdown removed");
+        return;
+      }
       const c = await b.evaluate(`document.querySelector('[role="timer"]').innerText`);
       if (a === c) throw new Error("countdown did not tick");
     }],
