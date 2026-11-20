@@ -6,7 +6,7 @@ import { Button, Dialog, DialogContent, cn } from "@/ui";
 import { CopyButton } from "./copy";
 
 /** Types from docs/api/developer.md. */
-export type KeyScope = "read" | "generate";
+export type KeyScope = "read" | "generate" | "account";
 export interface ApiKey {
   id: string;
   name: string;

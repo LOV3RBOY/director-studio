@@ -26,7 +26,7 @@ export const hero = {
 };
 
 export type ToolGroup = "models" | "generations" | "files" | "account";
-export type Scope = "read" | "generate";
+export type Scope = "read" | "generate" | "account";
 
 export interface ToolInfo {
   name: string;
@@ -299,7 +299,11 @@ export const dev = {
     name: "Name",
     namePlaceholder: "Untitled key",
     scopes: "Scopes",
-    scopeHelp: { read: "Read models, prices, generations, files and balance.", generate: "Start and cancel generations and upload files." },
+    scopeHelp: {
+      read: "Read models, prices, generations, files and balance.",
+      generate: "Start and cancel generations and upload files.",
+      account: "Full account: the agent can do anything you can do in the app, except sign-in, keys, account settings and billing.",
+    },
     expiry: "Expiry",
     empty: "No keys yet. Create one to call the API or connect an agent.",
     secretTitle: "Copy your new key now",

@@ -1,0 +1,1277 @@
+[
+ {
+  "method": "DELETE",
+  "path": "/api/account",
+  "summary": "{ confirm: \"DELETE\", password }   password is not needed for guests."
+ },
+ {
+  "method": "GET",
+  "path": "/api/account",
+  "summary": "Profile, balance, subscription and preferences in one read."
+ },
+ {
+  "method": "POST",
+  "path": "/api/account/email",
+  "summary": "{ email, password }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/account/handle",
+  "summary": "Query ?handle=  Is this handle valid and free?"
+ },
+ {
+  "method": "POST",
+  "path": "/api/account/password",
+  "summary": "{ currentPassword, newPassword }   Also signs out every other session."
+ },
+ {
+  "method": "GET",
+  "path": "/api/account/preferences",
+  "summary": ""
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/account/preferences",
+  "summary": "{ defaultPrivacy?, language?, theme?, notices? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/account/profile",
+  "summary": ""
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/account/profile",
+  "summary": "{ name?, handle?, bio?, avatarAssetId? (null clears) }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/account/referral",
+  "summary": "This member's invite code and how it has done."
+ },
+ {
+  "method": "POST",
+  "path": "/api/account/referral/claim",
+  "summary": "{ code }   Both members get the invite bonus, once."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/account/sessions",
+  "summary": "Signs out every session except this one."
+ },
+ {
+  "method": "GET",
+  "path": "/api/account/sessions",
+  "summary": "Every signed-in session, newest first."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/account/sessions/:id",
+  "summary": "Signs out one other session."
+ },
+ {
+  "method": "GET",
+  "path": "/api/ads/brands",
+  "summary": ""
+ },
+ {
+  "method": "POST",
+  "path": "/api/ads/brands",
+  "summary": "{ name, colors?, fonts?, tone?, logoAssetId?, wordsToUse?, wordsToAvoid? }"
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/ads/brands/:id",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/ads/brands/:id",
+  "summary": ""
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/ads/brands/:id",
+  "summary": "— only the fields sent change."
+ },
+ {
+  "method": "GET",
+  "path": "/api/ads/campaigns",
+  "summary": ""
+ },
+ {
+  "method": "POST",
+  "path": "/api/ads/campaigns",
+  "summary": "{ productId, formats, variations?, brandKitId?, name?, script?, presenterAssetId? } — creates a draft."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/ads/campaigns/:id",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/ads/campaigns/:id",
+  "summary": "— the campaign with every ad, grouped by format. Poll while status is \"running\"."
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/ads/campaigns/:id",
+  "summary": "— only the fields sent change."
+ },
+ {
+  "method": "POST",
+  "path": "/api/ads/campaigns/:id/duplicate",
+  "summary": "— a new draft with the same settings."
+ },
+ {
+  "method": "GET",
+  "path": "/api/ads/campaigns/:id/quote",
+  "summary": "Query ?formatId=  — exact price of a run (or of re-running one format)."
+ },
+ {
+  "method": "POST",
+  "path": "/api/ads/campaigns/:id/rerun",
+  "summary": "{ formatId, expectedCost? } — a fresh round of variations for one format."
+ },
+ {
+  "method": "POST",
+  "path": "/api/ads/campaigns/:id/run",
+  "summary": "{ expectedCost? }"
+ },
+ {
+  "method": "POST",
+  "path": "/api/ads/copy",
+  "summary": "{ productId, brandKitId?, count?, seconds? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/ads/formats",
+  "summary": "— the ad format catalog. Works signed out."
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/ads/items/:id",
+  "summary": "{ winner: boolean }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/ads/products",
+  "summary": "Query ?brandKitId="
+ },
+ {
+  "method": "POST",
+  "path": "/api/ads/products",
+  "summary": "{ name, description?, benefits?, audience?, price?, link?, imageIds?, brandKitId? }"
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/ads/products/:id",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/ads/products/:id",
+  "summary": ""
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/ads/products/:id",
+  "summary": "— only the fields sent change."
+ },
+ {
+  "method": "GET",
+  "path": "/api/apps",
+  "summary": "Query ?category=&tag=&q=&sort=featured|popular|new|name&status=all|available|soon"
+ },
+ {
+  "method": "GET",
+  "path": "/api/apps/:id",
+  "summary": "One app with its form and the price of its defaults."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/apps/:id/pin",
+  "summary": "Unpins it. Safe to repeat."
+ },
+ {
+  "method": "PUT",
+  "path": "/api/apps/:id/pin",
+  "summary": "Pins the app for this member. Safe to repeat."
+ },
+ {
+  "method": "POST",
+  "path": "/api/apps/:id/price",
+  "summary": "{ fields?, values?, inputs?, count? }  The price of the form as filled so far."
+ },
+ {
+  "method": "POST",
+  "path": "/api/apps/:id/run",
+  "summary": "{ fields, values?, inputs, count? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/apps/:id/runs",
+  "summary": "Query ?limit=&before=  The member's past runs of this app, newest first, with results."
+ },
+ {
+  "method": "GET",
+  "path": "/api/apps/check",
+  "summary": "The result of the catalog check, for tests and operators."
+ },
+ {
+  "method": "GET",
+  "path": "/api/apps/pinned",
+  "summary": "The member's pinned apps, most recently pinned first."
+ },
+ {
+  "method": "GET",
+  "path": "/api/apps/recent",
+  "summary": "Query ?limit=  Apps the member ran lately, most recent first."
+ },
+ {
+  "method": "GET",
+  "path": "/api/assets",
+  "summary": "Query ?kind=&source=&favorite=1&folder=<id>|none&job=&limit=&before="
+ },
+ {
+  "method": "POST",
+  "path": "/api/assets",
+  "summary": "(multipart form: `file`, optional `accept=image,video`)"
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/assets/:id",
+  "summary": "{ title?, favorite?, folderId?, isPublic? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/assets/:id/file[",
+  "summary": "Query ?poster=1][&download=1]"
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/guest",
+  "summary": "a throwaway account, so people can try first"
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/login",
+  "summary": "{ email, password }"
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/logout",
+  "summary": ""
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/signup",
+  "summary": "{ email, password, name? }   a guest who signs up keeps their work"
+ },
+ {
+  "method": "POST",
+  "path": "/api/billing/demo/end-period",
+  "summary": "Demo billing only: end the current period now, so the"
+ },
+ {
+  "method": "GET",
+  "path": "/api/billing/plans",
+  "summary": "The plan catalog. Signed in, it also says which plan is yours."
+ },
+ {
+  "method": "POST",
+  "path": "/api/billing/promo",
+  "summary": "{ code }   Adds the code's credits, once per member."
+ },
+ {
+  "method": "GET",
+  "path": "/api/billing/receipts",
+  "summary": "Query ?limit=&before=  Newest first."
+ },
+ {
+  "method": "GET",
+  "path": "/api/billing/subscription",
+  "summary": ""
+ },
+ {
+  "method": "POST",
+  "path": "/api/billing/subscription",
+  "summary": "{ planId?, interval? }   Change plan or billing interval."
+ },
+ {
+  "method": "POST",
+  "path": "/api/billing/subscription/cancel",
+  "summary": "Keep the plan to the end of the period, then move to Free."
+ },
+ {
+  "method": "POST",
+  "path": "/api/billing/subscription/resume",
+  "summary": "Undo a cancel before the period ends."
+ },
+ {
+  "method": "GET",
+  "path": "/api/billing/usage",
+  "summary": "Query ?days=30&tz=120  Credits spent per day, per kind and per model."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/cinema/batches/:id",
+  "summary": "Stops feeding new stills."
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/batches/:id",
+  "summary": "Progress."
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/catalog",
+  "summary": "presets and models. Works signed out."
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/compose",
+  "summary": "Query ?mode=still|text&modelId=&aspect=&duration=&count="
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/cinema/elements/:id",
+  "summary": "Also removes it from every shot."
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/elements/:id",
+  "summary": ""
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/cinema/elements/:id",
+  "summary": "{ name?, description?, refAssetIds? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/projects",
+  "summary": ""
+ },
+ {
+  "method": "POST",
+  "path": "/api/cinema/projects",
+  "summary": "{ title, logline?, aspect?, look?, stillModelId?, videoModelId? }"
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/cinema/projects/:id",
+  "summary": "Generated files stay in the library."
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/projects/:id",
+  "summary": "The storyboard: project, cast, scenes, shots, selected takes, running time."
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/cinema/projects/:id",
+  "summary": "Any of { title, logline, aspect, look, stillModelId, videoModelId }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/projects/:id/batch",
+  "summary": "Query ?modelId=  Price of every missing still, plus the latest batch."
+ },
+ {
+  "method": "POST",
+  "path": "/api/cinema/projects/:id/batch",
+  "summary": "{ modelId?, expectedTotal? }  Starts making every missing still."
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/projects/:id/elements",
+  "summary": "Cast, places and props."
+ },
+ {
+  "method": "POST",
+  "path": "/api/cinema/projects/:id/elements",
+  "summary": "{ kind, name, description?, refAssetIds? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/projects/:id/export",
+  "summary": "Query ?format=json|csv  Downloads the project or the shot list."
+ },
+ {
+  "method": "POST",
+  "path": "/api/cinema/projects/:id/render",
+  "summary": "Joins the selected video takes into one video in the library."
+ },
+ {
+  "method": "POST",
+  "path": "/api/cinema/projects/:id/scenes",
+  "summary": "{ title?, notes? }  Adds a scene at the end."
+ },
+ {
+  "method": "PUT",
+  "path": "/api/cinema/projects/:id/scenes/order",
+  "summary": "{ sceneIds: [...] }  every scene, in the new order."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/cinema/scenes/:id",
+  "summary": "Deletes the scene and its shots."
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/cinema/scenes/:id",
+  "summary": "{ title?, notes? }"
+ },
+ {
+  "method": "POST",
+  "path": "/api/cinema/scenes/:id/duplicate",
+  "summary": "Copies the scene and its shots (not takes) right after it."
+ },
+ {
+  "method": "POST",
+  "path": "/api/cinema/scenes/:id/shots",
+  "summary": "Shot fields. Adds a shot at the end of the scene."
+ },
+ {
+  "method": "PUT",
+  "path": "/api/cinema/scenes/:id/shots/order",
+  "summary": "{ shotIds: [...] }  every shot of the scene, in the new order."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/cinema/shots/:id",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/shots/:id",
+  "summary": "The shot with every take."
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/cinema/shots/:id",
+  "summary": "Any shot field, plus selectedTakeId and sceneId (move)."
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/shots/:id/compose",
+  "summary": "Query ?mode=still|animate|text&modelId=&fromTakeId=&count=  What Generate would send, and its price."
+ },
+ {
+  "method": "POST",
+  "path": "/api/cinema/shots/:id/duplicate",
+  "summary": "Copies the shot (not its takes) right after it."
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/shots/:id/takes",
+  "summary": ""
+ },
+ {
+  "method": "POST",
+  "path": "/api/cinema/shots/:id/takes",
+  "summary": "{ mode?, modelId?, count?, fromTakeId?, values? }  Starts new takes."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/cinema/takes/:id",
+  "summary": "Takes it off the shot. The file stays in the library."
+ },
+ {
+  "method": "GET",
+  "path": "/api/cinema/takes/:id",
+  "summary": ""
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/community/comments/:id",
+  "summary": "The comment's author or the post's owner."
+ },
+ {
+  "method": "GET",
+  "path": "/api/community/contests",
+  "summary": "Running, then upcoming, then past. Works signed out."
+ },
+ {
+  "method": "GET",
+  "path": "/api/community/contests/:slug",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/community/contests/:slug/entries",
+  "summary": "Query ?sort=top|new&limit=&cursor=  `top` is the leaderboard."
+ },
+ {
+  "method": "POST",
+  "path": "/api/community/contests/:slug/entries",
+  "summary": "{ postId }  Enters one of the member's own posts."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/community/contests/:slug/entries/:postId",
+  "summary": "Withdraws the member's own entry."
+ },
+ {
+  "method": "POST",
+  "path": "/api/community/contests/:slug/entries/:postId/vote",
+  "summary": "and  DELETE ...  One vote per member per entry."
+ },
+ {
+  "method": "GET",
+  "path": "/api/community/hidden",
+  "summary": "Members whose posts the viewer has hidden."
+ },
+ {
+  "method": "POST",
+  "path": "/api/community/posts",
+  "summary": "{ assetId, title?, description?, tags?, allowRecreate? }  Publishes a generated file."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/community/posts/:id",
+  "summary": "Unpublishes. The file stays in the author's library, private again."
+ },
+ {
+  "method": "GET",
+  "path": "/api/community/posts/:id",
+  "summary": "One post. Works signed out."
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/community/posts/:id",
+  "summary": "{ title?, description?, tags?, allowRecreate? }  Author only."
+ },
+ {
+  "method": "GET",
+  "path": "/api/community/posts/:id/comments",
+  "summary": "Query ?limit=&cursor=  Oldest first. Works signed out."
+ },
+ {
+  "method": "POST",
+  "path": "/api/community/posts/:id/comments",
+  "summary": "{ body }  Full accounts only."
+ },
+ {
+  "method": "POST",
+  "path": "/api/community/posts/:id/like",
+  "summary": "and  DELETE ...  Guests may like too. Both are idempotent."
+ },
+ {
+  "method": "GET",
+  "path": "/api/community/posts/:id/recreate",
+  "summary": "`{ modelId, prompt, values, droppedInputs }`, ready for POST /api/jobs."
+ },
+ {
+  "method": "POST",
+  "path": "/api/community/posts/:id/report",
+  "summary": "{ reason, note? }  Stored for a moderator."
+ },
+ {
+  "method": "POST",
+  "path": "/api/community/posts/:id/save",
+  "summary": "and  DELETE ...  Guests may save too. Both are idempotent."
+ },
+ {
+  "method": "POST",
+  "path": "/api/community/posts/:id/view",
+  "summary": "Counts a view, once per viewer per day. Works signed out."
+ },
+ {
+  "method": "GET",
+  "path": "/api/community/saved",
+  "summary": "Query ?limit=&cursor=  The viewer's saved posts, most recently saved first."
+ },
+ {
+  "method": "GET",
+  "path": "/api/developer/keys",
+  "summary": "The member's keys, active first. Never includes the key itself."
+ },
+ {
+  "method": "POST",
+  "path": "/api/developer/keys",
+  "summary": "{ name?, scopes? }  Answers with `secret`, the key itself, shown this once."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/developer/keys/:id",
+  "summary": "Revokes the key for good."
+ },
+ {
+  "method": "GET",
+  "path": "/api/developer/keys/:id",
+  "summary": ""
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/developer/keys/:id",
+  "summary": "{ name?, scopes? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/developer/usage",
+  "summary": "Query ?key=&limit=&before=  Request log, newest first, plus per-key totals."
+ },
+ {
+  "method": "GET",
+  "path": "/api/developer/webhooks",
+  "summary": "The member's endpoints and the events they can choose."
+ },
+ {
+  "method": "POST",
+  "path": "/api/developer/webhooks",
+  "summary": "{ url, events?, description? }  Answers with `secret`, shown this once."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/developer/webhooks/:id",
+  "summary": "Removes the endpoint and its delivery log."
+ },
+ {
+  "method": "GET",
+  "path": "/api/developer/webhooks/:id",
+  "summary": ""
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/developer/webhooks/:id",
+  "summary": "{ url?, events?, description?, enabled? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/developer/webhooks/:id/deliveries",
+  "summary": "Query ?limit=&before=  The delivery log, newest first."
+ },
+ {
+  "method": "POST",
+  "path": "/api/developer/webhooks/:id/deliveries/:deliveryId/retry",
+  "summary": "Queues a delivered or failed delivery again."
+ },
+ {
+  "method": "POST",
+  "path": "/api/developer/webhooks/:id/rotate",
+  "summary": "A new signing secret, shown this once. The old one stops working at once."
+ },
+ {
+  "method": "POST",
+  "path": "/api/developer/webhooks/:id/test",
+  "summary": "Sends a `webhook.test` event now and answers with the delivery."
+ },
+ {
+  "method": "GET",
+  "path": "/api/director/jobs/:jobId",
+  "summary": "A Director job (analysis, plan, chat, render, export)."
+ },
+ {
+  "method": "GET",
+  "path": "/api/director/models",
+  "summary": "Render models a Director project can use, with clip lengths, aspects and resolutions."
+ },
+ {
+  "method": "GET",
+  "path": "/api/director/packs/:packId",
+  "summary": "A pack version."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/packs/:packId/export",
+  "summary": "Build a ZIP of prompts and references; returns a job."
+ },
+ {
+  "method": "GET",
+  "path": "/api/director/packs/:packId/image-quote/:index",
+  "summary": "Price for image prompt N (character sheet or keyframe)."
+ },
+ {
+  "method": "GET",
+  "path": "/api/director/packs/:packId/images",
+  "summary": "Image attempts for the pack."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/packs/:packId/images",
+  "summary": "{ index, requestKey, maxCredits }  Generate a character sheet or keyframe."
+ },
+ {
+  "method": "GET",
+  "path": "/api/director/packs/:packId/quote/:clip",
+  "summary": "Price to render clip N (0-based)."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/packs/:packId/render",
+  "summary": "{ clip, requestKey (16+ chars, unique per approval), maxCredits }  Render a clip; maxCredits must cover the quote."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/packs/:packId/review",
+  "summary": "Mark the pack reviewed."
+ },
+ {
+  "method": "GET",
+  "path": "/api/director/projects",
+  "summary": "Director projects."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/projects",
+  "summary": "{ title, styleVersionId, brief, constraints?, cast?: [{ name, notes?, assetIds }], duration (s), aspect, model }  Start a styled project; the Director writes the storyboard."
+ },
+ {
+  "method": "GET",
+  "path": "/api/director/projects/:projectId",
+  "summary": "Project detail: brief, current pack (storyboard + compiled prompts), jobs and takes."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/projects/:projectId/chat",
+  "summary": "{ message }  Talk to the Director; it can revise the storyboard."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/projects/:projectId/pack",
+  "summary": "{ previousId, plan, settings }  Save an edited storyboard as a new pack version."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/projects/:projectId/plan",
+  "summary": "Retry a failed storyboard."
+ },
+ {
+  "method": "GET",
+  "path": "/api/director/renders/:jobId/fidelity",
+  "summary": "How closely a delivered take follows its style."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/renders/:jobId/fidelity",
+  "summary": "Score a take again."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/renders/:jobId/grade",
+  "summary": "{ strength? (0-1], grain? }  Grade a take toward its style; makes a new file."
+ },
+ {
+  "method": "GET",
+  "path": "/api/director/status",
+  "summary": "Director mode."
+ },
+ {
+  "method": "GET",
+  "path": "/api/director/styles",
+  "summary": "Saved and draft styles."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/styles",
+  "summary": "{ assetIds: [fileId] (1-8), title, notes? }  Learn a style from reference files. Returns a job."
+ },
+ {
+  "method": "GET",
+  "path": "/api/director/styles/:styleId",
+  "summary": "A style with its versions, rules, guide and evidence."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/styles/:styleId/retry",
+  "summary": "Study the references again."
+ },
+ {
+  "method": "POST",
+  "path": "/api/director/styles/:styleId/save",
+  "summary": "{ previousId: versionId, guide }  Save a version to the Style Library."
+ },
+ {
+  "method": "GET",
+  "path": "/api/elements",
+  "summary": "Query ?type=&q=&tag=&sort=recent|created|name|used|popular&limit=&offset="
+ },
+ {
+  "method": "POST",
+  "path": "/api/elements",
+  "summary": "{ type, name, description?, tags?, assetIds }"
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/elements/:id",
+  "summary": "The images stay in the library."
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/elements/:id",
+  "summary": "{ type?, name?, description?, tags?, assetIds? }"
+ },
+ {
+  "method": "POST",
+  "path": "/api/elements/:id/resolve",
+  "summary": "{ modelId, slot?, dryRun? }  File ids for the model's reference slot."
+ },
+ {
+  "method": "GET",
+  "path": "/api/explore",
+  "summary": "Query ?tab=trending|new|top|following&period=day|week|month|all&kind=&model=&tag=&limit=&cursor="
+ },
+ {
+  "method": "GET",
+  "path": "/api/explore/models",
+  "summary": "Models that have public posts, for the model filter."
+ },
+ {
+  "method": "GET",
+  "path": "/api/explore/tags",
+  "summary": "Query ?limit=  Most used tags on public posts, for filter chips."
+ },
+ {
+  "method": "GET",
+  "path": "/api/folders",
+  "summary": "Every folder with its file count, plus how many files have no folder."
+ },
+ {
+  "method": "POST",
+  "path": "/api/folders",
+  "summary": "{ name }"
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/folders/:id",
+  "summary": "Its files go back to \"no folder\"."
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/folders/:id",
+  "summary": "{ name }"
+ },
+ {
+  "method": "POST",
+  "path": "/api/folders/:id/assets",
+  "summary": "{ ids }  Moves files into the folder. Use `none` as the id to take them out of any folder."
+ },
+ {
+  "method": "GET",
+  "path": "/api/jobs",
+  "summary": "Query ?status=active|all&kind=&surface=&limit=&before="
+ },
+ {
+  "method": "POST",
+  "path": "/api/jobs",
+  "summary": "{ modelId, prompt, values, inputs, count, surface?, meta? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/library",
+  "summary": "Query ?kind=&source=&favorite=1&folder=<id>|none&model=a,b&from=&to=&q=&sort=&limit=&cursor="
+ },
+ {
+  "method": "POST",
+  "path": "/api/library/bulk",
+  "summary": "{ action: favorite|move|trash|restore|delete, ids, favorite?, folderId? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/library/summary",
+  "summary": "Sidebar counts, storage by kind, models used."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/library/trash",
+  "summary": "Empties the trash for good."
+ },
+ {
+  "method": "GET",
+  "path": "/api/library/trash",
+  "summary": "Query ?limit=&cursor=  Deletes anything older than 30 days first."
+ },
+ {
+  "method": "GET",
+  "path": "/api/library/trash/:id/file[",
+  "summary": "Query ?poster=1]  Preview of a file in the trash. Owner only."
+ },
+ {
+  "method": "POST",
+  "path": "/api/library/trash/restore",
+  "summary": "{ ids } or { all: true }"
+ },
+ {
+  "method": "POST",
+  "path": "/api/mcp",
+  "summary": "Model Context Protocol, Streamable HTTP, stateless. Bearer API key."
+ },
+ {
+  "method": "GET",
+  "path": "/api/notifications",
+  "summary": "Query ?unread=1&kind=a,b&limit=&before="
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/notifications/:id",
+  "summary": ""
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/notifications/:id",
+  "summary": "{ read: boolean }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/notifications/preferences",
+  "summary": ""
+ },
+ {
+  "method": "PUT",
+  "path": "/api/notifications/preferences",
+  "summary": "{ kinds: { like: false, ... } }"
+ },
+ {
+  "method": "POST",
+  "path": "/api/notifications/read",
+  "summary": "{ all: true } or { ids: string[] }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/notifications/stream",
+  "summary": "Query ?heartbeat=15&timeout=300"
+ },
+ {
+  "method": "GET",
+  "path": "/api/notifications/unread",
+  "summary": "->  { unread } . Cheap enough to poll for the badge."
+ },
+ {
+  "method": "GET",
+  "path": "/api/notifications/whats-new",
+  "summary": "->  { items, unseen }. Signed out, everything is unseen."
+ },
+ {
+  "method": "POST",
+  "path": "/api/notifications/whats-new/seen",
+  "summary": "{ all: true } or { ids: string[] }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/profiles/:handle",
+  "summary": "A member's public profile. Works signed out."
+ },
+ {
+  "method": "POST",
+  "path": "/api/profiles/:handle/follow",
+  "summary": "and  DELETE ...  Full accounts only. Idempotent."
+ },
+ {
+  "method": "GET",
+  "path": "/api/profiles/:handle/followers",
+  "summary": "Query ?limit=&cursor="
+ },
+ {
+  "method": "GET",
+  "path": "/api/profiles/:handle/following",
+  "summary": "Query ?limit=&cursor="
+ },
+ {
+  "method": "POST",
+  "path": "/api/profiles/:handle/hide",
+  "summary": "and  DELETE ...  Hides a member's posts from the viewer's own feeds."
+ },
+ {
+  "method": "GET",
+  "path": "/api/profiles/:handle/posts",
+  "summary": "Query ?sort=new|top&kind=&limit=&cursor=  The profile grid."
+ },
+ {
+  "method": "GET",
+  "path": "/api/search",
+  "summary": "Query ?q=&types=models,files,generations,folders,posts&limit=5"
+ },
+ {
+  "method": "GET",
+  "path": "/api/search/commands",
+  "summary": "Query ?q=  ->  { commands }. Filtered to what this visitor can use."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/search/recent",
+  "summary": "(clears all)"
+ },
+ {
+  "method": "GET",
+  "path": "/api/search/recent",
+  "summary": "Query ?limit=10"
+ },
+ {
+  "method": "POST",
+  "path": "/api/search/recent",
+  "summary": "{ query }"
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/search/recent/:id",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/search/suggestions",
+  "summary": "->  { popularModels, recentItems, recentSearches }"
+ },
+ {
+  "method": "POST",
+  "path": "/api/super/approvals/:id",
+  "summary": "{ decision: \"allow\"|\"always\"|\"deny\" } or { choice } for a question."
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/chats",
+  "summary": "Query ?projectId=&pinned=1&search=&limit=&before=  Newest first, pinned on top."
+ },
+ {
+  "method": "POST",
+  "path": "/api/super/chats",
+  "summary": "{ title?, projectId?, skillIds?, incognito?, agentId? }"
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/super/chats/:id",
+  "summary": "Stops any running turn and removes the chat with its transcript."
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/chats/:id",
+  "summary": "The chat and its recent turns. Read rows from /rows."
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/super/chats/:id",
+  "summary": "{ title?, pinned?, projectId?, skillIds? }"
+ },
+ {
+  "method": "POST",
+  "path": "/api/super/chats/:id/close",
+  "summary": "An incognito chat is deleted when closed."
+ },
+ {
+  "method": "POST",
+  "path": "/api/super/chats/:id/messages",
+  "summary": "{ text, fileIds?, mode?: \"ask\"|\"auto\", model? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/chats/:id/rows",
+  "summary": "Query ?after=<updatedSeq>&limit="
+ },
+ {
+  "method": "POST",
+  "path": "/api/super/chats/:id/stop",
+  "summary": "Stops the running turn and drops queued ones."
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/computer",
+  "summary": "The member's cloud computer status."
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/computer/screenshot",
+  "summary": "The latest screenshot as PNG, or 404 before the first one."
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/config",
+  "summary": "The composer's choices: agent modes, assistant models, limits."
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/connectors",
+  "summary": "Query ?search=  The app catalog with this member's status, plus custom servers."
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/connectors/apps/:slug/callback",
+  "summary": "Query ?connected_account_id="
+ },
+ {
+  "method": "POST",
+  "path": "/api/super/connectors/apps/:slug/connect",
+  "summary": "Answers with the sign-in link to open."
+ },
+ {
+  "method": "POST",
+  "path": "/api/super/connectors/apps/:slug/disconnect",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/connectors/mcp",
+  "summary": ""
+ },
+ {
+  "method": "POST",
+  "path": "/api/super/connectors/mcp",
+  "summary": "{ name, url }  Stored only; Parallax does not call it yet."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/super/connectors/mcp/:id",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/events",
+  "summary": "The member's Server-Sent Events stream for every chat."
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/memory",
+  "summary": "What the assistant remembers about the member, newest first."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/super/memory/:id",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/projects",
+  "summary": ""
+ },
+ {
+  "method": "POST",
+  "path": "/api/super/projects",
+  "summary": "{ name, instructions?, fileIds? }"
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/super/projects/:id",
+  "summary": "Its chats stay, outside any project."
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/projects/:id",
+  "summary": "The project and its chats."
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/super/projects/:id",
+  "summary": "{ name?, instructions?, fileIds? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/schedules",
+  "summary": ""
+ },
+ {
+  "method": "POST",
+  "path": "/api/super/schedules",
+  "summary": "{ title, prompt, intervalMinutes, runNow? }"
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/super/schedules/:id",
+  "summary": "The chat it posted into stays."
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/super/schedules/:id",
+  "summary": "{ title?, prompt?, intervalMinutes?, enabled?, runNow? }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/showcase",
+  "summary": "Example prompts for the home screen. Works signed out."
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/skills",
+  "summary": "Built-in skills first, then the member's own."
+ },
+ {
+  "method": "POST",
+  "path": "/api/super/skills",
+  "summary": "{ name, description?, instructions }"
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/super/skills/:id",
+  "summary": ""
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/super/skills/:id",
+  "summary": "{ name?, description?, instructions? }  Custom skills only."
+ },
+ {
+  "method": "GET",
+  "path": "/api/v1/balance",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/v1/files",
+  "summary": "Query ?kind=&source=&limit=&before="
+ },
+ {
+  "method": "POST",
+  "path": "/api/v1/files",
+  "summary": "(multipart form, field `file`). The type is read from the bytes."
+ },
+ {
+  "method": "GET",
+  "path": "/api/v1/files/:id",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/v1/files/:id/content[",
+  "summary": "Query ?download=1]  The bytes. Honours Range."
+ },
+ {
+  "method": "GET",
+  "path": "/api/v1/generations",
+  "summary": "Query ?status=active|all&kind=&limit=&before="
+ },
+ {
+  "method": "POST",
+  "path": "/api/v1/generations",
+  "summary": "{ modelId, prompt, values, inputs, count }  Header: Idempotency-Key (optional)."
+ },
+ {
+  "method": "GET",
+  "path": "/api/v1/generations/:id",
+  "summary": ""
+ },
+ {
+  "method": "POST",
+  "path": "/api/v1/generations/:id/cancel",
+  "summary": "Queued only; the held credits come back."
+ },
+ {
+  "method": "GET",
+  "path": "/api/v1/models",
+  "summary": "Query ?kind=&available=1"
+ },
+ {
+  "method": "GET",
+  "path": "/api/v1/models/:id",
+  "summary": "The model's controls and media slots."
+ },
+ {
+  "method": "GET",
+  "path": "/api/v1/openapi.json",
+  "summary": "Built from the same route table the routes use. No key needed."
+ },
+ {
+  "method": "POST",
+  "path": "/api/v1/quote",
+  "summary": "{ modelId, prompt, values, inputs, count }  Prices a draft; nothing runs."
+ },
+ {
+  "method": "GET",
+  "path": "/api/wallet",
+  "summary": "Query ?limit=&before=  Balance, plan and the credit history, newest first."
+ },
+ {
+  "method": "POST",
+  "path": "/api/wallet/topup",
+  "summary": "{ packId }"
+ }
+]

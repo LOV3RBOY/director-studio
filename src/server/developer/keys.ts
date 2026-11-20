@@ -11,7 +11,8 @@ import { ApiError, badRequest, notFound } from "../errors";
  * leaked database does not leak working keys. The member sees the key once, at creation.
  */
 
-export const SCOPES = ["read", "generate"] as const;
+/** `account` lets an agent use the whole app as its owner (see agent.ts). */
+export const SCOPES = ["read", "generate", "account"] as const;
 export type Scope = (typeof SCOPES)[number];
 
 /** Active (not revoked) keys a member may hold. */
@@ -64,12 +65,12 @@ export function cleanName(raw: unknown): string {
 }
 
 export function cleanScopes(raw: unknown): Scope[] {
-  if (raw === undefined || raw === null) return [...SCOPES];
-  if (!Array.isArray(raw) || raw.length === 0) throw badRequest("Pick at least one scope: read or generate.");
+  if (raw === undefined || raw === null) return ["read", "generate"];
+  if (!Array.isArray(raw) || raw.length === 0) throw badRequest("Pick at least one scope: read, generate or account.");
   const out = new Set<Scope>();
   for (const s of raw) {
     const scope = SCOPES.find((x) => x === s);
-    if (!scope) throw badRequest("Scopes can only be read and generate.");
+    if (!scope) throw badRequest("Scopes can only be read, generate and account.");
     out.add(scope);
   }
   return SCOPES.filter((s) => out.has(s));

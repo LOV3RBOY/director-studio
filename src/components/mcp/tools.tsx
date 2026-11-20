@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Box, Coins, Copy, Check, Eye, FolderOpen, Layers, Search, Sparkles, Wallet, X, type LucideIcon } from "lucide-react";
+import { BookOpen, Box, Coins, Copy, Check, Eye, FolderOpen, Layers, Search, Sparkles, Wallet, X, type LucideIcon, KeyRound } from "lucide-react";
 import { useState } from "react";
 import { scopeFilters, toolCallBody, toolGroups, tools, toolsSection, type Scope, type ToolGroup, type ToolInfo } from "@/content/mcp";
 import { routes } from "@/content/site";
@@ -9,7 +9,7 @@ import { Artwork, cn } from "@/ui";
 import { useCopy } from "./copy";
 
 const groupIcon: Record<ToolGroup | "all", LucideIcon> = { all: Layers, models: Box, generations: Sparkles, files: FolderOpen, account: Wallet };
-const scopeIcon: Record<Scope, LucideIcon> = { read: Eye, generate: Sparkles };
+const scopeIcon: Record<Scope, LucideIcon> = { read: Eye, generate: Sparkles, account: KeyRound };
 
 type Filter = ToolGroup | "all" | `scope:${Scope}`;
 
