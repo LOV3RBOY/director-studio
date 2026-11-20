@@ -178,7 +178,7 @@ const TOOLS: Tool[] = [
   {
     name: "import_file",
     title: "Import a file",
-    description: "Downloads a public image, video or audio link (up to 100 MB) into the owner's Library and returns its file id, for use as a reference.",
+    description: "Downloads a public image, video or audio link (video up to 30 MB, images and audio up to 20 MB) into the owner's Library and returns its file id, for use as a reference.",
     scope: "account",
     readOnly: false,
     inputSchema: { type: "object", properties: { url: s("A direct https link to the file."), title: s("A name for the Library.") }, required: ["url"] },

@@ -42,13 +42,22 @@ function walk(dir) {
   });
 }
 
+// Methods and paths come from each route file's location and exports; doc lines only add summaries.
+const shape = (p) => p.replace(/:[^/]+/g, ":");
 const rows = new Map();
 for (const file of walk(path.join(root, "src/app/api")).sort()) {
-  for (const line of readFileSync(file, "utf8").split("\n")) {
-    const m = /^\s*(?:\/\*\*|\*)\s*(GET|POST|PUT|PATCH|DELETE)\s+(\/api\/[^\s?:`]*(?::[^\s?`/]+[^\s?`]*)*)(\?\S*)?:?\s*(.*?)\s*(?:\*\/)?$/.exec(line);
-    if (!m || m[2].startsWith("/api/director")) continue;
-    rows.set(`${m[1]} ${m[2]}`, { method: m[1], path: m[2], summary: `${m[3] ? `Query ${m[3]}  ` : ""}${m[4]}`.trim() });
+  const dir = path.relative(path.join(root, "src/app"), path.dirname(file)).split(path.sep).filter((s) => !/^\(.*\)$/.test(s));
+  if (dir.some((s) => s.startsWith("[..."))) continue; // catch-all handlers are listed by hand below
+  const route = "/" + dir.map((s) => s.replace(/^\[(.+)\]$/, ":$1")).join("/");
+  if (route.startsWith("/api/director")) continue;
+  const source = readFileSync(file, "utf8");
+  const methods = [...source.matchAll(/export\s+(?:const|async\s+function|function)\s+(GET|POST|PUT|PATCH|DELETE)\b/g)].map((m) => m[1]);
+  const docs = new Map();
+  for (const line of source.split("\n")) {
+    const m = /^\s*(?:\/\*\*|\*)\s*(GET|POST|PUT|PATCH|DELETE)\s+(\/api\/[^\s?`\[]*)(\?[^\s]*|\[[^\]]*\])?:?\s*(.*?)\s*(?:\*\/)?$/.exec(line);
+    if (m && shape(m[2]) === shape(route)) docs.set(m[1], `${m[3] ? `Query ${m[3]}  ` : ""}${m[4]}`.trim());
   }
+  for (const method of new Set(methods)) rows.set(`${method} ${route}`, { method, path: route, summary: docs.get(method) ?? "" });
 }
 for (const [method, p, summary] of director) rows.set(`${method} ${p}`, { method, path: p, summary });
 const json = JSON.stringify([...rows.values()].sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method)), null, 1) + "\n";

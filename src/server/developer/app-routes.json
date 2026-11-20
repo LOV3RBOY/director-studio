@@ -240,34 +240,34 @@
   "summary": "(multipart form: `file`, optional `accept=image,video`)"
  },
  {
+  "method": "DELETE",
+  "path": "/api/assets/:id",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/assets/:id",
+  "summary": ""
+ },
+ {
   "method": "PATCH",
   "path": "/api/assets/:id",
   "summary": "{ title?, favorite?, folderId?, isPublic? }"
  },
  {
   "method": "GET",
-  "path": "/api/assets/:id/file[",
-  "summary": "Query ?poster=1][&download=1]"
+  "path": "/api/assets/:id/file",
+  "summary": "Query [?poster=1]  [&download=1]"
  },
  {
   "method": "POST",
-  "path": "/api/auth/guest",
-  "summary": "a throwaway account, so people can try first"
- },
- {
-  "method": "POST",
-  "path": "/api/auth/login",
-  "summary": "{ email, password }"
- },
- {
-  "method": "POST",
-  "path": "/api/auth/logout",
+  "path": "/api/auth/:action",
   "summary": ""
  },
  {
-  "method": "POST",
-  "path": "/api/auth/signup",
-  "summary": "{ email, password, name? }   a guest who signs up keeps their work"
+  "method": "GET",
+  "path": "/api/auth/me",
+  "summary": ""
  },
  {
   "method": "POST",
@@ -327,7 +327,7 @@
  {
   "method": "GET",
   "path": "/api/cinema/catalog",
-  "summary": "presets and models. Works signed out."
+  "summary": ""
  },
  {
   "method": "GET",
@@ -515,6 +515,11 @@
   "summary": "Withdraws the member's own entry."
  },
  {
+  "method": "DELETE",
+  "path": "/api/community/contests/:slug/entries/:postId/vote",
+  "summary": ""
+ },
+ {
   "method": "POST",
   "path": "/api/community/contests/:slug/entries/:postId/vote",
   "summary": "and  DELETE ...  One vote per member per entry."
@@ -555,6 +560,11 @@
   "summary": "{ body }  Full accounts only."
  },
  {
+  "method": "DELETE",
+  "path": "/api/community/posts/:id/like",
+  "summary": ""
+ },
+ {
   "method": "POST",
   "path": "/api/community/posts/:id/like",
   "summary": "and  DELETE ...  Guests may like too. Both are idempotent."
@@ -568,6 +578,11 @@
   "method": "POST",
   "path": "/api/community/posts/:id/report",
   "summary": "{ reason, note? }  Stored for a moderator."
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/community/posts/:id/save",
+  "summary": ""
  },
  {
   "method": "POST",
@@ -800,6 +815,11 @@
   "summary": "The images stay in the library."
  },
  {
+  "method": "GET",
+  "path": "/api/elements/:id",
+  "summary": ""
+ },
+ {
   "method": "PATCH",
   "path": "/api/elements/:id",
   "summary": "{ type?, name?, description?, tags?, assetIds? }"
@@ -840,6 +860,11 @@
   "summary": "Its files go back to \"no folder\"."
  },
  {
+  "method": "GET",
+  "path": "/api/folders/:id",
+  "summary": ""
+ },
+ {
   "method": "PATCH",
   "path": "/api/folders/:id",
   "summary": "{ name }"
@@ -858,6 +883,16 @@
   "method": "POST",
   "path": "/api/jobs",
   "summary": "{ modelId, prompt, values, inputs, count, surface?, meta? }"
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/jobs/:id",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/jobs/:id",
+  "summary": ""
  },
  {
   "method": "GET",
@@ -886,13 +921,23 @@
  },
  {
   "method": "GET",
-  "path": "/api/library/trash/:id/file[",
-  "summary": "Query ?poster=1]  Preview of a file in the trash. Owner only."
+  "path": "/api/library/trash/:id/file",
+  "summary": "Query [?poster=1]  Preview of a file in the trash. Owner only."
  },
  {
   "method": "POST",
   "path": "/api/library/trash/restore",
   "summary": "{ ids } or { all: true }"
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/mcp",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/mcp",
+  "summary": ""
  },
  {
   "method": "POST",
@@ -955,6 +1000,11 @@
   "summary": "A member's public profile. Works signed out."
  },
  {
+  "method": "DELETE",
+  "path": "/api/profiles/:handle/follow",
+  "summary": ""
+ },
+ {
   "method": "POST",
   "path": "/api/profiles/:handle/follow",
   "summary": "and  DELETE ...  Full accounts only. Idempotent."
@@ -968,6 +1018,11 @@
   "method": "GET",
   "path": "/api/profiles/:handle/following",
   "summary": "Query ?limit=&cursor="
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/profiles/:handle/hide",
+  "summary": ""
  },
  {
   "method": "POST",
@@ -1013,6 +1068,11 @@
   "method": "GET",
   "path": "/api/search/suggestions",
   "summary": "->  { popularModels, recentItems, recentSearches }"
+ },
+ {
+  "method": "GET",
+  "path": "/api/studio/status",
+  "summary": ""
  },
  {
   "method": "POST",
@@ -1120,6 +1180,21 @@
   "summary": "The member's Server-Sent Events stream for every chat."
  },
  {
+  "method": "DELETE",
+  "path": "/api/super/mcp",
+  "summary": ""
+ },
+ {
+  "method": "GET",
+  "path": "/api/super/mcp",
+  "summary": ""
+ },
+ {
+  "method": "POST",
+  "path": "/api/super/mcp",
+  "summary": ""
+ },
+ {
   "method": "GET",
   "path": "/api/super/memory",
   "summary": "What the assistant remembers about the member, newest first."
@@ -1221,8 +1296,8 @@
  },
  {
   "method": "GET",
-  "path": "/api/v1/files/:id/content[",
-  "summary": "Query ?download=1]  The bytes. Honours Range."
+  "path": "/api/v1/files/:id/content",
+  "summary": "Query [?download=1]  The bytes. Honours Range."
  },
  {
   "method": "GET",

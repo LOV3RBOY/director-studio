@@ -44,7 +44,7 @@ Clip lengths, aspect ratios and resolutions come from each model's controls. A p
 
 ## Agent access
 
-**Developer → Keys → Create agent connection** makes a key with the `account` scope and shows the message to paste into Grok Bot or any MCP agent: the server address (`/api/mcp`) and the `Authorization: Bearer` header. Account keys add three MCP tools. `app_routes` lists every app action from `src/server/developer/app-routes.json`; regenerate it with `node scripts/app-routes.mjs` after adding a route (`npm run check:registry` fails when it is stale). `app_request` performs one action as the owner through a single-use session that lasts at most two minutes and is deleted afterwards. `import_file` saves a public file link (up to 100 MB) to the Library. Sign-in, keys, account settings, billing, `/api/v1` and the MCP endpoint itself are refused. Revoke the key to disconnect the agent.
+**Developer → Keys → Create agent connection** makes a key with the `account` scope and shows the message to paste into Grok Bot or any MCP agent: the server address (`/api/mcp`) and the `Authorization: Bearer` header. Account keys add three MCP tools. `app_routes` lists every app action from `src/server/developer/app-routes.json`; regenerate it with `node scripts/app-routes.mjs` after adding a route (`npm run check:registry` fails when it is stale). `app_request` performs one action as the owner through a single-use session that lasts at most two minutes and is deleted afterwards. `import_file` saves a public file link to the Library (video up to 30 MB, images and audio up to 20 MB). Sign-in, keys, account settings, billing, the Director store, `/api/v1` and the MCP endpoint itself are refused. Revoke the key to disconnect the agent.
 
 ## Environment variables
 
