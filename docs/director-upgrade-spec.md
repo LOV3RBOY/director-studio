@@ -181,12 +181,12 @@ Add `measureStyle(asset): Promise<StyleMetrics>`, computed with ffmpeg/ffprobe p
 
 **Acceptance:** grading a clip toward a known target palette lowers the palette ΔE by at least 40%, and two identical inputs produce byte-identical LUTs.
 
-## 7. Phase D: Model adapters (pure refactor)
+## 7. Phase D: Model adapters and any registry video model
 
-1. **Before** changing the compiler, add a test that snapshots the current compiled prompts and provider bodies for representative Seedance 2.0 and 2.5 packs.
-2. Extract a `ModelAdapter` interface: `{ id, limits, durations, refLabel(attachment), validateAsset(asset, ref), providerBody(...) }`. Implement it in `src/server/director/adapters/seedance20.ts` and `seedance25.ts`, and make `compilePack` dispatch through it. The snapshots must stay byte-identical.
-3. Remove the now-duplicated constants from `compiler.ts`, with proof (Section 1.3).
-4. **Don't add any other model** unless its request contract is already documented in the repo or in MuAPI's published docs. Log it as a question instead.
+1. **Before** changing the compiler, snapshot the current compiled prompts and provider bodies for representative Seedance 2.0 and 2.5 packs. They must stay byte-identical.
+2. Describe each render model with one adapter (`src/server/director/models.ts`): durations, aspects, resolutions, prompt limit, reference limits, frame slots, seed and quality. Seedance 2.0 and 2.5 stay MuAPI omni-reference adapters. Remove the duplicated constants from `compiler.ts`.
+3. The user may pick any registry video model whose contract is already in the repo: available, prompt-driven, with a duration control, and with only optional start and end frame slots. These render through `submitJobs`, so pricing, credits and provider handling are shared and each take is charged once. Keyframe references become start and end frames; other references are left out with a pack note.
+4. The planner, fixture plan, project start, pack edits and pickers (web and iOS) use the adapter's limits.
 
 ## 8. Phase E: In-app agent built on the app's own API
 

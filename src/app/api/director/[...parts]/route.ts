@@ -8,6 +8,8 @@ import { exportFile, ingest, renderQuote, requestRender } from "@/server/directo
 import { gradeTake, queueFidelity, renderReview } from "@/server/director/fidelity";
 import { imageAttempts, imageQuote, requestImage } from "@/server/director/images";
 import { evidenceFrame } from "@/server/director/media";
+import { directorModels } from "@/server/director/models";
+import { tregMode } from "@/server/treg";
 import { directorMode } from "@/server/director/runtime";
 import {
   currentPack, evidenceFor, listProjects, listStyles, markPackReviewed, ownedJob, projectDetail, projectRow, queue, reanalyzeStyle,
@@ -35,6 +37,10 @@ export const GET = publicRoute<Params>(async (ctx) => {
   if (surface === "store" && ctx.params.parts.length === 1) return purchaseOptions(userId);
   if (surface === "styles" && ctx.params.parts.length === 1) return { styles: listStyles(userId) };
   if (surface === "projects" && ctx.params.parts.length === 1) return { projects: listProjects(userId) };
+  if (surface === "models" && ctx.params.parts.length === 1) {
+    // Frame models render through the shared pipeline, which must run in the same mode.
+    return { models: directorModels().map((item) => ({ ...item, available: item.engine === "omni" || tregMode() === mode })) };
+  }
   const id = valid(identifier, rawId);
   if (surface === "styles") {
     if (ctx.params.parts.length === 2) return styleDetail(userId, id);
@@ -121,7 +127,7 @@ export const POST = publicRoute<Params>(async (ctx) => {
   }
   if (surface === "packs" && count === 3) {
     if (action === "review") return markPackReviewed(user.id, id);
-    if (action === "render") return { job: requestRender(user.id, id, valid(renderInput, body)) };
+    if (action === "render") return { job: requestRender(user, id, valid(renderInput, body)) };
     if (action === "images") return requestImage(user, id, valid(imageInput, body));
     if (action === "export") {
       const { project, pack } = snapshot(user.id, id);

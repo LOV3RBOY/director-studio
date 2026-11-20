@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ApiError, badRequest } from "../errors";
 import { exemplarSelection, guidance, takeReview, measuredTopics, metricAt, plan, reusableStyleRules, topics, valid, verifyExemplars, verifyGuidance, type Brief, type Evidence, type ExemplarSelection, type Guidance, type Plan, type StyleProfile, type TakeReview } from "./contracts";
+import { describeDurations, directorModel, splitDuration } from "./models";
 
 export type DirectorMode = "mock" | "live";
 const unsafeLive = () => process.env.DIRECTOR_MODE === "live" && process.env.PARALLAX_DEMO_BILLING === "1";
@@ -227,10 +228,22 @@ export async function reviewTake(options: {
   return { ...review, model: result.model, usage: result.usage, fixture: false };
 }
 
+function modelLimits(brief: Brief) {
+  const adapter = directorModel(brief.model);
+  if (adapter.engine === "omni") {
+    return "Seedance 2.0 clips are 4–15 seconds with up to 9 images; Seedance 2.5 clips are 5–30 seconds with up to 30 images. Select the most relevant original refs, one per distinct role and identity at minimum.";
+  }
+  const frames = adapter.slots.length
+    ? `It accepts only keyframe-role image references: the first becomes the start frame${adapter.slots.length > 1 ? " and the second the end frame" : ""}. Leave other references out.`
+    : "It accepts no references; carry identity and style entirely in the shot text.";
+  return `${adapter.name} clips must be ${describeDurations(adapter.durations)} whole seconds. ${frames} Describe each cast member's visible traits in the shot text because identity references are not sent.`;
+}
+
 function fixturePlan(brief: Brief, profile: StyleProfile): Plan {
-  const total = brief.duration;
-  const max = brief.model === "seedance-2.0" ? 15 : 30;
-  const count = Math.ceil(total / max);
+  const lengths = splitDuration(brief.duration, directorModel(brief.model).durations);
+  if (!lengths) throw badRequest("The project duration does not fit this model's clip lengths.");
+  const count = lengths.length;
+  const ends = lengths.map((_, i) => lengths.slice(0, i + 1).reduce((sum, n) => sum + n, 0));
   const rules = reusableStyleRules(profile.rules);
   const cameraRule = rules.find((rule) => rule.topic === "camera-motion");
   const framingRule = rules.find((rule) => rule.topic === "composition");
@@ -241,8 +254,8 @@ function fixturePlan(brief: Brief, profile: StyleProfile): Plan {
     assetId, scope: `Identity of ${member.name}; preserve their visible traits`, modality: "image" as const, role: "identity" as const,
   })));
   const clips = Array.from({ length: count }, (_, i) => {
-    const startMs = Math.floor(total * i / count) * 1000;
-    const endMs = Math.floor(total * (i + 1) / count) * 1000;
+    const startMs = (i ? ends[i - 1] : 0) * 1000;
+    const endMs = ends[i] * 1000;
     return {
       startMs, endMs, mode: /\b(?:hard cut|cut to|jump cut|smash cut)\b/i.test(brief.brief) ? "cuts" as const : "continuous" as const, references: refs, promptOverride: "",
       shots: [{
@@ -291,7 +304,7 @@ function checkedPlan(authored: z.infer<typeof authoredPlan>, rules: Guidance["ru
 export async function directProject(brief: Brief, profile: StyleProfile, runMode: DirectorMode) {
   if (runMode === "mock") return { plan: fixturePlan(brief, profile), model: "none", usage: {} };
   const result = await turn("plan", JSON.stringify({
-    task: "Compose an ordered plan in milliseconds. Complete every required field. Preserve brief for action, original refs for identity, and the saved guide and signature rules for filming. Express the style in specific camera, lighting, palette, texture, timing and sound directions. Adapt flexible rules to the new brief. Provide chronological camera start, action, movement, end, frame/reveal, continuity and sound. Do not reuse reference subjects or scene-specific details. Reuse only cast asset ids provided. A single clip is permitted within provider limits, otherwise split duration into contiguous whole-second clips. Seedance 2.0 clips are 4–15 seconds with up to 9 images; Seedance 2.5 clips are 5–30 seconds with up to 30 images. Select the most relevant original refs, one per distinct role and identity at minimum. Do not put provider tags in shot text.",
+    task: `Compose an ordered plan in milliseconds. Complete every required field. Preserve brief for action, original refs for identity, and the saved guide and signature rules for filming. Express the style in specific camera, lighting, palette, texture, timing and sound directions. Adapt flexible rules to the new brief. Provide chronological camera start, action, movement, end, frame/reveal, continuity and sound. Do not reuse reference subjects or scene-specific details. Reuse only cast asset ids provided. A single clip is permitted within provider limits, otherwise split duration into contiguous whole-second clips. ${modelLimits(brief)} Do not put provider tags in shot text.`,
     brief, guide: profile.guide, rules: reusableStyleRules(profile.rules),
     citations: "For each shot, cite at most eight supplied rule indices in styleRuleIndices. Cite a rule only when it directly shaped this specific shot. Use an empty array when there is no match.",
     evidence: profile.evidence.frames.map(({ ordinal, seconds, cutCandidate }) => ({ ordinal, seconds, cutCandidate })),

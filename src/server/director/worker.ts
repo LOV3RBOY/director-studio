@@ -1,10 +1,12 @@
 import { assetsOfJobs, saveAsset } from "../assets";
 import { all, run, tx } from "../db";
 import { ApiError, notFound } from "../errors";
+import { getJob } from "../jobs";
 import { buildExport, pollMuapi, prepareMuapi, RenderPending, RenderReview, submitMuapi } from "./delivery";
 import { claimFidelity, dueFidelity, queueFidelityAfterRender, requeueInterruptedFidelity, scoreFidelity } from "./fidelity";
 import { evidenceFrame, measureReferences, mockVideo, sampleWindow } from "./media";
 import { directChat, directProject, mode, studyStyle } from "./runtime";
+import { directorModel } from "./models";
 import { addStyleVersion, currentPack, finish, projectProfile, projectRow, reject, snapshot, styleAssets, styleRow, writePack, type JobRow } from "./store";
 
 const interval = 900;
@@ -107,7 +109,7 @@ async function perform(row: JobRow) {
     const style = projectProfile(row.user_id, project);
     const draft = await directProject(project.request, style.profile, row.mode);
     tx(() => {
-      const pack = writePack(row.user_id, project.id, draft.plan, { model: project.request.model, resolution: "720p" }, null);
+      const pack = writePack(row.user_id, project.id, draft.plan, { model: project.request.model, resolution: directorModel(project.request.model).defaultResolution }, null);
       finish(row, { snapshotId: pack.id, model: draft.model, usage: draft.usage });
     });
     return;
@@ -144,6 +146,19 @@ async function perform(row: JobRow) {
   if (saved) {
     finish(row, { assetId: saved.id, url: `/api/assets/${saved.id}/file`, duration: saved.duration, estimatedUsd: input.quotedUsd });
     queueFidelityAfterRender(row);
+    return;
+  }
+  if (input.jobId) {
+    const job = getJob(row.user_id, input.jobId);
+    const asset = job.assets.find((item) => item.kind === "video");
+    if (job.status === "succeeded" && asset) {
+      finish(row, { assetId: asset.id, url: asset.url, duration: asset.duration, estimatedUsd: input.quotedUsd, providerCost: null });
+      queueFidelityAfterRender(row);
+    } else if (["failed", "canceled"].includes(job.status) || job.status === "succeeded") {
+      reject(row, job.error ?? { code: "render_failed", message: `${job.modelName} did not deliver a take.` });
+    } else {
+      run("UPDATE director_jobs SET next_run = ?, updated_at = updated_at WHERE id = ?", Date.now() + 3_000, row.id);
+    }
     return;
   }
   if (row.mode === "live" && row.state !== "polling") {

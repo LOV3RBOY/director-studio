@@ -143,6 +143,43 @@ struct ProjectBrief: Codable {
     var model = "seedance-2.0"
 }
 
+/// A render model the Director can use: Seedance omni-reference, or a registry video model
+/// that renders from the prompt and optional start and end keyframes.
+struct DirectorModelOption: Decodable, Identifiable, Equatable {
+    let id: String
+    let name: String
+    let engine: String
+    let durations: [Int]
+    let aspects: [String]?
+    let resolutions: [String]
+    let defaultResolution: String
+    let slots: [String]
+    let seed: Bool
+    let quality: Bool
+    let available: Bool
+
+    static let allAspects = ["9:16", "16:9", "1:1", "4:3", "3:4", "21:9"]
+    /// Shown until the server list arrives.
+    static let seedance = [
+        DirectorModelOption(id: "seedance-2.0", name: "Seedance 2.0", engine: "omni", durations: Array(4...15), aspects: nil,
+                            resolutions: ["480p", "720p", "1080p", "4k"], defaultResolution: "720p", slots: [], seed: false, quality: true, available: true),
+        DirectorModelOption(id: "seedance-2.5", name: "Seedance 2.5", engine: "omni", durations: Array(5...30), aspects: nil,
+                            resolutions: ["480p", "720p", "1080p", "4k"], defaultResolution: "720p", slots: [], seed: true, quality: false, available: true),
+    ]
+
+    var summary: String {
+        let lengths = durations.count > 2 && durations.last! - durations.first! == durations.count - 1
+            ? "\(durations.first!)–\(durations.last!) s" : durations.map(String.init).joined(separator: ", ") + " s"
+        if engine == "omni" { return "\(lengths) clips with identity, style, motion and sound references." }
+        let frames = slots.count == 2 ? " and start/end keyframes" : slots.count == 1 ? " and a start keyframe" : ""
+        return "\(lengths) clips from the prompt\(frames). The style travels in the prompt."
+    }
+}
+
+struct DirectorModelsResponse: Decodable {
+    let models: [DirectorModelOption]
+}
+
 struct CastMember: Codable {
     var name: String
     var notes = ""

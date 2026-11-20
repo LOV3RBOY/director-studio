@@ -3,7 +3,8 @@ import { badRequest } from "../errors";
 
 const text = (max: number) => z.string().trim().min(1).max(max);
 export const identifier = z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/);
-export const model = z.enum(["seedance-2.0", "seedance-2.5"]);
+/** A Director model id: Seedance omni-reference or any eligible registry video model (see models.ts). */
+export const model = z.string().regex(/^[a-z0-9][a-z0-9.-]{0,59}$/, "Choose an available video model.");
 export const aspect = z.enum(["16:9", "9:16", "1:1", "4:3", "3:4", "21:9"]);
 export const projectsInput = z.object({
   title: text(120),
@@ -250,7 +251,7 @@ export type Plan = z.infer<typeof plan>;
 
 export const packSettings = z.object({
   model,
-  resolution: z.enum(["480p", "720p", "1080p", "4k"]),
+  resolution: z.string().regex(/^[a-zA-Z0-9]{2,8}$/),
   quality: z.enum(["basic", "high"]).optional(),
   seed: z.number().int().min(-1).max(2_147_483_647).optional(),
   styleRefs: z.boolean().optional(),

@@ -115,6 +115,9 @@ private struct NewProjectForm: View {
     let onCreated: (String) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var request = ProjectBrief()
+    @State private var models = DirectorModelOption.seedance
+    private var chosen: DirectorModelOption? { models.first { $0.id == request.model } }
+    private var aspects: [String] { chosen?.aspects ?? DirectorModelOption.allAspects }
     @State private var styles: [StyleSummary] = []
     @State private var selectedStyleId = ""
     @State private var versions: [StyleVersion] = []
@@ -153,14 +156,14 @@ private struct NewProjectForm: View {
                         .disabled(request.cast.count >= 8)
                 }
                 Section("Format") {
-                    Picker("Frame", selection: $request.aspect) {
-                        ForEach(["9:16", "16:9", "1:1", "4:3", "3:4", "21:9"], id: \.self) { Text($0) }
-                    }
                     Picker("Render model", selection: $request.model) {
-                        Text("Seedance 2.0").tag("seedance-2.0")
-                        Text("Seedance 2.5").tag("seedance-2.5")
+                        ForEach(models) { option in Text(option.name).tag(option.id) }
                     }
-                    Stepper("\(request.duration) seconds", value: $request.duration, in: (request.model == "seedance-2.5" ? 5 : 4)...60)
+                    Picker("Frame", selection: $request.aspect) {
+                        ForEach(aspects, id: \.self) { Text($0) }
+                    }
+                    Stepper("\(request.duration) seconds", value: $request.duration, in: max(4, chosen?.durations.first ?? 4)...60)
+                    if let chosen { Text(chosen.summary).font(.footnote).foregroundStyle(.secondary) }
                 }
                 Button(saving ? "Starting…" : "Create storyboard") { Task { await create() } }
                     .disabled(saving || request.styleVersionId.isEmpty || request.title.isEmpty || request.brief.isEmpty)
@@ -168,6 +171,10 @@ private struct NewProjectForm: View {
             .navigationTitle("New Project")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
             .task {
+                if let response: DirectorModelsResponse = try? await api.get("/api/director/models") {
+                    let available = response.models.filter(\.available)
+                    if !available.isEmpty { models = available }
+                }
                 do {
                     let response: StylesResponse = try await api.get("/api/director/styles")
                     styles = response.styles.filter { $0.latest != nil }
@@ -184,8 +191,9 @@ private struct NewProjectForm: View {
                     request.styleVersionId = versions.first?.id ?? ""
                 } catch { if !Task.isCancelled { self.error = error.localizedDescription } }
             }
-            .onChange(of: request.model) { _, model in
-                if model == "seedance-2.5" && request.duration < 5 { request.duration = 5 }
+            .onChange(of: request.model) { _, _ in
+                if let first = chosen?.durations.first, request.duration < first { request.duration = max(4, first) }
+                if !aspects.contains(request.aspect) { request.aspect = aspects[0] }
             }
             .sheet(isPresented: $showCast) {
                 CastForm(api: api) { cast in request.cast.append(cast); showCast = false }

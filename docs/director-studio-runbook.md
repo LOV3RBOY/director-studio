@@ -36,6 +36,12 @@ Style Proof lists the project's delivered takes with their score and misses. **F
 
 Migration 180 adds `director_fidelity` and `director_grades`. Scoring uses its own queue rather than a new `director_jobs` kind: adding a kind would require rebuilding `director_jobs`, and dropping that table inside the migration transaction would cascade-delete `director_render_reviews`.
 
+## Render models
+
+`GET /api/director/models` lists every model a project can use. Seedance 2.0 and 2.5 render through MuAPI omni-reference with identity, style, motion and sound references. Every other listed model comes from the generation registry: it is available, takes a prompt and a duration, and accepts only optional start and end frames. Those models render through the shared generation pipeline, which holds and settles the credits, so the Director reserves nothing and the take is charged once. They need the shared pipeline in the same mode as Director (`TREG_MODE` and the Director mode both mock, or both live with `TREG_TOKEN`).
+
+Clip lengths, aspect ratios and resolutions come from each model's controls. A project's duration is split into the fewest clips the model can render, evenly where possible (14 s on Veo 3.1 becomes 8 s + 6 s). On a registry model, the first keyframe reference becomes the start frame and the second the end frame. Identity, style, motion and sound references are not sent; the pack notes say which clips left them out, and the style travels in the prompt. Exports list the registry request (model, prompt, values and frames) for each clip.
+
 ## Environment variables
 
 | Variable | Purpose |

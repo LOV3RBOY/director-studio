@@ -7,6 +7,8 @@ import { compilePack, inspectAsset, type PackBody } from "./compiler";
 import { requireAuthoringEntitlement } from "./commerce";
 import { reusableStyleRules, type Brief, type Guidance, type learnInput, type Plan, type Settings, type StyleProfile, verifyGuidance } from "./contracts";
 import { materializeStyleKit } from "./media";
+import { describeDurations, directorModel, splitDuration } from "./models";
+import { tregMode } from "../treg";
 import { directorMode, hermesConfig, type DirectorMode } from "./runtime";
 
 export interface StyleRow {
@@ -287,7 +289,14 @@ export function startProject(userId: string, brief: Brief) {
   const mode = directorMode();
   const version = styleVersion(userId, brief.styleVersionId);
   if (!version.saved) throw badRequest("Save the style in the Style Library before applying it.");
-  if (brief.model === "seedance-2.5" && brief.duration < 5) throw badRequest("Seedance 2.5 needs at least five seconds.");
+  const adapter = directorModel(brief.model);
+  if (adapter.aspects && !adapter.aspects.includes(brief.aspect)) throw badRequest(`${adapter.name} renders ${adapter.aspects.join(", ")} aspect ratios.`);
+  if (!splitDuration(brief.duration, adapter.durations)) {
+    throw badRequest(`${adapter.name} renders ${describeDurations(adapter.durations)} second clips, which cannot make ${brief.duration} seconds.`);
+  }
+  if (adapter.engine === "frames" && mode !== tregMode()) {
+    throw new ApiError(503, "render_unavailable", `${adapter.name} is unavailable in this workspace mode.`);
+  }
   const seen = new Set<string>();
   for (const member of brief.cast) {
     for (const id of member.assetIds) {
