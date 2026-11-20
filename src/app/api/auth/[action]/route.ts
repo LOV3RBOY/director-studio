@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { AccountError, createGuest, endSession, logIn, publicUser, signUp, startSession, type User } from "@/server/auth";
 import { MILLI } from "@/config/economy";
 import { balance, grant } from "@/server/credits";
@@ -17,6 +17,18 @@ function privatePilot() {
 function ownerEmail() {
   const email = process.env.STUDIO_OWNER_EMAIL?.trim().toLowerCase();
   return email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? email : null;
+}
+
+/**
+ * The owner proves who they are at signup with STUDIO_OWNER_PASSWORD, a secret only the server
+ * operator can set, so nobody who merely knows the address can claim the account first.
+ */
+function ownerPasswordMatches(supplied: unknown) {
+  const expected = process.env.STUDIO_OWNER_PASSWORD ?? "";
+  if (expected.length < 8 || typeof supplied !== "string") return false;
+  const a = createHash("sha256").update(expected).digest();
+  const b = createHash("sha256").update(supplied).digest();
+  return timingSafeEqual(a, b);
 }
 
 const isOwner = (email: unknown) => typeof email === "string" && email.trim().toLowerCase() === ownerEmail();
@@ -68,7 +80,7 @@ export const POST = publicRoute<{ action: string }>(async ({ req, user, params }
       case "signup":
         rateLimit(`signup:${who}`, 10, HOUR);
         body = await readJson(req);
-        if (ownerOnly && !isOwner(body.email)) throw notFound();
+        if (ownerOnly && (!isOwner(body.email) || !ownerPasswordMatches(body.password))) throw notFound();
         next = signUp({ email: body.email, password: body.password, name: body.name }, user);
         break;
       case "login":
