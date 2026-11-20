@@ -176,6 +176,15 @@ struct DirectorModelOption: Decodable, Identifiable, Equatable {
     }
 }
 
+struct AgentKeyRequest: Encodable {
+    var name = "Agent · full access (iPhone)"
+    var scopes = ["read", "generate", "account"]
+}
+
+struct AgentKey: Decodable {
+    let secret: String
+}
+
 struct DirectorModelsResponse: Decodable {
     let models: [DirectorModelOption]
 }

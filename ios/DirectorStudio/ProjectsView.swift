@@ -1,5 +1,6 @@
 import PhotosUI
 import SwiftUI
+import UIKit
 
 struct ProjectsView: View {
     let api: StudioAPI
@@ -14,6 +15,8 @@ struct ProjectsView: View {
     @State private var showAccount = false
     @State private var showStyles = false
     @State private var showPurchases = false
+    @State private var agentMessage: String?
+    @State private var connecting = false
     @State private var error: String?
 
     var body: some View {
@@ -89,16 +92,40 @@ struct ProjectsView: View {
                 }
             }
             .confirmationDialog("Studio Account", isPresented: $showAccount, titleVisibility: .visible) {
+                Button("Connect agent") { Task { await connectAgent() } }
                 if commerce { Button("Purchases") { showPurchases = true } }
                 Button("Sign out", role: .destructive) { Task { await signOut() } }
             } message: {
                 Text(api.base.host ?? "")
             }
             .sheet(isPresented: $showPurchases) { StudioPurchases(api: api) }
+            .alert("Agent connection copied", isPresented: Binding(get: { agentMessage != nil }, set: { if !$0 { agentMessage = nil } })) {
+                Button("Done", role: .cancel) { agentMessage = nil }
+            } message: {
+                Text("Open Grok Bot and paste it into the chat. It gives your agent full use of the studio as you. Revoke it any time under Developer → Keys on the web.")
+            }
             .sheet(isPresented: $showStyles) { StylesView(api: api, fixture: fixture) }
             .task { await reload() }
             .studioError($error)
         }
+    }
+
+    /// One tap: makes a full-access agent key and copies the setup message for Grok Bot or any MCP agent.
+    private func connectAgent() async {
+        guard !connecting else { return }
+        connecting = true
+        defer { connecting = false }
+        do {
+            let made: AgentKey = try await api.post("/api/developer/keys", AgentKeyRequest())
+            let server = api.base.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            let message = [
+                "Add this MCP server: \(server)/api/mcp",
+                "Send this header with every request: Authorization: Bearer \(made.secret)",
+                "It is my Out of Order Studio. Call app_routes to see everything you can do, then use app_request to act as me.",
+            ].joined(separator: "\n")
+            UIPasteboard.general.string = message
+            agentMessage = message
+        } catch { self.error = error.localizedDescription }
     }
 
     private func reload() async {
