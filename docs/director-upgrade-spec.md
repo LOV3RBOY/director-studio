@@ -132,7 +132,7 @@ Add `measureStyle(asset): Promise<StyleMetrics>`, computed with ffmpeg/ffprobe p
 
 ### B1. Exemplars in the profile
 
-- The analysis turn returns `exemplars: {ordinal, role: "lighting" | "composition" | "motion", why}[]`: 3–6 image exemplars plus at most one motion window `{source, startSec, endSec}`. Validate that the ordinals and windows exist.
+- The analysis turn returns `exemplars: {ordinal, role: "lighting" | "composition", why}[]` (3–6 image exemplars) plus at most one `motionWindow: {source, startSec, endSec, why}`. Image exemplars never take the `motion` role: in the compiler, `motion` is valid only for video, and that rule stays unchanged. The motion window becomes the kit's single video reference with role `motion`. Validate that the ordinals and the window exist.
 - Prefer frames that show the environment, light and texture. Avoid frames dominated by an identifiable person or by text or logos.
 - When a style version is saved, materialize the exemplars as owned assets with `saveAsset`:
   - images: full-resolution frames extracted from the source, not the 640px evidence frames
