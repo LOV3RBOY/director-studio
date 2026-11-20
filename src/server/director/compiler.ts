@@ -1,7 +1,7 @@
 import { statSync } from "node:fs";
 import { assetFile, ownedAsset, type AssetRow } from "../assets";
 import { badRequest, notFound } from "../errors";
-import type { Brief, Plan, Reference, Settings } from "./contracts";
+import type { Brief, Plan, Reference, Settings, StyleProfile } from "./contracts";
 
 const endpoint20 = "seedance-2.0-omni-reference";
 const endpoint25 = "seedance-2.5-omni-reference";
@@ -15,6 +15,7 @@ const allowed = {
   identity: ["image"], keyframe: ["image"], composition: ["image", "video"],
   lighting: ["image", "video"], motion: ["video"], sound: ["audio"],
 } satisfies Record<Reference["role"], Modality[]>;
+const kitScope = "Style reference only: match lighting, palette, composition, texture and camera behavior. Do not reproduce its people, objects, text or location.";
 
 export interface Attachment extends Reference {
   index: number;
@@ -45,12 +46,33 @@ export function inspectAsset(userId: string, assetId: string): AssetRow {
   return asset;
 }
 
-export function compilePack(userId: string, brief: Brief, plan: Plan, settings: Settings): PackBody {
+function withStyleKit(references: Reference[], model: Settings["model"], profile: StyleProfile): Reference[] {
+  const kit = profile.kit;
+  if (!kit) return references;
+  const ordered = [...references.filter(({ role }) => role === "identity"), ...references.filter(({ role }) => role !== "identity")];
+  const used = new Set(references.map(({ assetId }) => assetId));
+  const is20 = model === "seedance-2.0";
+  let images = Math.min(is20 ? 2 : 4, maximum[model].image - references.filter(({ modality }) => modality === "image").length);
+  for (const [index, assetId] of kit.images.entries()) {
+    if (images <= 0) break;
+    if (used.has(assetId)) continue;
+    ordered.push({ assetId, modality: "image", role: profile.exemplars?.[index]?.role ?? "composition", scope: kitScope });
+    used.add(assetId);
+    images--;
+  }
+  if (!is20 && kit.motion && !used.has(kit.motion) && references.filter(({ modality }) => modality === "video").length < maximum[model].video) {
+    ordered.push({ assetId: kit.motion, modality: "video", role: "motion", scope: kitScope });
+  }
+  return ordered;
+}
+
+export function compilePack(userId: string, brief: Brief, plan: Plan, settings: Settings, style?: StyleProfile): PackBody {
   if (settings.model === "seedance-2.0" && settings.seed !== undefined) throw badRequest("Seedance 2.0 has no documented seed input.");
   if (settings.model === "seedance-2.5" && settings.quality !== undefined) throw badRequest("Choose resolution for Seedance 2.5.");
+  const { styleRefs, ...renderSettings } = settings;
   const effective = settings.model === "seedance-2.0"
-    ? { ...settings, quality: settings.quality ?? "high" as const }
-    : { ...settings, seed: settings.seed ?? -1 };
+    ? { ...renderSettings, quality: settings.quality ?? "high" as const }
+    : { ...renderSettings, seed: settings.seed ?? -1 };
   const identity = new Set(brief.cast.flatMap((member) => member.assetIds));
   let cursor = 0;
   const clips = plan.clips.map((clip, index) => {
@@ -77,7 +99,8 @@ export function compilePack(userId: string, brief: Brief, plan: Plan, settings: 
     if (shotCursor !== clip.endMs) throw badRequest(`Clip ${index + 1} has uncovered time at the end.`);
     const counts = { image: 0, video: 0, audio: 0 };
     const seen = new Set<string>();
-    const attachments = clip.references.map((ref): Attachment => {
+    const references = styleRefs !== false && style?.kit ? withStyleKit(clip.references, settings.model, style) : clip.references;
+    const attachments = references.map((ref): Attachment => {
       if (seen.has(ref.assetId)) throw badRequest("Each file may appear only once in a clip.");
       seen.add(ref.assetId);
       const asset = inspectAsset(userId, ref.assetId);

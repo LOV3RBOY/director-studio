@@ -167,6 +167,7 @@ struct RenderSettings: Codable, Equatable {
     var resolution: String
     var quality: String?
     var seed: Int?
+    var styleRefs: Bool? = nil
 }
 
 struct Storyboard: Codable, Equatable {
