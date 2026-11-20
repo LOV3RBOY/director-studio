@@ -2,6 +2,7 @@ import { assetsOfJobs, saveAsset } from "../assets";
 import { all, run, tx } from "../db";
 import { ApiError, notFound } from "../errors";
 import { buildExport, pollMuapi, prepareMuapi, RenderPending, RenderReview, submitMuapi } from "./delivery";
+import { claimFidelity, dueFidelity, queueFidelityAfterRender, requeueInterruptedFidelity, scoreFidelity } from "./fidelity";
 import { evidenceFrame, measureReferences, mockVideo, sampleWindow } from "./media";
 import { directChat, directProject, mode, studyStyle } from "./runtime";
 import { addStyleVersion, currentPack, finish, projectProfile, projectRow, reject, snapshot, styleAssets, styleRow, writePack, type JobRow } from "./store";
@@ -27,6 +28,7 @@ export function ensureDirectorWorker() {
         JSON.stringify({ code: "authoring_interrupted", message: "The server restarted during authoring. Review the result, then retry if needed." }), Date.now(), current);
       run("UPDATE director_jobs SET state = 'review', error = ?, updated_at = ? WHERE mode = ? AND kind = 'render' AND state = 'submitting'",
         JSON.stringify({ code: "render_requires_review", message: "The server restarted during submission. Confirm the provider's acceptance before retrying." }), Date.now(), current);
+      requeueInterruptedFidelity(current);
     });
   }
   const state = { owner: instance, running: shared.directorWorker?.running ?? new Set<string>(), timer: undefined as NodeJS.Timeout | undefined };
@@ -47,6 +49,15 @@ export function ensureDirectorWorker() {
             console.error("[director] Could not persist job failure.", row.id);
           }
         }).finally(() => state.running.delete(row.id));
+      }
+      // Score at most one take at a time: measuring runs several media processes.
+      if (![...state.running].some((key) => key.startsWith("fidelity:")) && state.running.size < 3) {
+        for (const row of dueFidelity(current, 1)) {
+          if (!claimFidelity(row.id)) continue;
+          const key = `fidelity:${row.id}`;
+          state.running.add(key);
+          void scoreFidelity(row).catch(() => console.error("[director] Could not score a take.", row.id)).finally(() => state.running.delete(key));
+        }
       }
     } catch {
       console.error("[director] Could not read the durable job queue.");
@@ -132,6 +143,7 @@ async function perform(row: JobRow) {
   const saved = assetsOfJobs([row.id]).get(row.id)?.[0];
   if (saved) {
     finish(row, { assetId: saved.id, url: `/api/assets/${saved.id}/file`, duration: saved.duration, estimatedUsd: input.quotedUsd });
+    queueFidelityAfterRender(row);
     return;
   }
   if (row.mode === "live" && row.state !== "polling") {
@@ -158,4 +170,5 @@ async function perform(row: JobRow) {
     assetId: asset.id, url: `/api/assets/${asset.id}/file`, duration: asset.duration,
     estimatedUsd: input.quotedUsd, providerCost: rendered.providerCost,
   });
+  queueFidelityAfterRender(row);
 }

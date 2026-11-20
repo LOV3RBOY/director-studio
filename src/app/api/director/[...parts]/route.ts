@@ -5,6 +5,7 @@ import { ApiError, notFound, publicRoute, readJson, type AuthedCtx } from "@/ser
 import { applyPurchase, commerceAvailable, handleStoreNotification, purchaseOptions } from "@/server/director/commerce";
 import { chatInput, guidance, identifier, imageInput, learnInput, packInput, projectsInput, renderInput, valid } from "@/server/director/contracts";
 import { exportFile, ingest, renderQuote, requestRender } from "@/server/director/delivery";
+import { gradeTake, queueFidelity, renderReview } from "@/server/director/fidelity";
 import { imageAttempts, imageQuote, requestImage } from "@/server/director/images";
 import { evidenceFrame } from "@/server/director/media";
 import { directorMode } from "@/server/director/runtime";
@@ -46,6 +47,7 @@ export const GET = publicRoute<Params>(async (ctx) => {
     }
   }
   if (surface === "projects" && ctx.params.parts.length === 2) return projectDetail(userId, id);
+  if (surface === "renders" && action === "fidelity" && ctx.params.parts.length === 3) return renderReview(userId, id);
   if (surface === "packs") {
     if (ctx.params.parts.length === 2) return { pack: snapshot(userId, id).pack };
     if (action === "quote" && ctx.params.parts.length === 4) return renderQuote(userId, id, readIndex(rawIndex, 11));
@@ -70,6 +72,8 @@ export const GET = publicRoute<Params>(async (ctx) => {
 });
 
 const styleEdit = z.object({ previousId: identifier, guide: guidance.shape.guide, rules: guidance.shape.rules.optional() });
+
+const gradeInput = z.object({ strength: z.number().gt(0).max(1).default(0.6), grain: z.boolean().default(true) });
 
 const signedValue = z.string().max(160_000).regex(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
 
@@ -106,6 +110,13 @@ export const POST = publicRoute<Params>(async (ctx) => {
       const edit = valid(packInput, body);
       if (!currentPack(user.id, id)) throw notFound("This project has no storyboard yet.");
       return { pack: writePack(user.id, id, edit.plan, edit.settings, edit.previousId) };
+    }
+  }
+  if (surface === "renders" && count === 3) {
+    if (action === "fidelity") return { fidelity: queueFidelity(user.id, id) };
+    if (action === "grade") {
+      const input = valid(gradeInput, body);
+      return { grade: await gradeTake(user.id, id, input.strength, input.grain) };
     }
   }
   if (surface === "packs" && count === 3) {

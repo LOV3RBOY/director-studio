@@ -257,7 +257,7 @@ function percentile(sorted: ArrayLike<number>, fraction: number) {
   return sorted[lower] + (sorted[Math.ceil(index)] - sorted[lower]) * (index - lower);
 }
 
-function rgbLab(r: number, g: number, b: number): Lab {
+export function rgbLab(r: number, g: number, b: number): Lab {
   const linear = (value: number) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
   const f = (value: number) => value > (6 / 29) ** 3 ? Math.cbrt(value) : value / (3 * (6 / 29) ** 2) + 4 / 29;
   const [red, green, blue] = [r, g, b].map(linear);

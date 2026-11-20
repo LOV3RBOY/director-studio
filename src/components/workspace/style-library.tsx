@@ -12,8 +12,12 @@ import type { Brief, StyleProfile } from "@/server/director/contracts";
 import type { PackBody } from "@/server/director/compiler";
 import { Button, Spinner } from "@/ui";
 import { StyleProof } from "./style-proof";
+import type { DeliveredTake } from "./take-fidelity";
 
-type Job = { kind: string; state: string; error: { message: string } | null };
+type Job = {
+  id: string; kind: string; state: string; error: { message: string } | null;
+  clip?: number | null; snapshotId?: string | null; result?: { assetId?: string; url?: string } | null;
+};
 type StyleVersion = { id: string; version: number; saved: boolean; profile: StyleProfile };
 type StyleSummary = { id: string; title: string; latest: StyleVersion | null };
 type StyleDetail = { id: string; title: string; versions: StyleVersion[]; analysis: Job[] };
@@ -212,11 +216,15 @@ function NewStyledProject({ version }: { version: StyleVersion }) {
 
 function StyledProject({ id }: { id: string }) {
   const key = `/api/director/projects/${encodeURIComponent(id)}`;
-  const resource = useSWR<ProjectDetail>(key, fetcher, { refreshInterval: (project) => pending(project?.jobs.find((job) => job.kind === "plan")) ? 1800 : 0 });
+  const resource = useSWR<ProjectDetail>(key, fetcher, {
+    refreshInterval: (project) => project?.jobs.some((job) => (job.kind === "plan" || job.kind === "chat") && pending(job)) ? 1800 : 0,
+  });
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const project = resource.data;
   const plan = project?.jobs.find((job) => job.kind === "plan");
+  const takes = (project?.jobs ?? []).filter((job): job is Job & DeliveredTake =>
+    job.kind === "render" && job.state === "succeeded" && typeof job.clip === "number" && !!job.result?.assetId && !!job.result.url);
   async function retry() {
     setProblem(null);
     setBusy(true);
@@ -242,6 +250,7 @@ function StyledProject({ id }: { id: string }) {
         {project.pack && <Link href={`/cinema?project=${project.project.id}`} className="ooo-pill ooo-primary self-start">Open storyboard in Cinema <ArrowUpRight size={15} aria-hidden /></Link>}
       </section>
       {project.pack && <StyleProof key={project.pack.id} pack={project.pack} style={project.pinnedStyle} cast={project.brief.cast} reviewedAt={project.reviewedAt}
+        projectId={project.project.id} takes={takes}
         onReviewed={(reviewedAt) => void resource.mutate((current) => current && current.pack?.id === project.pack?.id ? { ...current, reviewedAt } : current)} />}
     </div>
   );

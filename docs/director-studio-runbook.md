@@ -24,6 +24,18 @@ Director adds kit references to each clip after the storyboard references, with 
 
 Pack edits can set `settings.styleRefs` to `false` to use the storyboard references alone. Omit the setting or set it to `true` to use the kit. Saved profiles without a kit continue to compile with their storyboard references. Reanalyze and save an older guide to create a new version with a kit.
 
+## Take fidelity and style grades
+
+Each delivered render is measured against the style version pinned to its project, then scored automatically. Scoring runs one take at a time in the Director worker and needs a style with schema version 2 measurements. `GET /api/director/renders/:jobId/fidelity` returns the latest score and grade. `POST` to the same path scores the take again and returns the pending score instead of queuing a second one.
+
+The numeric half compares the take's measurements with the style: mean shot length within 35%, weighted CIEDE2000 palette distance up to 12, median luma within 0.08, contrast and saturation within 0.10, loudness within 3 LU, and tempo within 4 BPM when both sides measure it with confidence 0.35 or higher. Measurements missing on either side are listed as not compared. The judged half asks the Director whether six frames from the take follow each signature rule. In mock mode the judge is a deterministic placeholder that is labelled as such. The score is the mean of the two pass rates, 0 to 100. If the judge is unavailable, the report says so and the score uses the measurements alone. A failed measurement is retried once.
+
+Style Proof lists the project's delivered takes with their score and misses. **Fix with Director** sends the misses to the project chat, which writes a new pack version. Nothing renders until you quote and approve it as usual.
+
+`POST /api/director/renders/:jobId/grade` accepts `strength` (above 0 and up to 1, default 0.6) and `grain` (default `true`). It builds a 33-point `.cube` LUT from Lab mean and standard deviation transfer between the take's measured palette and the style's, then applies it with FFmpeg `lut3d`. Partial strength interpolates the scale geometrically and the mean shift linearly. When the style is grainier than the graded take is expected to be, uniform temporal noise is added, capped at strength 40. The graded copy is a new owned asset; the original take is never changed. Identical inputs produce byte-identical LUTs, and the response includes the LUT's SHA-256, the palette distance before and after, and the grain levels. Grain is measured at a 64 × 128 analysis size, where fine texture and edges also count, so treat the grain match as approximate.
+
+Migration 180 adds `director_fidelity` and `director_grades`. Scoring uses its own queue rather than a new `director_jobs` kind: adding a kind would require rebuilding `director_jobs`, and dropping that table inside the migration transaction would cascade-delete `director_render_reviews`.
+
 ## Environment variables
 
 | Variable | Purpose |

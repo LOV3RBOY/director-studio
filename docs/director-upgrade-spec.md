@@ -154,7 +154,7 @@ Add `measureStyle(asset): Promise<StyleMetrics>`, computed with ffmpeg/ffprobe p
 ### C1. Fidelity score
 
 - **Migration `180_director_fidelity.sql`:** create `director_fidelity(id, user_id, job_id, style_version_id, score, report, created_at)`.
-- After a render is ingested successfully, queue a non-billable `fidelity` job. This means adding `'fidelity'` to the `kind` CHECK through a new migration that rebuilds the table the SQLite-safe way. If the rebuild risks data, stop and log a question instead.
+- After a render is ingested successfully, queue a non-billable fidelity score. (As built: a separate `director_fidelity` queue, because rebuilding `director_jobs` to add a kind would cascade-delete `director_render_reviews`. See the ledger decision.)
 - **Numeric report:** run `measureStyle` on the take and compare it with the style metrics, using these tolerances:
 
 | Metric | Tolerance |
