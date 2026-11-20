@@ -25,6 +25,7 @@ struct StyleVersion: Decodable, Identifiable {
 }
 
 struct StyleProfile: Decodable {
+    let schemaVersion: Int?
     let guide: String
     let fixture: Bool
     let rules: [StyleRule]
@@ -37,6 +38,7 @@ struct StyleRule: Codable {
     let reuse: String
     var detail: String
     let evidence: [Int]
+    let measures: [String]?
 }
 
 struct Evidence: Decodable {
@@ -46,6 +48,50 @@ struct Evidence: Decodable {
     let hasAudio: Bool
     let audioCues: [AudioCue]?
     let frames: [EvidenceFrame]
+    let sources: [EvidenceSource]?
+    let metrics: StyleMetrics?
+    let metricSpread: [String: Double]?
+}
+
+struct EvidenceSource: Decodable {
+    let assetId: String
+    let digest: String
+    let duration: Double?
+    let width: Int
+    let height: Int
+    let hasAudio: Bool
+    let metrics: StyleMetrics
+}
+
+struct StyleMetrics: Decodable {
+    struct Editing: Decodable {
+        let cutTimes: [Double]?
+        let shotLengths: [String: Double?]
+        let cutsPer10s: Double?
+    }
+
+    struct PaletteColor: Decodable {
+        let hex: String
+        let lab: [Double]
+        let weight: Double
+    }
+
+    struct Motion: Decodable {
+        let translation: [String: Double]?
+        let rotation: Double?
+        let zoom: Double?
+        let jitter: Double?
+        let motionEnergy: Double?
+        let camera: String?
+    }
+
+    let editing: Editing
+    let palette: [PaletteColor]?
+    let tone: [String: Double?]
+    let grain: Double?
+    let motion: Motion
+    let audio: [String: Double?]
+    let reasons: [String: String]
 }
 
 struct AudioCue: Decodable {
@@ -57,6 +103,7 @@ struct EvidenceFrame: Decodable, Identifiable {
     let ordinal: Int
     let seconds: Double?
     let cutCandidate: Bool
+    let source: Int?
     var id: Int { ordinal }
 }
 

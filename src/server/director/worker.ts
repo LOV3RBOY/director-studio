@@ -1,11 +1,10 @@
 import { assetsOfJobs, saveAsset } from "../assets";
 import { all, run, tx } from "../db";
 import { ApiError, notFound } from "../errors";
-import { inspectAsset } from "./compiler";
 import { buildExport, pollMuapi, prepareMuapi, RenderPending, RenderReview, submitMuapi } from "./delivery";
-import { evidenceFrame, extractEvidence, mockVideo, sampleWindow } from "./media";
+import { evidenceFrame, measureReferences, mockVideo, sampleWindow } from "./media";
 import { directChat, directProject, mode, studyStyle } from "./runtime";
-import { addStyleVersion, currentPack, finish, projectProfile, projectRow, reject, snapshot, styleRow, writePack, type JobRow } from "./store";
+import { addStyleVersion, currentPack, finish, projectProfile, projectRow, reject, snapshot, styleAssets, styleRow, writePack, type JobRow } from "./store";
 
 const interval = 900;
 const shared = globalThis as typeof globalThis & {
@@ -78,12 +77,12 @@ async function perform(row: JobRow) {
   const input = JSON.parse(row.input);
   if (row.kind === "analysis") {
     const style = styleRow(row.user_id, input.styleId, row.mode);
-    const asset = inspectAsset(row.user_id, style.asset_id);
-    const evidence = await extractEvidence(asset);
+    const assets = styleAssets(row.user_id, style);
+    const evidence = await measureReferences(assets);
     const profile = await studyStyle({
       mode: row.mode, id: row.id, notes: style.notes, evidence,
-      frames: () => Promise.all(evidence.frames.map((frame) => evidenceFrame(asset, evidence, frame.ordinal))),
-      window: (seconds) => sampleWindow(asset, evidence, seconds),
+      frames: () => Promise.all(evidence.frames.map((frame) => evidenceFrame(assets[frame.source ?? 0], evidence, frame.ordinal))),
+      window: (seconds) => sampleWindow(assets[0], evidence, seconds),
     });
     tx(() => {
       const version = addStyleVersion(row.user_id, style.id, profile, false);

@@ -40,26 +40,26 @@ function Problem({ message }: { message?: string | null }) {
 }
 
 function UploadReference({ onCreated }: { onCreated: (id: string) => void }) {
-  const [file, setFile] = useState<File>();
-  const [asset, setAsset] = useState<Asset>();
+  const [files, setFiles] = useState<File[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!file || busy) return;
+    if (!files.length || files.length > 8 || busy) return;
     const form = new FormData(event.currentTarget);
     setBusy(true);
     setProblem(null);
     try {
-      let source = asset;
-      if (!source) {
+      const sources = [...assets];
+      for (const file of files.slice(sources.length)) {
         const data = new FormData();
         data.append("file", file);
-        source = (await api<{ asset: Asset }>("/api/assets", { method: "POST", body: data })).asset;
-        setAsset(source);
+        sources.push((await api<{ asset: Asset }>("/api/assets", { method: "POST", body: data })).asset);
+        setAssets([...sources]);
       }
       const result = await api<{ styleId: string }>("/api/director/styles", {
-        method: "POST", body: { assetId: source.id, title: form.get("title"), notes: form.get("notes") },
+        method: "POST", body: { assetIds: sources.map(({ id }) => id), title: form.get("title"), notes: form.get("notes") },
       });
       onCreated(result.styleId);
     } catch (error) {
@@ -73,15 +73,18 @@ function UploadReference({ onCreated }: { onCreated: (id: string) => void }) {
     <form onSubmit={submit} className="ooo-panel flex flex-col gap-4 p-5 sm:p-6">
       <div className="flex items-center gap-3"><span className="ooo-icon-tile"><Upload size={19} aria-hidden /></span><h2 className={heading}>Study a reference</h2></div>
       <Field label="Reference image or video">
-        <input type="file" required accept="image/*,video/*" disabled={busy} className={field} onChange={(event) => {
-          setFile(event.currentTarget.files?.[0]);
-          setAsset(undefined);
+        <input type="file" required multiple accept="image/*,video/*" disabled={busy} className={field} onChange={(event) => {
+          const selection = Array.from(event.currentTarget.files ?? []);
+          setFiles(selection);
+          setAssets([]);
+          setProblem(selection.length > 8 ? "Choose up to eight references." : null);
         }} />
       </Field>
+      <p className="text-sm text-text-secondary">Choose up to eight images or videos for one style.</p>
       <Field label="Style name"><input name="title" required maxLength={120} className={field} /></Field>
       <Field label="What to carry over or ignore"><textarea name="notes" rows={3} maxLength={2400} className={field} /></Field>
       <Problem message={problem} />
-      <Button type="submit" variant="lime" size="md" disabled={!file || busy} className="self-start">{busy ? <><Spinner /> Starting analysis…</> : "Analyze reference"}</Button>
+      <Button type="submit" variant="lime" size="md" disabled={!files.length || files.length > 8 || busy} className="self-start">{busy ? <><Spinner /> Starting analysis…</> : "Analyze reference"}</Button>
     </form>
   );
 }
@@ -142,7 +145,7 @@ function ReviewStyle({ id, onSaved }: { id: string; onSaved: () => void }) {
                 {latest.profile.evidence.frames.map((frame) => (
                   <li key={frame.ordinal} className="overflow-hidden rounded-lg bg-surface-tertiary">
                     <Image unoptimized src={`/api/director/styles/${style.id}/frames/${latest.id}/${frame.ordinal}`} alt={`Reference frame ${frame.ordinal + 1}`} width={320} height={180} className="aspect-video w-full object-contain" />
-                    <p className="px-2 py-1 text-xs text-text-secondary">{frame.seconds === null ? "Still" : `${frame.seconds.toFixed(2)} s`}{frame.cutCandidate ? " · Possible cut" : ""}</p>
+                    <p className="px-2 py-1 text-xs text-text-secondary">{frame.source !== undefined ? `Source ${frame.source + 1} · ` : ""}{frame.seconds === null ? "Still" : `${frame.seconds.toFixed(2)} s`}{frame.cutCandidate ? " · Possible cut" : ""}</p>
                   </li>
                 ))}
               </ul>
