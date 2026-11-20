@@ -39,8 +39,14 @@ jobs:
             sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 update -qq
             sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 install -y -qq ffmpeg
           fi
-      - run: python3 tests/run.py tests/core_e2e.py tests/cinema.py tests/super_hermes.py
-      - run: python3 tests/run.py tests/director.py tests/director_recovery.py
+      - name: Verify server and desktop workspace
+        run: npm test
+      - name: Verify Studio navigation, Style Proof, and mobile layout
+        env:
+          UI_SIZE: '390 720'
+        run: |
+          export CHROME_BIN="$(command -v google-chrome)"
+          python3 tests/run.py tests/ui/workspace.mjs tests/ui/library.mjs tests/ui/studio-polish.mjs
 
   iphone:
     runs-on: macos-15

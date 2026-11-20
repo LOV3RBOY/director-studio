@@ -350,7 +350,7 @@ struct ProjectWorkspace: View {
     }
 
     @discardableResult
-    private func send(_ path: String, _ body: some Encodable) async -> Bool {
+    private func send(_ path: String, _ body: some Encodable & Sendable) async -> Bool {
         working = true
         defer { working = false }
         do {

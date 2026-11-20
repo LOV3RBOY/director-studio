@@ -18,8 +18,10 @@ final class DirectorStudioUITests: XCTestCase {
         sampleStyle.tap()
         let guide = app.navigationBars["Sample Style"]
         XCTAssertTrue(guide.waitForExistence(timeout: 8))
-        guide.buttons.firstMatch.tap()
-        app.buttons["demo-pack"].tap()
+        guide.buttons["BackButton"].tap()
+        let pack = app.buttons["demo-pack"]
+        XCTAssertTrue(pack.waitForExistence(timeout: 8), app.debugDescription)
+        pack.tap()
 
         let take = app.buttons["demo-take"]
         if !take.isHittable { app.swipeUp() }
@@ -51,7 +53,14 @@ final class DirectorStudioUITests: XCTestCase {
 
         let director = app.tabBars.buttons["Director"]
         XCTAssertTrue(director.waitForExistence(timeout: 20))
+        // iOS may offer to save the fixture password after sign-in.
+        let savePassword = app.sheets["Save Password?"].buttons["Not Now"]
+        if savePassword.waitForExistence(timeout: 3) {
+            savePassword.tap()
+            XCTAssertTrue(savePassword.waitForNonExistence(timeout: 8))
+        }
         director.tap()
+        XCTAssertTrue(app.navigationBars["Director"].waitForExistence(timeout: 10), app.debugDescription)
         let project = app.staticTexts["iPhone fixture project"]
         XCTAssertTrue(project.waitForExistence(timeout: 20))
         return app
@@ -59,7 +68,9 @@ final class DirectorStudioUITests: XCTestCase {
 
     func testSignedInStyleLibraryCanOpenAGuide() throws {
         let app = signedIn()
-        app.buttons["open-style-library"].tap()
+        let library = app.buttons["open-style-library"]
+        XCTAssertTrue(library.waitForExistence(timeout: 8), app.debugDescription)
+        library.tap()
         XCTAssertTrue(app.navigationBars["Style Library"].waitForExistence(timeout: 10), app.debugDescription)
         let style = app.buttons
             .matching(NSPredicate(format: "identifier BEGINSWITH %@", "style-row-")).firstMatch

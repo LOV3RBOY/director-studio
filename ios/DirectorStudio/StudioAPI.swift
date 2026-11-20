@@ -228,7 +228,7 @@ struct JobResponse: Decodable { let job: StudioJob }
 struct VersionResponse: Decodable { let version: StyleVersion }
 struct SnapshotResponse: Decodable { let pack: Snapshot }
 struct ImagesResponse: Decodable { let images: [ImageAttempt] }
-struct EmptyBody: Codable {}
+struct EmptyBody: Codable, Sendable {}
 struct LogoutResponse: Decodable {}
 
 private enum SessionsKeychain {
