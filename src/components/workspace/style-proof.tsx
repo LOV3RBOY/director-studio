@@ -7,6 +7,7 @@ import { api, errorMessage } from "@/lib/api";
 import type { PackBody } from "@/server/director/compiler";
 import type { Brief, StyleProfile } from "@/server/director/contracts";
 import { Button, cn } from "@/ui";
+import { TakeFidelity, type DeliveredTake } from "./take-fidelity";
 
 type Pack = { id: string; version: number; body: PackBody };
 type PinnedStyle = { id: string; styleId: string; title: string; version: number; profile: StyleProfile };
@@ -15,12 +16,14 @@ const seconds = (ms: number) => `${Number((ms / 1000).toFixed(3))}s`;
 const topic = (value: string) => value.replaceAll("-", " ");
 const panel = "rounded-2xl border border-border-default bg-surface-secondary p-4";
 
-export function StyleProof({ pack, style, cast, reviewedAt, onReviewed }: {
+export function StyleProof({ pack, style, cast, reviewedAt, onReviewed, projectId, takes = [] }: {
   pack: Pack;
   style: PinnedStyle;
   cast: Brief["cast"];
   reviewedAt: number | null;
   onReviewed: (at: number) => void;
+  projectId?: string;
+  takes?: DeliveredTake[];
 }) {
   const [clipIndex, setClipIndex] = useState(0);
   const [shotIndex, setShotIndex] = useState(0);
@@ -191,6 +194,7 @@ export function StyleProof({ pack, style, cast, reviewedAt, onReviewed }: {
           <span role="status" className="text-xs text-text-secondary">{copyStatus}</span>
         </div>
       </details>
+      {projectId && <TakeFidelity projectId={projectId} packId={pack.id} takes={takes} />}
       {!reviewedAt && <div className="flex flex-wrap items-center gap-2 border-t border-border-default pt-3">
         <Button variant="lime" size="md" disabled={saving} onClick={() => void record()}>Mark pack reviewed</Button>
         {problem && <p role="alert" className="text-sm text-danger">{problem}</p>}

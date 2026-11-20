@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ApiError, badRequest } from "../errors";
-import { exemplarSelection, guidance, measuredTopics, metricAt, plan, reusableStyleRules, topics, valid, verifyExemplars, verifyGuidance, type Brief, type Evidence, type ExemplarSelection, type Guidance, type Plan, type StyleProfile } from "./contracts";
+import { exemplarSelection, guidance, takeReview, measuredTopics, metricAt, plan, reusableStyleRules, topics, valid, verifyExemplars, verifyGuidance, type Brief, type Evidence, type ExemplarSelection, type Guidance, type Plan, type StyleProfile, type TakeReview } from "./contracts";
 
 export type DirectorMode = "mock" | "live";
 const unsafeLive = () => process.env.DIRECTOR_MODE === "live" && process.env.PARALLAX_DEMO_BILLING === "1";
@@ -55,7 +55,7 @@ async function assertScoped(config: ReturnType<typeof hermesConfig>) {
 export type RuntimeTurn = { value: unknown; model: string; usage: Record<string, number> };
 
 async function turn(
-  task: "analysis" | "plan" | "chat",
+  task: "analysis" | "plan" | "chat" | "review",
   input: string,
   images: Buffer[] = [],
 ): Promise<RuntimeTurn> {
@@ -194,6 +194,37 @@ export async function studyStyle(options: {
     ...verifyExemplars(valid(exemplarSelection, result.value), evidence),
     provenance: { analysisId: options.id, runtime: "hermes", model: result.model, usage: result.usage },
   };
+}
+
+/** Judges a delivered take against the style's signature rules, citing the supplied output frames. */
+export async function reviewTake(options: {
+  mode: DirectorMode; rules: { index: number; topic: string; detail: string }[]; frames: () => Promise<Buffer[]>;
+}): Promise<TakeReview & { model: string; usage: Record<string, number>; fixture: boolean }> {
+  if (!options.rules.length) return { rules: [], model: "none", usage: {}, fixture: options.mode === "mock" };
+  if (options.mode === "mock") {
+    return {
+      rules: options.rules.map(({ index }, position) => ({
+        index, pass: position % 3 !== 2, evidence: [0],
+        note: position % 3 !== 2 ? "Fixture review: treated as matched. No visual judgement was made." : "Fixture review: treated as missed. No visual judgement was made.",
+      })),
+      model: "none", usage: {}, fixture: true,
+    };
+  }
+  const frames = await options.frames();
+  const instruction = JSON.stringify({
+    task: "Judge whether this delivered take follows each signature rule of its style. Look only at the supplied frames, which are zero-based in order. Pass a rule only when the frames show it clearly. Fail it when they contradict it or do not show it. Keep each note to one specific sentence about what the frames show. Cite the frame ordinals you relied on.",
+    rules: options.rules,
+    response: { rules: [{ index: 0, pass: true, note: "one specific sentence", evidence: [0] }] },
+  });
+  const result = await turn("review", instruction, frames);
+  const review = valid(takeReview, result.value);
+  const wanted = new Set(options.rules.map(({ index }) => index));
+  const seen = new Set(review.rules.map(({ index }) => index));
+  if (review.rules.length !== wanted.size || [...wanted].some((index) => !seen.has(index))
+    || review.rules.some(({ evidence }) => evidence.some((ordinal) => ordinal >= frames.length))) {
+    throw new ApiError(503, "director_review_invalid", "The Director returned an incomplete review. Score the take again.");
+  }
+  return { ...review, model: result.model, usage: result.usage, fixture: false };
 }
 
 function fixturePlan(brief: Brief, profile: StyleProfile): Plan {

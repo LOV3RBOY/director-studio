@@ -136,6 +136,17 @@ try {
       assert.ok((await api(`/api/director/projects/${projectId}`)).reviewedAt);
       await b.reload();
       await b.until('document.body.innerText.includes("Pack v1 reviewed")');
+      // A delivered take is scored against the style, and its misses can go back to the Director.
+      const render = await api(`/api/director/packs/${project.pack.id}/render`, { clip: 0, requestKey: "workspace-fidelity-take", maxCredits: 0 });
+      for (let tries = 0; tries < 120 && (await api(`/api/director/jobs/${render.job.id}`)).job.state !== "succeeded"; tries++) await b.sleep(500);
+      for (let tries = 0; tries < 120 && (await api(`/api/director/renders/${render.job.id}/fidelity`)).fidelity?.state !== "succeeded"; tries++) await b.sleep(500);
+      await b.reload();
+      await b.until('!!document.querySelector("#take-fidelity-title")', 10000, "delivered takes");
+      await b.until('!!document.querySelector(\'[aria-label^="Fidelity score"]\')', 10000, "fidelity score");
+      assert.ok(await b.evaluate('document.body.innerText.includes("Fixture mode: the rule review is a placeholder")'));
+      await b.click("button", "Fix with Director");
+      await b.until('document.body.innerText.includes("Sent to the Director")', 8000, "fix request");
+      await b.shot("05-take-fidelity");
       await b.click('a[href^="/cinema?project="]');
       await b.until('location.pathname === "/cinema" && document.querySelector("h1")?.textContent.includes("Glass city")', 20000, "the correct storyboard");
       await b.until('!!document.querySelector(\'a[href^="/style-library?project="]\')', 5000, "Style Proof link in Cinema");

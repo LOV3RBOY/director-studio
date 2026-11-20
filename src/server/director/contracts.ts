@@ -68,6 +68,16 @@ export const exemplarSelection = z.object({
 });
 export type ExemplarSelection = z.infer<typeof exemplarSelection>;
 
+export const takeReview = z.object({
+  rules: z.array(z.object({
+    index: z.number().int().nonnegative(),
+    pass: z.boolean(),
+    note: text(450),
+    evidence: z.array(z.number().int().nonnegative()).max(6),
+  })).max(40),
+});
+export type TakeReview = z.infer<typeof takeReview>;
+
 export function reusableStyleRules(rules: Guidance["rules"]) {
   return rules.flatMap((rule, index) => rule.reuse !== "exclude" && rule.basis !== "unknown" ? [{ ...rule, index }] : []);
 }

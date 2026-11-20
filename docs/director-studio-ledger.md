@@ -41,9 +41,24 @@
 - [x] B2 — Inject kit references within model limits with cast identity first, preserve legacy compilation, and show kit references separately in Style Proof.
   Updated `contracts.ts`, `compiler.ts`, `store.ts`, `style-proof.tsx`, `StudioModels.swift`, and the runbook. `director_style_kit.py` checks reference order, both models’ limits and remaining capacity, and byte equality for v1, v2, and explicit opt-out renderer output.
 
+### Phase C — Fidelity score and post-grade
+
+- [x] C1 — Score each delivered take numerically and by rule review, store it, and show it in Style Proof with a Fix with Director action.
+  Added migration 180, `fidelity.ts`, the `review` runtime task and `takeReview` contract, worker scheduling and restart recovery, the render fidelity routes, and `take-fidelity.tsx`. `director_fidelity.py` checks automatic scoring, the score formula, tenant isolation, non-render refusal and repeat scoring. `tests/ui/workspace.mjs` checks the score, the fixture label and the fix request in the browser.
+- [x] C2 — Grade a take toward its style with a deterministic LUT and optional grain, keeping the original.
+  Added `gradeTake`, `buildLut`, `paletteStats`, `transferScale` and `grainStrength` in `fidelity.ts`, the grade route and the Original/Graded toggle. `director_fidelity.py` checks the palette reduction, byte-identical LUTs, the grain toggle, ownership and that the original take is unchanged.
+
+**Decision (C1):** fidelity scores run in their own `director_fidelity` queue instead of a new `director_jobs` kind. Adding the kind requires rebuilding `director_jobs`; with foreign keys on, dropping it inside the migration transaction would cascade-delete `director_render_reviews` rows, which Section 6 names as the stop condition. The separate queue keeps the same restart recovery and is not billable.
+
 ### Open questions
 
 None.
+
+### Phase C status
+
+- Built by Claude on `codex/director-upgrade-phase-c`, stacked on Phase B (PR #3), which must merge first.
+- Grading runs inside the request, one grade per take at a time, with a 180-second FFmpeg limit. Scoring runs in the worker.
+- `npm run check:registry`, `npm run typecheck`, `npm run build`, and all 38 files in `npm test` passed locally on Node 22 with Ubuntu FFmpeg 6.1.1 in mock mode. In `director_fidelity.py`, the default 0.6 grade cut the palette distance from 29.7 to 12.3 (59%), and identical inputs produced the same LUT SHA-256.
 
 ### Phase B status
 
