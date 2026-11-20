@@ -48,6 +48,7 @@
 
 - PR #2 merged at `223a8fb` after both hosted checks passed on `e9444c4`. Pulled `codex/director-studio` and created `codex/director-upgrade-phase-b` from that merge.
 - Read the full upgrade spec, then `AGENTS.md`, and added the Phase B checklist before implementation. Phase B is blocked on the role contract above. No implementation or test files changed, and Phase B verification commands have not run.
+- Cinema CI follow-up in `tests/ui/cinema.mjs` waits for a visible, enabled Shot options button before each click. Each menu wait has an 8-second deadline and retries the click once at 3 seconds if the menu is still closed. All five consecutive local runs of `python3 tests/run.py tests/ui/cinema.mjs` passed in mock mode.
 
 ### Phase A acceptance
 

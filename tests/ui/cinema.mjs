@@ -9,6 +9,32 @@ const b = await launch({ width: Number(W), height: Number(H), out });
 const takes = `ul[aria-label="Takes"] li`;
 const shotCards = `#cinema-storyboard li.group`;
 
+async function openShotMenu(card = shotCards) {
+  const selector = `${card} button[aria-label^="Shot options"]`;
+  const button = `[...document.querySelectorAll(${JSON.stringify(selector)})].find((item) => item.getClientRects().length > 0)`;
+  const ready = `(() => {
+    const item = ${button};
+    return !!item && !item.matches(':disabled, [aria-disabled="true"]') && getComputedStyle(item).visibility === "visible";
+  })()`;
+  const menu = `!!document.querySelector('[role="menuitemradio"]')`;
+  const click = async () => {
+    await b.until(ready, 8000, "visible and enabled Shot options");
+    await b.hover(selector);
+    await b.until(`${ready} && Number(getComputedStyle(${button}).opacity) > 0`, 8000, "visible Shot options after hover");
+    if (!await b.evaluate(menu)) await b.click(selector);
+  };
+
+  await click();
+  const deadline = Date.now() + 8000;
+  try {
+    await b.until(menu, 3000, "shot menu");
+  } catch (error) {
+    if (error.message !== "timed out waiting for: shot menu") throw error;
+    await click();
+    if (!await b.evaluate(menu)) await b.until(menu, Math.max(0, deadline - Date.now()), "shot menu");
+  }
+}
+
 const wide = () => b.evaluate(`document.documentElement.scrollWidth > window.innerWidth + 1`);
 async function noSideways() {
   if (await wide()) throw new Error("page is wider than the window");
@@ -123,19 +149,16 @@ try {
     ["storyboard: add, duplicate, reorder and delete shots", async () => {
       await b.click("#cinema-storyboard button", "Add shot");
       await b.until(`document.querySelectorAll('${shotCards}').length === 2`, 8000, "two shots");
-      await b.click(`${shotCards} button[aria-label^="Shot options"]`);
-      await b.until(`!!document.querySelector('[role="menuitemradio"]')`, 3000, "shot menu");
+      await openShotMenu();
       await b.click('[role="menuitemradio"]', "Duplicate");
       await b.until(`document.querySelectorAll('${shotCards}').length === 3`, 8000, "three shots");
       const before = await b.evaluate(`[...document.querySelectorAll('${shotCards}')].map((l) => l.dataset.shot).join("|")`);
       await b.sleep(400);
-      await b.click(`${shotCards} button[aria-label^="Shot options"]`);
-      await b.until(`!!document.querySelector('[role="menuitemradio"]')`, 3000, "shot menu");
+      await openShotMenu();
       await b.click('[role="menuitemradio"]', "Move later");
       await b.until(`[...document.querySelectorAll('${shotCards}')].map((l) => l.dataset.shot).join("|") !== ${JSON.stringify(before)}`, 8000, "order changed");
       await b.sleep(400);
-      await b.click(`${shotCards}:nth-child(3) button[aria-label^="Shot options"]`);
-      await b.until(`!!document.querySelector('[role="menuitemradio"]')`, 3000, "shot menu");
+      await openShotMenu(`${shotCards}:nth-child(3)`);
       await b.click('[role="menuitemradio"]', "Delete");
       await b.until(`document.querySelectorAll('${shotCards}').length === 2`, 8000, "two shots again");
       await b.click("#cinema-storyboard button", "Add scene");
