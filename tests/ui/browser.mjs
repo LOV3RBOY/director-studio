@@ -32,7 +32,8 @@ export async function launch({ width = 1440, height = 900, out = ".", mobile = w
   );
 
   let wsUrl = null;
-  for (let i = 0; i < 75 && !wsUrl; i++) {
+  // A cold Chrome on a busy CI runner can take more than 15 s to open its debugging port.
+  for (let i = 0; i < 200 && !wsUrl; i++) {
     try {
       const list = await (await fetch(`http://127.0.0.1:${port}/json`)).json();
       wsUrl = list.find((t) => t.type === "page")?.webSocketDebuggerUrl ?? null;
