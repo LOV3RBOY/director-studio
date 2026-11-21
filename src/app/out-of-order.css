@@ -247,17 +247,6 @@ a, button, [role="tab"], [role="button"], summary, label[for] {
 }
 .ooo-tool:active { scale: 0.99; }
 
-/* On touch screens every small control still answers a 44-point finger. */
-@media (pointer: coarse) {
-  /* Already-positioned controls keep their position; the rest become the anchor. */
-  .ooo-control:where(:not(.absolute, .fixed, .sticky)) { position: relative; }
-  .ooo-control::after {
-    position: absolute;
-    inset: min(0px, calc((100% - 44px) / 2));
-    content: "";
-  }
-}
-
 /* A busy button keeps its label, dims it and shows the spinner beside it. */
 [aria-busy="true"].ooo-control { cursor: progress; }
 
@@ -276,7 +265,3 @@ p { text-wrap: pretty; }
 
 /* Panels that scroll inside the page keep their scroll to themselves. */
 .scroll-quiet, .scroll-none { overscroll-behavior: contain; }
-
-@media (prefers-reduced-motion: no-preference) {
-  html { scroll-behavior: smooth; }
-}

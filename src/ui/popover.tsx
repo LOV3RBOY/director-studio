@@ -35,7 +35,7 @@ export function PopoverContent({
         sideOffset={sideOffset}
         align={align}
         collisionPadding={collisionPadding}
-        className={cn("z-50 animate-rise-in data-[state=closed]:animate-fade-out overflow-clip text-text-primary outline-none", looks[look], className)}
+        className={cn("z-50 animate-rise-in overflow-clip text-text-primary outline-none", looks[look], className)}
         {...rest}
       />
     </P.Portal>
