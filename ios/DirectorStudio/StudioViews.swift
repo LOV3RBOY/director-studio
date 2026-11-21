@@ -16,6 +16,8 @@ extension View {
         } message: {
             Text(message.wrappedValue ?? "")
         }
+        // A short error buzz the moment something fails, wherever the error is shown.
+        .sensoryFeedback(trigger: message.wrappedValue) { _, new in new == nil ? nil : .error }
     }
 }
 

@@ -6,3 +6,4 @@ export { Chip, IconButton, Tag, iconButtonClass } from "./chip";
 export { MenuItem, MenuLabel, Popover, PopoverAnchor, PopoverClose, PopoverContent, PopoverTrigger } from "./popover";
 export { Dialog, DialogClose, DialogContent, DialogTrigger } from "./dialog";
 export { Spinner, Switch } from "./switch";
+export { Toaster, toast } from "./toast";

@@ -18,6 +18,8 @@ struct PackEditor: View {
     @State private var sharing: TemporaryFile?
     @State private var attempts: [ImageAttempt] = []
     @State private var imageWatch = 0
+    /// Bumped after a save, render or image request goes through: one success tap.
+    @State private var confirmed = 0
     @State private var models = DirectorModelOption.seedance
     private var option: DirectorModelOption? { models.first { $0.id == settings.model } }
     private var endpoint: String { "/api/director/packs/\(snapshot.id)" }
@@ -127,6 +129,8 @@ struct PackEditor: View {
             }
         }
         .refreshable { refreshed(); await reloadImages() }
+        .sensoryFeedback(.success, trigger: confirmed)
+        .sensoryFeedback(.selection, trigger: selected)
         .studioError($error)
     }
 
@@ -241,6 +245,7 @@ struct PackEditor: View {
         defer { working = false }
         do {
             let _: SnapshotResponse = try await api.post("/api/director/projects/\(detail.project.id)/pack", Update(previousId: snapshot.id, plan: plan, settings: settings))
+            confirmed += 1
             refreshed()
         } catch { self.error = error.localizedDescription }
     }
@@ -274,6 +279,7 @@ struct PackEditor: View {
                 imageWatch += 1
             }
             UserDefaults.standard.removeObject(forKey: keyName)
+            confirmed += 1
         } catch { self.error = error.localizedDescription }
     }
 

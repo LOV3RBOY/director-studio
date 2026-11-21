@@ -10,7 +10,7 @@ import { routes } from "@/content/site";
 import { api, errorMessage, fetcher } from "@/lib/api";
 import { useQueryParam } from "@/lib/browser";
 import { ensureSession, useSession } from "@/lib/session";
-import { Artwork, Button, ButtonLink, cn, IconButton } from "@/ui";
+import { Artwork, Button, ButtonLink, cn, IconButton, toast } from "@/ui";
 import { AssetBrowser, type Scope } from "./asset-browser";
 import { ErrorLine, PANEL } from "./common";
 import { formatBytes, refreshLibrary, type Folder, type Summary } from "./data";
@@ -128,6 +128,8 @@ export function Library() {
         }
       }
       if (problems.length) setUploadProblem(problems.join(" "));
+      const saved = files.length - problems.length;
+      if (saved > 0) toast.success(saved === 1 ? "Uploaded to your Library" : `${saved} files uploaded to your Library`);
     } catch (e) {
       setUploadProblem(errorMessage(e));
     } finally {
