@@ -50,24 +50,47 @@ struct ProjectsView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
                     }
+                    .buttonStyle(StudioPressStyle())
                     .accessibilityIdentifier("open-style-library")
                     .listRowBackground(StudioPlate())
                     .listRowSeparator(.hidden)
-                    if !loaded { ProgressView("Loading projects") }
-                    if loaded && projects.isEmpty {
-                        ContentUnavailableView("No projects yet", systemImage: "film.stack", description: Text("Save a style in the Style Library, then start a project with a fresh brief."))
+                    if !loaded {
+                        ForEach(0..<4, id: \.self) { _ in ProjectRow(title: "Loading project title") }
+                            .redacted(reason: .placeholder)
+                            .shimmering()
+                            .listRowBackground(StudioPlate())
+                            .listRowSeparator(.hidden)
                     }
-                    ForEach(projects) { project in
+                    if loaded && projects.isEmpty {
+                        ContentUnavailableView {
+                            Label("No projects yet", systemImage: "film.stack")
+                        } description: {
+                            Text("Save a style in the Style Library, then start a project with a fresh brief.")
+                        } actions: {
+                            Button { creating = true } label: { Label("New project", systemImage: "plus") }
+                                .buttonStyle(.borderedProminent)
+                        }
+                        .listRowBackground(Color.clear)
+                    }
+                    ForEach(Array(projects.enumerated()), id: \.element.id) { index, project in
                         NavigationLink {
                             ProjectWorkspace(api: api, projectId: project.id)
                         } label: {
-                            Label(project.title, systemImage: "film")
-                                .font(.body.weight(.medium))
-                                .padding(.vertical, 5)
+                            ProjectRow(title: project.title)
                         }
+                        .listRowBackground(StudioPlate())
+                        .listRowSeparator(.hidden)
+                        .contextMenu {
+                            Button { createdProject = project.id } label: { Label("Open", systemImage: "arrow.up.right") }
+                            Button { UIPasteboard.general.string = project.title } label: { Label("Copy name", systemImage: "doc.on.doc") }
+                        }
+                        .modifier(StaggeredAppear(index: index))
                     }
                 }
                 .listStyle(.insetGrouped)
+                .listRowSpacing(10)
+                .animation(.spring(response: 0.38, dampingFraction: 0.86), value: projects.map(\.id))
+                .animation(.easeOut(duration: 0.2), value: loaded)
                 .refreshable { await reload() }
             }
             .scrollContentBackground(.hidden)
@@ -102,6 +125,7 @@ struct ProjectsView: View {
             }
             .sheet(isPresented: $showPurchases) { StudioPurchases(api: api) }
             .sensoryFeedback(.success, trigger: confirmed)
+            .sensoryFeedback(.impact(weight: .light), trigger: creating) { _, open in open }
             .alert("Agent connection copied", isPresented: Binding(get: { agentMessage != nil }, set: { if !$0 { agentMessage = nil } })) {
                 Button("Done", role: .cancel) { agentMessage = nil }
             } message: {
@@ -310,22 +334,29 @@ struct ProjectWorkspace: View {
                 Text("Project Pack").tag(1)
             }
             .pickerStyle(.segmented)
+            .sensoryFeedback(.selection, trigger: tab)
             .padding(.horizontal)
             .padding(.vertical, 8)
             .background(alignment: .bottom) { StudioPlate(radius: 0) }
             if let detail {
-                if tab == 0 {
-                    director(detail)
-                } else if let pack = detail.pack {
+                Group {
+                    if tab == 0 {
+                        director(detail)
+                    } else if let pack = detail.pack {
                     PackEditor(api: api, detail: detail, snapshot: pack) { watch += 1 }
                         .id(pack.id)
-                } else {
-                    ContentUnavailableView("Storyboard pending", systemImage: "film.stack", description: Text("The Project Pack becomes available after the Director saves a storyboard."))
+                    } else {
+                        ContentUnavailableView("Storyboard pending", systemImage: "film.stack", description: Text("The Project Pack becomes available after the Director saves a storyboard."))
+                    }
                 }
+                .transition(.opacity)
+                .id(tab)
             } else {
-                ProgressView("Loading project").frame(maxHeight: .infinity)
+                WorkspaceSkeleton()
             }
         }
+        .animation(.easeOut(duration: 0.2), value: tab)
+        .animation(.easeOut(duration: 0.25), value: detail == nil)
         .background { StudioGround() }
         .navigationTitle(detail?.project.title ?? "Project")
         .navigationBarTitleDisplayMode(.inline)
@@ -401,4 +432,90 @@ struct ProjectWorkspace: View {
             return false
         }
     }
+}
+
+private struct ProjectRow: View {
+    let title: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "film")
+                .font(.system(size: 16, weight: .semibold))
+                .frame(width: 40, height: 40)
+                .background { StudioPlate(radius: 11) }
+                .accessibilityHidden(true)
+            Text(title)
+                .font(.body.weight(.semibold))
+                .lineLimit(2)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+private struct WorkspaceSkeleton: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            ForEach(0..<3, id: \.self) { _ in
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Section heading").font(.footnote.weight(.semibold))
+                    Text("A line of project detail that is loading now")
+                    Text("Another shorter loading line")
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background { StudioPlate() }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding()
+        .redacted(reason: .placeholder)
+        .shimmering()
+        .accessibilityLabel("Loading project")
+    }
+}
+
+/// Rows settle in one after another the first time a list appears.
+struct StaggeredAppear: ViewModifier {
+    let index: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var shown = false
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(shown || reduceMotion ? 1 : 0)
+            .offset(y: shown || reduceMotion ? 0 : 10)
+            .onAppear {
+                guard !shown else { return }
+                withAnimation(.spring(response: 0.42, dampingFraction: 0.85).delay(Double(min(index, 8)) * 0.04)) { shown = true }
+            }
+    }
+}
+
+/// A soft light sweep across placeholder content while it loads.
+struct Shimmer: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var phase: CGFloat = -1
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                if !reduceMotion {
+                    GeometryReader { box in
+                        LinearGradient(colors: [.clear, .white.opacity(0.55), .clear], startPoint: .leading, endPoint: .trailing)
+                            .frame(width: box.size.width * 0.6)
+                            .offset(x: phase * box.size.width * 1.6)
+                    }
+                    .blendMode(.plusLighter)
+                    .allowsHitTesting(false)
+                }
+            }
+            .mask(content)
+            .onAppear {
+                withAnimation(.linear(duration: 1.25).repeatForever(autoreverses: false)) { phase = 1 }
+            }
+    }
+}
+
+extension View {
+    func shimmering() -> some View { modifier(Shimmer()) }
 }
