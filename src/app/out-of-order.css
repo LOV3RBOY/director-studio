@@ -241,11 +241,13 @@ a, button, [role="tab"], [role="button"], summary, label[for] {
     box-shadow var(--studio-motion), color var(--studio-motion), translate var(--studio-motion),
     scale 260ms var(--studio-spring);
 }
-.ooo-control:active:not(:disabled), .ooo-pill:active:not(:disabled), .ooo-primary:active:not(:disabled) {
-  scale: 0.97;
-  transition-duration: 70ms;
+@media (prefers-reduced-motion: no-preference) {
+  .ooo-control:active:not(:disabled), .ooo-pill:active:not(:disabled), .ooo-primary:active:not(:disabled) {
+    scale: 0.97;
+    transition-duration: 70ms;
+  }
+  .ooo-tool:active { scale: 0.99; }
 }
-.ooo-tool:active { scale: 0.99; }
 
 /* A busy button keeps its label, dims it and shows the spinner beside it. */
 [aria-busy="true"].ooo-control { cursor: progress; }
