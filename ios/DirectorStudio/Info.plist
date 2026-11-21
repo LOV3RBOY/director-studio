@@ -9,6 +9,12 @@
         <key>NSAllowsLocalNetworking</key>
         <true/>
     </dict>
+    <key>NSCameraUsageDescription</key>
+    <string>Take photos and videos to use as references in your studio.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Record audio and video references for your productions.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Save your generated images and videos to Photos.</string>
     <key>NSFaceIDUsageDescription</key>
     <string>Unlock your saved Out of Order session.</string>
     <key>NSLocalNetworkUsageDescription</key>
