@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import localFont from "next/font/local";
 import { WorkspaceBar } from "@/components/workspace/workspace-bar";
 import { brand } from "@/config/brand";
+import { Toaster } from "@/ui";
 import { bootScript } from "@/lib/closable";
 import "./globals.css";
 import "./out-of-order.css";
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <Suspense><WorkspaceBar /></Suspense>
         <div className="studio-pages">{children}</div>
+        <Toaster />
       </body>
     </html>
   );

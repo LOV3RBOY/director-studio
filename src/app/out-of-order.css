@@ -38,6 +38,7 @@
   --studio-depth: inset 0 1px 0 #fff, 0 1px 2px #2621360b, 0 12px 30px -22px #26213670;
   --studio-float: inset 0 1px 0 #fff, 0 3px 7px #26213612, 0 18px 48px -18px #26213654;
   --studio-motion: 180ms cubic-bezier(.22, 1, .36, 1);
+  --studio-spring: cubic-bezier(.34, 1.4, .64, 1);
 }
 
 .ooo-ground {
@@ -163,7 +164,7 @@
     transition-duration: .01ms !important;
   }
   .ooo-tool:hover, .ooo-tool:hover .ooo-tool-arrow,
-  .ooo-pill:active, .ooo-tool:active, .ooo-control:active { translate: none; }
+  .ooo-pill:active, .ooo-tool:active, .ooo-control:active { translate: none; scale: none; }
 }
 
 /* The workspace rail reserves space above fixed-height editors. */
@@ -224,4 +225,58 @@ html:has(.studio-workspace-bar) {
   position: sticky;
   top: var(--studio-workspace-height, 0px);
   z-index: 20;
+}
+
+/* ---------------------------------------------------------------------------
+ * Touch-up: tactile feedback and touch ergonomics, applied to every control.
+ * ------------------------------------------------------------------------- */
+a, button, [role="tab"], [role="button"], summary, label[for] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Presses sink a little and settle with a short spring, like a real button. */
+.ooo-control, .ooo-pill, .ooo-primary {
+  transition: background-color var(--studio-motion), border-color var(--studio-motion),
+    box-shadow var(--studio-motion), color var(--studio-motion), translate var(--studio-motion),
+    scale 260ms var(--studio-spring);
+}
+.ooo-control:active:not(:disabled), .ooo-pill:active:not(:disabled), .ooo-primary:active:not(:disabled) {
+  scale: 0.97;
+  transition-duration: 70ms;
+}
+.ooo-tool:active { scale: 0.99; }
+
+/* On touch screens every small control still answers a 44-point finger. */
+@media (pointer: coarse) {
+  /* Already-positioned controls keep their position; the rest become the anchor. */
+  .ooo-control:where(:not(.absolute, .fixed, .sticky)) { position: relative; }
+  .ooo-control::after {
+    position: absolute;
+    inset: min(0px, calc((100% - 44px) / 2));
+    content: "";
+  }
+}
+
+/* A busy button keeps its label, dims it and shows the spinner beside it. */
+[aria-busy="true"].ooo-control { cursor: progress; }
+
+.ooo-toast {
+  border: 1px solid var(--studio-seam);
+  background: color-mix(in oklab, #fff 92%, transparent);
+  box-shadow: var(--studio-float);
+  backdrop-filter: blur(14px) saturate(1.4);
+  animation: var(--animate-toast-in);
+}
+
+/* Type details: balanced headings, steady numbers for prices, counts and timers. */
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+.tabular, [data-price], time { font-variant-numeric: tabular-nums; }
+
+/* Panels that scroll inside the page keep their scroll to themselves. */
+.scroll-quiet, .scroll-none { overscroll-behavior: contain; }
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
 }

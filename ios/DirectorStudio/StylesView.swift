@@ -134,6 +134,7 @@ private struct StyleEditor: View {
     @State private var showingRules = false
     @State private var watch = 0
     @State private var saving = false
+    @State private var saved = 0
     @State private var error: String?
     private var latest: StyleVersion? { detail?.versions.first }
     private var endpoint: String { "/api/director/styles/\(styleId)" }
@@ -190,6 +191,7 @@ private struct StyleEditor: View {
         }
         .refreshable { await reload() }
         .studioError($error)
+        .sensoryFeedback(.success, trigger: saved)
     }
 
     private func evidence(_ version: StyleVersion) -> some View {
@@ -250,6 +252,7 @@ private struct StyleEditor: View {
         defer { saving = false }
         do {
             let _: VersionResponse = try await api.post("\(endpoint)/save", Edits(previousId: previous.id, guide: guide, rules: rules))
+            saved += 1
             await reload()
         } catch { self.error = error.localizedDescription }
     }

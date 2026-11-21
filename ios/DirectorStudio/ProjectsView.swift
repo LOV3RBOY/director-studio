@@ -17,6 +17,7 @@ struct ProjectsView: View {
     @State private var showPurchases = false
     @State private var agentMessage: String?
     @State private var connecting = false
+    @State private var confirmed = 0
     @State private var error: String?
 
     var body: some View {
@@ -88,6 +89,7 @@ struct ProjectsView: View {
             }) {
                 NewProjectForm(api: api) { id in
                     pendingProject = id
+                    confirmed += 1
                     creating = false
                 }
             }
@@ -99,6 +101,7 @@ struct ProjectsView: View {
                 Text(api.base.host ?? "")
             }
             .sheet(isPresented: $showPurchases) { StudioPurchases(api: api) }
+            .sensoryFeedback(.success, trigger: confirmed)
             .alert("Agent connection copied", isPresented: Binding(get: { agentMessage != nil }, set: { if !$0 { agentMessage = nil } })) {
                 Button("Done", role: .cancel) { agentMessage = nil }
             } message: {
@@ -125,6 +128,7 @@ struct ProjectsView: View {
             ].joined(separator: "\n")
             UIPasteboard.general.string = message
             agentMessage = message
+            confirmed += 1
         } catch { self.error = error.localizedDescription }
     }
 

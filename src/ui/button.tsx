@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ComponentProps } from "react";
 import { cn } from "./cn";
+import { Spinner } from "./switch";
 
 const base =
   "ooo-control inline-flex shrink-0 items-center justify-center whitespace-nowrap select-none transition-colors duration-150 disabled:pointer-events-none disabled:opacity-40";
@@ -45,8 +46,14 @@ interface Look {
   size?: ButtonSize;
 }
 
-export function Button({ variant, size, className, type = "button", ...rest }: Look & ComponentProps<"button">) {
-  return <button type={type} className={buttonClass(variant, size, className)} {...rest} />;
+/** `loading` shows a spinner in place, keeps the width, and blocks a second press. */
+export function Button({ variant, size, className, type = "button", loading, disabled, children, ...rest }: Look & { loading?: boolean } & ComponentProps<"button">) {
+  return (
+    <button type={type} className={buttonClass(variant, size, className)} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
+      {loading ? <Spinner className="size-4" label="Working" /> : null}
+      {children}
+    </button>
+  );
 }
 
 /** The same looks on a link. */
