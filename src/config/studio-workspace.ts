@@ -1,6 +1,7 @@
 export const studioDestinations = [
   { id: "studio", label: "Studio", href: "/studio" },
   { id: "styles", label: "Style Library", href: "/style-library" },
+  { id: "five-star", label: "Five Star", href: "/five-star" },
   { id: "agents", label: "Agents", href: "/agents" },
   { id: "cinema", label: "Cinema", href: "/cinema" },
   { id: "library", label: "Library", href: "/library" },
