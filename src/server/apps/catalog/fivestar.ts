@@ -17,24 +17,26 @@ export const FIVE_STAR_LOOKS: ChoiceOption[] = [
   {
     value: "key-art",
     label: "Key Art",
-    // Built from how the official loading-screen and cover art is made: a life-like digital painting,
-    // posterized into hard tonal bands, a bold black cut-out contour, a simpler painted background, warm cast.
+    // See docs/five-star-style-bible.md section 2.
     prompt:
-      "Official Grand Theft Auto loading-screen illustration style, as in the Rockstar Games promotional artwork for GTA V and GTA VI. " +
-      "The character is a life-like digital painting with realistic proportions and anatomy, not a cartoon and not a photo: smooth airbrushed skin, " +
-      "shading posterized into a few hard-edged tonal bands per colour, crisp sharpened detail in the face, hair, fabric folds and jewellery. " +
-      "A bold, even black contour line runs around the whole figure's silhouette like a cut-out sticker, with thinner dark lines only on major folds and facial features. " +
-      "The figure reads as cut out and layered over the background, lit warmly from one side with a clean shadow side. " +
-      "The background is painted more simply than the figure: flat colour shapes, smooth gradients, slight dry-brush grain. " +
-      "Overall warm orange cast, rich but natural saturation, no neon glow, no lens effects, no bokeh. Confident, cool, slightly cocky attitude.",
+      "Official Grand Theft Auto VI promotional artwork style, as in Rockstar Games' Jason and Lucia key art and loading-screen illustrations. " +
+      "The character is a grounded, life-like digital painting with realistic proportions and anatomy, not a cartoon and not a photo: smooth painted skin, " +
+      "shading in a few hard-edged tonal bands per colour, crisp sharpened detail in the face, hair, fabric folds and jewellery. " +
+      "A clean dark contour runs around the figure's silhouette so it reads as cut out and layered over the background, with thinner dark lines only on major folds and facial features. " +
+      "Warm low-sun key light from one side with a clean shadow side. The background is a separately painted, simpler Vice City scene: flat colour shapes, smooth sunset gradients, slight dry-brush grain. " +
+      "Florida colour script of turquoise, pink, orange and gold under a warm overall cast; rich but not neon saturation; no lens effects, no bokeh. Confident, cool, slightly cocky attitude.",
   },
   {
     value: "in-engine",
     label: "In-Engine",
+    // See docs/five-star-style-bible.md section 1.
     prompt:
-      "An in-game frame from the Grand Theft Auto VI trailers: Rockstar's real-time engine graphics, photoreal but unmistakably a video game render, " +
-      "set in a humid Miami-like coastal city with palm trees, pastel art-deco buildings, sodium-vapor streetlights and pink-orange neon, wet asphalt reflections, " +
-      "subtle real-time shader sheen on skin and fabric, filmic grade with teal shadows and warm highlights, shallow depth of field.",
+      "An in-game frame from Grand Theft Auto VI, captured in photo mode on PS5 Pro: Rockstar's RAGE real-time graphics, near-photoreal but clearly a real-time render, not a photograph. " +
+      "Ray-traced global illumination: soft bounced fill light that picks up the colour of nearby walls and pavement, expressive low-sun or sunset backlight with a warm rim on hair and shoulders, coloured neon spill light at night, strong readable silhouettes. " +
+      "Humid ocean haze softening the distance. Florida colour script of turquoise, pink, orange and gold; glossy glamour beside worn, lived-in detail. " +
+      "Character detail at the level of the game's protagonists: skin pores, a light sheen of sweat, make-up where worn, individual hair strands catching the light, fabric that creases and bunches at elbows and shoulders. " +
+      "Crisp ray-traced reflections in nearby wet asphalt, car paint and shop glass. Vice City setting: palm trees, pastel art-deco, neon, busy lived-in streets. " +
+      "Slight real-time temporal softness; no film grain, no bokeh balls, no lens-flare streaks.",
   },
 ];
 
