@@ -1,7 +1,7 @@
 /** Words for the Five Star page. Scene and look ids match src/server/apps/catalog/fivestar.ts. */
 export const fiveStarCopy = {
   title: "Five Star",
-  pitch: "Upload a selfie, pick a scene, and come out as the lead of your own crime saga. As a still or a trailer shot.",
+  pitch: "Upload yourself, describe any scene, and get it back in the style of the game, as a photo or a trailer shot.",
   cast: "Cast",
   you: "You",
   friend: "Friend",
@@ -11,11 +11,11 @@ export const fiveStarCopy = {
   photo: "Photo",
   video: "Video",
   look: "Look",
-  scene: "Scene",
+  scene: "Your scene",
+  scenePlaceholder: "Describe any scene. Where are you, what are you doing, what's happening around you?",
+  starters: "Or start from",
   today: "Today",
-  twist: "Your twist",
-  twistPlaceholder: "Optional · black suit, gold phone",
-  run: { photo: "Make my photo", video: "Make my video", signIn: "Sign in to start", needYou: "Add your photo first" },
+  run: { photo: "Make my photo", video: "Make my video", signIn: "Sign in to start", needYou: "Add your photo first", needScene: "Describe your scene" },
   result: "Your scene",
   emptyResult: "Your scene appears here, vertical and ready to post.",
   renderingPhoto: "Painting your scene",
@@ -31,14 +31,15 @@ export const fiveStarCopy = {
   wanted: (n: number) => (n >= 5 ? "Most wanted" : `Wanted level ${n}`),
 } as const;
 
-export const fiveStarScenes: Record<string, string> = {
-  mugshot: "Booked, unbothered",
-  chase: "Five stars, no brakes",
-  beach: "Golden hour on the strip",
-  heist: "In and out of the vault",
-  "night-drive": "Top down, city on",
-  penthouse: "Made it, obviously",
-};
+/** One-tap starters. Tapping one fills the scene box; the member can edit it from there. */
+export const fiveStarStarters: { id: string; label: string; text: string }[] = [
+  { id: "chase", label: "Five-star chase", text: "Leaning out of the window of a speeding muscle car in a five-star police chase at night, red and blue lights flooding the neon boulevard, a helicopter searchlight cutting through the haze" },
+  { id: "beach", label: "Beach day", text: "Striding along a crowded oceanfront promenade at golden hour, art-deco hotels and palm trees behind, sunglasses on, effortlessly the main character" },
+  { id: "heist", label: "The heist", text: "Walking out of a marble bank vault with a duffel bag of cash over one shoulder, alarm lights spinning, cash fluttering down" },
+  { id: "mugshot", label: "Mugshot", text: "A police booking mugshot against a height-chart wall under harsh flash, holding a booking placard, smirking, attitude intact" },
+  { id: "night-drive", label: "Night drive", text: "At the wheel of a classic convertible cruising a palm-lined causeway at night, the city skyline glowing behind, wind in their hair" },
+  { id: "penthouse", label: "Penthouse", text: "Leaning on the glass railing of a luxury penthouse balcony at sunset, drink in hand, stacks of cash on the table behind, sky blazing orange and pink" },
+];
 
 export const fiveStarLooks: Record<string, string> = {
   "in-engine": "In-Game",

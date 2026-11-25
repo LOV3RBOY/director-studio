@@ -16,7 +16,7 @@ const videoCount = `document.querySelectorAll('section[aria-label="Trailer"] vid
 
 try {
   await b.goto(`${base}/five-star`);
-  await b.until(`document.querySelectorAll('[data-scene]').length === 6`, 30000, "scenes");
+  await b.until(`document.querySelectorAll('[data-starter]').length === 6`, 30000, "starters");
   await b.sleep(500);
   await b.shot("00-signed-out", { full: true });
   await b.evaluate(`fetch("/api/auth/guest", { method: "POST" }).then((r) => r.status)`);
@@ -25,12 +25,13 @@ try {
   const friend = await b.evaluate(face(200));
   await b.evaluate(`localStorage.setItem("fivestar.cast.v2", JSON.stringify({ you: [${JSON.stringify(you)}], crew: [${JSON.stringify(friend)}] }))`);
   await b.goto(`${base}/five-star`);
-  await b.until(`document.querySelectorAll('[data-scene]').length === 6 && !!document.querySelector('[data-upload="you"] img')`, 30000, "cast loaded");
+  await b.until(`document.querySelectorAll('[data-starter]').length === 6 && !!document.querySelector('img[alt="You"]') && !!document.querySelector('img[alt="Friend"]')`, 30000, "cast loaded");
   await b.sleep(600);
   await b.shot("01-start", { full: true });
 
   // Photo, then Make it move.
-  await b.click('[data-scene="chase"]');
+  if (!(await b.evaluate(`document.querySelector('[data-run="make"]').disabled`))) throw new Error("Make should wait for a scene");
+  await b.click('[data-starter="chase"]');
   await b.until(`!document.querySelector('[data-run="make"]').disabled`, 10000, "make enabled");
   await b.click('[data-run="make"]');
   await b.until(`document.querySelector('[data-result]')?.dataset.result === "photo" && !!document.querySelector('[data-run="move"]')`, 60000, "photo");
@@ -43,7 +44,7 @@ try {
   await b.click('[data-option="video"]');
   for (const sc of ["beach", "penthouse"]) {
     const before = await b.evaluate(videoCount);
-    await b.click(`[data-scene="${sc}"]`);
+    await b.click(`[data-starter="${sc}"]`);
     await b.until(`!document.querySelector('[data-run="make"]').disabled`, 20000, "make enabled");
     await b.click('[data-run="make"]');
     await b.until(`${videoCount} > ${before} && document.querySelector('[data-result]')?.dataset.result === "video"`, 150000, `video for ${sc}`);

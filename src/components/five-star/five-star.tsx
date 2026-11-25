@@ -16,11 +16,12 @@ import useSWR from "swr";
 import { LoginDialog } from "@/components/entry/login-dialog";
 import type { AppDetail, AppRun, Price } from "@/components/apps/types";
 import { formatCredits } from "@/config/economy";
-import { fiveStarCopy as copy, fiveStarLooks, fiveStarScenes } from "@/content/five-star";
+import { fiveStarCopy as copy, fiveStarLooks, fiveStarStarters } from "@/content/five-star";
 import { api, errorMessage, fetcher, type Asset, type Job } from "@/lib/api";
+import { useNow } from "@/lib/browser";
 import { refreshSession, setBalance, useSession } from "@/lib/session";
 import { isActive } from "@/lib/studio";
-import { Spinner, Tag, cn } from "@/ui";
+import { Spinner, cn } from "@/ui";
 
 const STILL = "five-star";
 const MOTION = "five-star-motion";
@@ -29,13 +30,12 @@ const PENDING_KEY = "fivestar.pending-video.v1";
 const MAX_YOU = 3;
 const MAX_CREW = 3;
 
-const SCENE_ICON: Record<string, LucideIcon> = {
+const STARTER_ICON: Record<string, LucideIcon> = {
   mugshot: IdCard, chase: Siren, beach: TreePalm, heist: Vault, "night-drive": CarFront, penthouse: Building2,
 };
 
 const field = "w-full rounded-xl border border-border-default bg-surface-field px-3 py-2.5 text-base leading-6 text-text-primary placeholder:text-text-tertiary focus:border-border-strong focus:outline-none";
 const label = "text-[11px] leading-4 font-semibold tracking-[0.14em] text-text-secondary uppercase";
-const pressed = "border-[#22212b] bg-[linear-gradient(160deg,#383640,#211f28)] text-white shadow-[inset_0_1px_0_#ffffff2d]";
 
 type Mode = "photo" | "video";
 type Cast = { you: Asset[]; crew: Asset[] };
@@ -76,15 +76,14 @@ function localStore<T>(key: string, empty: T, valid: (v: unknown) => v is T) {
 const isAssets = (v: unknown): v is Asset[] => Array.isArray(v) && v.every((a) => a && typeof a.id === "string" && typeof a.url === "string");
 const EMPTY_CAST: Cast = { you: [], crew: [] };
 const castStore = localStore<Cast>(CAST_KEY, EMPTY_CAST, (v): v is Cast => !!v && typeof v === "object" && isAssets((v as Cast).you) && isAssets((v as Cast).crew));
-/** Still runs that should become video once they finish: run id -> scene. */
+/** Still runs that should become video once they finish: run id -> the scene text. */
 const EMPTY_PENDING: Record<string, string> = {};
 const pendingStore = localStore<Record<string, string>>(PENDING_KEY, EMPTY_PENDING, (v): v is Record<string, string> => !!v && typeof v === "object" && !Array.isArray(v));
 
-/** Today's scene: the same for everyone on a given day. */
-function sceneOfTheDay(ids: string[]): string | null {
-  if (ids.length === 0) return null;
-  const d = new Date();
-  return ids[Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) % ids.length];
+/** Today's starter: the same for everyone on a given day. */
+function sceneOfTheDay(ids: string[], nowSeconds: number | null): string | null {
+  if (ids.length === 0 || nowSeconds === null) return null;
+  return ids[Math.floor(nowSeconds / 86400) % ids.length];
 }
 
 const done = (j: Job | undefined): j is Job => !!j && j.status === "succeeded" && j.assets.length > 0;
@@ -97,14 +96,14 @@ function Wanted({ level }: { level: number }) {
           <Star key={i} size={15} strokeWidth={1.75} aria-hidden className={cn("transition-colors duration-300", i < level ? "fill-current text-text-primary" : "text-text-tertiary opacity-40")} />
         ))}
       </div>
-      <p className="font-mono text-[10px] leading-3 tracking-[0.12em] whitespace-nowrap text-text-secondary uppercase">{copy.wanted(level)}</p>
+      {level >= 5 ? <p className="font-mono text-[10px] leading-3 tracking-[0.12em] whitespace-nowrap text-text-secondary uppercase">{copy.wanted(level)}</p> : null}
     </div>
   );
 }
 
 function Segment<T extends string>({ name, value, options, onChange }: { name: string; value: T; options: { value: T; label: string; icon?: LucideIcon }[]; onChange: (v: T) => void }) {
   return (
-    <div role="radiogroup" aria-label={name} className="grid grid-cols-2 gap-2">
+    <div role="radiogroup" aria-label={name} className="grid grid-cols-2 gap-1 rounded-full border border-border-default bg-surface-tertiary p-1">
       {options.map((o) => {
         const on = o.value === value;
         const Icon = o.icon;
@@ -116,9 +115,12 @@ function Segment<T extends string>({ name, value, options, onChange }: { name: s
             aria-checked={on}
             data-option={o.value}
             onClick={() => onChange(o.value)}
-            className={cn("ooo-control flex min-h-11 items-center justify-center gap-2 rounded-full border text-sm leading-5 font-semibold", on ? pressed : "border-border-default bg-surface-secondary text-text-secondary hover:text-text-primary")}
+            className={cn(
+              "ooo-control flex min-h-10 items-center justify-center gap-1.5 rounded-full text-sm leading-5 font-semibold",
+              on ? "bg-surface-primary text-text-primary shadow-[0_1px_3px_#1d18301f,inset_0_1px_0_#fff]" : "text-text-secondary hover:text-text-primary",
+            )}
           >
-            {Icon ? <Icon size={16} strokeWidth={1.75} aria-hidden /> : null}
+            {Icon ? <Icon size={15} strokeWidth={1.75} aria-hidden /> : null}
             {o.label}
           </button>
         );
@@ -127,17 +129,28 @@ function Segment<T extends string>({ name, value, options, onChange }: { name: s
   );
 }
 
-function Face({ asset, size, onRemove, label: name }: { asset: Asset; size: string; onRemove?: () => void; label: string }) {
+/** A photo in the cast: a rounded tile, like a thumbnail in the Library. */
+function Tile({ asset, tag, onRemove }: { asset: Asset; tag?: string; onRemove?: () => void }) {
   return (
-    <span className={cn("relative block shrink-0", size)}>
+    <span className="relative block h-20 w-16 shrink-0 overflow-clip rounded-xl border border-border-default bg-surface-tertiary">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={asset.posterUrl ?? asset.url} alt={name} className="size-full rounded-full border border-border-default object-cover shadow-[0_2px_6px_#1d18301f]" />
+      <img src={asset.posterUrl ?? asset.url} alt={tag ?? "You"} className="size-full object-cover" />
+      {tag ? <span className="absolute inset-x-1 bottom-1 rounded-md bg-black/55 text-center text-[10px] leading-4 font-semibold text-white backdrop-blur-sm">{tag}</span> : null}
       {onRemove ? (
-        <button type="button" aria-label={`Remove ${name}`} onClick={onRemove} className="absolute -top-1 -right-1 flex size-6 items-center justify-center rounded-full border border-border-default bg-surface-primary text-text-secondary shadow-sm hover:text-text-primary">
-          <X size={12} strokeWidth={2} aria-hidden />
+        <button type="button" aria-label={`Remove ${tag ?? "photo"}`} onClick={onRemove} className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm">
+          <X size={11} strokeWidth={2.25} aria-hidden />
         </button>
       ) : null}
     </span>
+  );
+}
+
+function AddTile({ text, onClick, busy, kind }: { text: string; onClick: () => void; busy: boolean; kind: string }) {
+  return (
+    <button type="button" data-upload={kind} onClick={onClick} disabled={busy} className="ooo-control flex h-20 w-16 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border-strong bg-surface-secondary text-text-secondary hover:text-text-primary">
+      {busy ? <Spinner label="Uploading" /> : <Plus size={16} strokeWidth={1.75} aria-hidden />}
+      <span className="text-[11px] leading-4 font-semibold">{text}</span>
+    </button>
   );
 }
 
@@ -154,17 +167,17 @@ export function FiveStar() {
     },
     [app],
   );
-  const scenes = useMemo(() => choices("scene"), [choices]);
   const looks = useMemo(() => choices("look"), [choices]);
-  const today = useMemo(() => sceneOfTheDay(scenes.map((s) => s.value)), [scenes]);
+  const now = useNow();
+  const day = now === null ? null : Math.floor(now / 86400) * 86400;
+  const today = useMemo(() => sceneOfTheDay(fiveStarStarters.map((s) => s.id), day), [day]);
 
   const cast = useSyncExternalStore(castStore.subscribe, castStore.get, castStore.server);
   const pending = useSyncExternalStore(pendingStore.subscribe, pendingStore.get, pendingStore.server);
   const [mode, setMode] = useState<Mode>("photo");
-  const [picked, setScene] = useState("");
-  const scene = picked || today || "";
+  const [concept, setConcept] = useState("");
+  const scene = concept.trim();
   const [look, setLook] = useState("in-engine");
-  const [twist, setTwist] = useState("");
   const [uploading, setUploading] = useState<"you" | "crew" | null>(null);
   const [busy, setBusy] = useState<Mode | "move" | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
@@ -202,7 +215,7 @@ export function FiveStar() {
     const t = window.setTimeout(() => {
       api<{ price: Price }>(`/api/apps/${STILL}/price`, {
         method: "POST",
-        body: { fields: { scene, look, concept: twist }, values: {}, inputs: { you: Math.max(1, cast.you.length), crew: cast.crew.length }, count: 1 },
+        body: { fields: { concept: scene || "price", look }, values: {}, inputs: { you: Math.max(1, cast.you.length), crew: cast.crew.length }, count: 1 },
       })
         .then((r) => live && setPrice(r.price))
         .catch(() => undefined);
@@ -211,7 +224,7 @@ export function FiveStar() {
       live = false;
       window.clearTimeout(t);
     };
-  }, [app, scene, look, twist, cast.you.length, cast.crew.length]);
+  }, [app, look, cast.you.length, cast.crew.length, scene]);
   const motionPrice = motion.data?.app.price?.millicredits ?? 0;
   const total = price ? price.millicredits + (mode === "video" ? motionPrice : 0) : null;
 
@@ -261,7 +274,7 @@ export function FiveStar() {
     setProblem(null);
     setBusy(mode);
     try {
-      const r = await run(STILL, { fields: { scene, look, concept: twist }, inputs: { you: cast.you.map((a) => a.id), crew: cast.crew.map((a) => a.id) } });
+      const r = await run(STILL, { fields: { concept: scene, look }, inputs: { you: cast.you.map((a) => a.id), crew: cast.crew.map((a) => a.id) } });
       if (mode === "video") pendingStore.set({ ...pendingStore.get(), [r.id]: scene });
     } catch (e) {
       setProblem(errorMessage(e));
@@ -275,7 +288,7 @@ export function FiveStar() {
       setProblem(null);
       setBusy("move");
       try {
-        await run(MOTION, { fields: { scene: sceneId }, inputs: { still: [asset.id] } });
+        await run(MOTION, { fields: { concept: sceneId }, inputs: { still: [asset.id] } });
       } catch (e) {
         setProblem(errorMessage(e));
       } finally {
@@ -314,7 +327,7 @@ export function FiveStar() {
   const level = Math.min(5, stills.filter((r) => r.jobs.some(done)).length + reel.length);
   const signedOut = !sessionLoading && !user;
   const canRun = !!app && cast.you.length > 0 && !!scene && busy === null;
-  const runLabel = signedOut ? copy.run.signIn : cast.you.length === 0 ? copy.run.needYou : copy.run[mode];
+  const runLabel = signedOut ? copy.run.signIn : cast.you.length === 0 ? copy.run.needYou : !scene ? copy.run.needScene : copy.run[mode];
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pt-7 pb-12 sm:px-8 sm:pt-10">
@@ -333,42 +346,16 @@ export function FiveStar() {
         <section aria-label="Make a scene" className="ooo-panel flex min-w-0 flex-col gap-6 p-5 sm:p-6">
           <div className="flex flex-col gap-3">
             <p className={label}>{copy.cast}</p>
-            <div className="flex items-end gap-4">
-              <div className="flex flex-col items-center gap-1.5">
-                <button
-                  type="button"
-                  data-upload="you"
-                  aria-label={cast.you.length ? "Change your photos" : "Add your photo"}
-                  onClick={() => (needSession() ? youRef.current?.click() : undefined)}
-                  className={cn("ooo-control relative flex size-[72px] items-center justify-center rounded-full", !cast.you.length && "border border-dashed border-border-strong bg-surface-secondary text-text-secondary")}
-                >
-                  {uploading === "you" ? <Spinner label="Uploading" /> : cast.you.length ? <Face asset={cast.you[0]} size="size-[72px]" label={copy.you} /> : <Plus size={20} strokeWidth={1.75} aria-hidden />}
-                  {cast.you.length > 1 ? (
-                    <span className="absolute -right-1 -bottom-1 rounded-full border border-border-default bg-surface-primary px-1.5 font-mono text-[10px] leading-4 text-text-secondary">×{cast.you.length}</span>
-                  ) : null}
-                </button>
-                <span className="text-xs leading-4 font-semibold">{copy.you}</span>
-              </div>
-              <span className="mb-6 h-10 w-px bg-border-default" aria-hidden />
-              {cast.crew.map((a, i) => (
-                <div key={a.id} className="flex flex-col items-center gap-1.5">
-                  <Face asset={a} size="size-14" label={`${copy.friend} ${i + 1}`} onRemove={() => castStore.set({ ...cast, crew: cast.crew.filter((x) => x.id !== a.id) })} />
-                  <span className="text-xs leading-4 text-text-secondary">{copy.friend}</span>
-                </div>
+            <div className="scroll-none -mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:px-0">
+              {cast.you.map((a) => (
+                <Tile key={a.id} asset={a} />
               ))}
-              {cast.crew.length < MAX_CREW ? (
-                <div className="flex flex-col items-center gap-1.5">
-                  <button
-                    type="button"
-                    data-upload="crew"
-                    aria-label="Add a friend"
-                    onClick={() => (needSession() ? crewRef.current?.click() : undefined)}
-                    className="ooo-control flex size-14 items-center justify-center rounded-full border border-dashed border-border-strong bg-surface-secondary text-text-secondary hover:text-text-primary"
-                  >
-                    {uploading === "crew" ? <Spinner label="Uploading" /> : <Plus size={18} strokeWidth={1.75} aria-hidden />}
-                  </button>
-                  <span className="text-xs leading-4 text-text-tertiary">{copy.friend}</span>
-                </div>
+              <AddTile kind="you" text={cast.you.length ? "Change" : copy.you} busy={uploading === "you"} onClick={() => (needSession() ? youRef.current?.click() : undefined)} />
+              {cast.crew.map((a) => (
+                <Tile key={a.id} asset={a} tag={copy.friend} onRemove={() => castStore.set({ ...cast, crew: cast.crew.filter((x) => x.id !== a.id) })} />
+              ))}
+              {cast.you.length && cast.crew.length < MAX_CREW ? (
+                <AddTile kind="crew" text={copy.friend} busy={uploading === "crew"} onClick={() => (needSession() ? crewRef.current?.click() : undefined)} />
               ) : null}
             </div>
             <p className="text-xs leading-5 text-text-secondary">{cast.you.length ? copy.castSaved : copy.castHint}</p>
@@ -377,53 +364,46 @@ export function FiveStar() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <p className={label}>{copy.make}</p>
-            <Segment name={copy.make} value={mode} onChange={setMode} options={[{ value: "photo", label: copy.photo, icon: ImageIcon }, { value: "video", label: copy.video, icon: Clapperboard }]} />
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <p className={label}>{copy.look}</p>
-            <Segment name={copy.look} value={look} onChange={setLook} options={[...looks].reverse().map((o) => ({ value: o.value, label: fiveStarLooks[o.value] ?? o.label }))} />
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <p className={label}>{copy.scene}</p>
-            <div role="radiogroup" aria-label={copy.scene} className="grid grid-cols-2 gap-2">
-              {scenes.map((o) => {
-                const on = scene === o.value;
-                const Icon = SCENE_ICON[o.value] ?? Star;
+            <label htmlFor="five-star-scene" className={label}>
+              {copy.scene}
+            </label>
+            <textarea
+              id="five-star-scene"
+              data-concept
+              value={concept}
+              rows={4}
+              maxLength={400}
+              onChange={(e) => setConcept(e.target.value)}
+              placeholder={copy.scenePlaceholder}
+              className={cn(field, "resize-none")}
+            />
+            <p className="text-xs leading-4 text-text-secondary">{copy.starters}</p>
+            <div className="scroll-none -mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:px-0">
+              {fiveStarStarters.map((o) => {
+                const on = concept === o.text;
+                const Icon = STARTER_ICON[o.id] ?? Star;
                 return (
                   <button
-                    key={o.value}
+                    key={o.id}
                     type="button"
-                    role="radio"
-                    aria-checked={on}
-                    data-scene={o.value}
-                    onClick={() => setScene(o.value)}
-                    className={cn("ooo-control relative flex min-h-[92px] flex-col items-start justify-between gap-3 rounded-2xl border p-3 text-left", on ? pressed : "border-border-default bg-surface-secondary hover:bg-surface-tertiary")}
+                    aria-pressed={on}
+                    data-starter={o.id}
+                    onClick={() => setConcept(o.text)}
+                    className="ooo-filter ooo-control flex items-center gap-2 text-sm leading-5"
                   >
-                    <span className={cn("flex size-8 items-center justify-center rounded-lg", on ? "bg-white/12 text-white" : "border border-border-default bg-surface-primary text-text-primary")}>
-                      <Icon size={16} strokeWidth={1.75} aria-hidden />
-                    </span>
-                    <span className="flex flex-col">
-                      <span className="text-sm leading-5 font-semibold">{o.label}</span>
-                      <span className={cn("text-xs leading-4", on ? "text-white/65" : "text-text-secondary")}>{fiveStarScenes[o.value]}</span>
-                    </span>
-                    {today === o.value ? (
-                      <span className="absolute top-3 right-3">
-                        <Tag tone={on ? "solid" : "neutral"}>{copy.today}</Tag>
-                      </span>
-                    ) : null}
+                    <Icon size={15} strokeWidth={1.75} aria-hidden />
+                    {o.label}
+                    {today === o.id ? <span className={cn("rounded-full px-1.5 text-[10px] leading-4 font-bold uppercase", on ? "bg-white/15" : "bg-surface-tertiary text-text-primary")}>{copy.today}</span> : null}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          <label className="flex flex-col gap-3">
-            <span className={label}>{copy.twist}</span>
-            <input value={twist} maxLength={160} onChange={(e) => setTwist(e.target.value)} placeholder={copy.twistPlaceholder} className={field} />
-          </label>
+          <div className="grid gap-3 min-[380px]:grid-cols-2">
+            <Segment name={copy.make} value={mode} onChange={setMode} options={[{ value: "photo", label: copy.photo, icon: ImageIcon }, { value: "video", label: copy.video, icon: Clapperboard }]} />
+            <Segment name={copy.look} value={look} onChange={setLook} options={[...looks].reverse().map((o) => ({ value: o.value, label: fiveStarLooks[o.value] ?? o.label }))} />
+          </div>
 
           {problem ? (
             <p role="alert" className="text-sm leading-5 text-danger">
@@ -488,7 +468,7 @@ export function FiveStar() {
                   <Download size={17} strokeWidth={1.75} aria-hidden />
                 </a>
                 {!videoWanted ? (
-                  <button type="button" data-run="move" disabled={busy !== null} onClick={() => void moveFrom(latestStill, String(latest?.fields.scene ?? scene))} className="ooo-pill min-h-11 disabled:opacity-50">
+                  <button type="button" data-run="move" disabled={busy !== null} onClick={() => void moveFrom(latestStill, String(latest?.fields.concept ?? scene))} className="ooo-pill min-h-11 disabled:opacity-50">
                     {busy === "move" ? <Spinner label="Starting" /> : <Play size={13} className="fill-current" strokeWidth={1.75} aria-hidden />}
                     {copy.makeMove}
                     {motionPrice ? <span className="font-mono text-xs text-text-secondary">· {formatCredits(motionPrice)} cr</span> : null}
@@ -498,23 +478,8 @@ export function FiveStar() {
             ) : null}
           </section>
 
-          <Reel clips={reel} />
+          {reel.length ? <Reel clips={reel} /> : null}
 
-          {stills.length > 1 ? (
-            <section aria-label={copy.history} className="ooo-panel flex flex-col gap-3 p-4">
-              <p className={label}>{copy.history}</p>
-              <ul className="grid grid-cols-4 gap-2 sm:grid-cols-5">
-                {stills.slice(1).flatMap((r) =>
-                  r.jobs.filter(done).map((j) => (
-                    <li key={j.id} className="aspect-[9/16] overflow-clip rounded-lg bg-surface-tertiary">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={j.assets[0].posterUrl ?? j.assets[0].url} alt="" loading="lazy" className="size-full object-cover" />
-                    </li>
-                  )),
-                )}
-              </ul>
-            </section>
-          ) : null}
         </div>
       </div>
       <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} mode="join" next="/five-star" />
