@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Five Star" };
 
 export default function FiveStarPage() {
   return (
-    <AppShell active="apps" footer>
+    <AppShell>
       <FiveStar />
     </AppShell>
   );

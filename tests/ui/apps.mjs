@@ -65,7 +65,7 @@ try {
       await b.click('ul[aria-label="Featured"] a', "Try now");
       // Five Star leads the featured row and has its own page.
       await b.until(`(location.pathname.startsWith("/apps/") || location.pathname === "/five-star") && !!document.querySelector("form h1, h1")`, 15000, "app page");
-      await b.until(`!!document.querySelector("form") || !!document.querySelector('[data-run="still"]')`, 15000, "the form");
+      await b.until(`!!document.querySelector("form") || !!document.querySelector('[data-run="make"]')`, 15000, "the form");
     }],
     ["a signed-out visitor sees the form and Run asks to sign in", async () => {
       await b.goto(`${base}/apps/event-poster`);

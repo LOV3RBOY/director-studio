@@ -1,34 +1,52 @@
-// Five Star walk-through: saved character, scene, still, Make it move, three shots fill the reel, trailer plays.
+// Five Star walk-through: saved cast (you + a friend), Photo then Make it move, Video (still chains
+// into a clip on its own), three shots fill the reel, the trailer plays.
 import { launch } from "./browser.mjs";
+
 const [base, out, W = "393", H = "852"] = process.argv.slice(2);
 const b = await launch({ width: Number(W), height: Number(H), out });
+const face = (hue) => `(async () => {
+  const c = document.createElement("canvas"); c.width = 300; c.height = 400; const x = c.getContext("2d");
+  x.fillStyle = "hsl(${hue} 40% 60%)"; x.fillRect(0, 0, 300, 400); x.fillStyle = "#3b2a22"; x.beginPath(); x.arc(150, 170, 80, 0, 7); x.fill();
+  const blob = await new Promise((r) => c.toBlob(r, "image/png"));
+  const f = new FormData(); f.append("file", blob, "face.png"); f.append("accept", "image");
+  const j = await (await fetch("/api/assets", { method: "POST", body: f })).json();
+  return { id: j.asset.id, url: j.asset.url, posterUrl: j.asset.posterUrl, kind: "image" };
+})()`;
+const videoCount = `document.querySelectorAll('section[aria-label="Trailer"] video').length`;
+
 try {
   await b.goto(`${base}/five-star`);
-  await b.evaluate(`fetch("/api/auth/guest", { method: "POST" }).then((r) => r.status)`);
-  console.log("topup", await b.evaluate(`fetch("/api/wallet/topup", { method: "POST", headers: {"content-type":"application/json"}, body: JSON.stringify({packId:"pack-2000"}) }).then((r) => r.status)`));
-  // a selfie stand-in, uploaded the same way the page uploads
-  const asset = await b.evaluate(`(async () => {
-    const c = document.createElement("canvas"); c.width = 300; c.height = 400; const x = c.getContext("2d");
-    const g = x.createLinearGradient(0,0,0,400); g.addColorStop(0,"#d9a47a"); g.addColorStop(1,"#6b4a3a"); x.fillStyle = g; x.fillRect(0,0,300,400);
-    x.fillStyle="#3b2a22"; x.beginPath(); x.arc(150,170,80,0,7); x.fill();
-    const blob = await new Promise((r) => c.toBlob(r, "image/png"));
-    const f = new FormData(); f.append("file", blob, "selfie.png"); f.append("accept", "image");
-    const r = await fetch("/api/assets", { method: "POST", body: f }); const j = await r.json();
-    localStorage.setItem("fivestar.character.v1", JSON.stringify([{id:j.asset.id,url:j.asset.url,posterUrl:j.asset.posterUrl,kind:"image"}]));
-    return j.asset.id; })()`);
-  await b.goto(`${base}/five-star`);
   await b.until(`document.querySelectorAll('[data-scene]').length === 6`, 30000, "scenes");
-  await b.sleep(800);
+  await b.sleep(500);
+  await b.shot("00-signed-out", { full: true });
+  await b.evaluate(`fetch("/api/auth/guest", { method: "POST" }).then((r) => r.status)`);
+  await b.evaluate(`fetch("/api/wallet/topup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ packId: "pack-2000" }) }).then((r) => r.status)`);
+  const you = await b.evaluate(face(25));
+  const friend = await b.evaluate(face(200));
+  await b.evaluate(`localStorage.setItem("fivestar.cast.v2", JSON.stringify({ you: [${JSON.stringify(you)}], crew: [${JSON.stringify(friend)}] }))`);
+  await b.goto(`${base}/five-star`);
+  await b.until(`document.querySelectorAll('[data-scene]').length === 6 && !!document.querySelector('[data-upload="you"] img')`, 30000, "cast loaded");
+  await b.sleep(600);
   await b.shot("01-start", { full: true });
-  for (const [i, sc] of ["chase", "beach", "penthouse"].entries()) {
+
+  // Photo, then Make it move.
+  await b.click('[data-scene="chase"]');
+  await b.until(`!document.querySelector('[data-run="make"]').disabled`, 10000, "make enabled");
+  await b.click('[data-run="make"]');
+  await b.until(`document.querySelector('[data-result]')?.dataset.result === "photo" && !!document.querySelector('[data-run="move"]')`, 60000, "photo");
+  await b.sleep(500);
+  await b.shot("02-photo", { full: true });
+  await b.click('[data-run="move"]');
+  await b.until(`document.querySelector('[data-result]')?.dataset.result === "video"`, 90000, "clip from photo");
+
+  // Video mode: one press makes the still, then the clip.
+  await b.click('[data-option="video"]');
+  for (const sc of ["beach", "penthouse"]) {
+    const before = await b.evaluate(videoCount);
     await b.click(`[data-scene="${sc}"]`);
-    await b.until(`!document.querySelector('[data-run="still"]').disabled`, 10000, "run enabled");
-    await b.click('[data-run="still"]');
-    await b.until(`!!document.querySelector('[data-result="still"] img')`, 60000, "still");
-    await b.until(`!!document.querySelector('[data-run="motion"]')`, 20000, "make it move");
-    if (i === 0) { await b.sleep(500); await b.shot("02-still", { full: true }); }
-    await b.click('[data-run="motion"]');
-    await b.until(`!!document.querySelector('[data-result="motion"] video')`, 90000, "clip");
+    await b.until(`!document.querySelector('[data-run="make"]').disabled`, 20000, "make enabled");
+    await b.click('[data-run="make"]');
+    await b.until(`${videoCount} > ${before} && document.querySelector('[data-result]')?.dataset.result === "video"`, 150000, `video for ${sc}`);
   }
   await b.until(`!!document.querySelector('[data-run="trailer"]')`, 20000, "trailer button");
   await b.sleep(800);
@@ -36,7 +54,13 @@ try {
   await b.click('[data-run="trailer"]');
   await b.sleep(1500);
   await b.shot("04-trailer-playing");
-  const errs = b.logs(); console.log("logs:", JSON.stringify(errs).slice(0, 800));
-  console.log("OK", asset);
-} catch (e) { console.log("FAIL", e.message); process.exitCode = 1; await b.shot("fail", { full: true }); console.log(JSON.stringify(b.logs()).slice(0,1500)); }
+  const errors = b.logs().filter((l) => !l.startsWith("warning"));
+  if (errors.length) throw new Error(`console: ${errors.join(" | ").slice(0, 600)}`);
+  console.log("OK");
+} catch (e) {
+  console.log("FAIL", e.message);
+  process.exitCode = 1;
+  await b.shot("fail", { full: true });
+  console.log(JSON.stringify(b.logs()).slice(0, 1500));
+}
 await b.close();

@@ -93,7 +93,8 @@ export const FIVE_STAR_SCENES: (ChoiceOption & { motion: string })[] = [
 ];
 
 const IDENTITY =
-  "The main character is the person in the reference photos: keep their exact face, skin tone, hairstyle and build recognisable.";
+  "The first reference photos show the main character: keep their exact face, skin tone, hairstyle and build recognisable. " +
+  "Any further reference photos show other people: put each of them in the scene beside the main character as their crew, each one just as recognisable.";
 
 const sceneChoice = (motion: boolean) =>
   choice(
@@ -105,10 +106,13 @@ const sceneChoice = (motion: boolean) =>
 export const fiveStarApps: AppDef[] = [
   app({
     id: "five-star", name: "Five Star", category: "template", badge: "new", added: ADDED,
-    pitch: "Put yourself in an open-world crime-saga scene. One selfie, one tap.",
+    pitch: "Put yourself and your crew in an open-world crime-saga scene. One selfie, one tap.",
     tags: ["character", "game", "poster", "selfie"],
     modelId: "nano-banana-pro", values: { aspect: "9:16", resolution: "2K" },
-    inputs: [input("you", "You", "refs", { min: 1, max: 3, hint: "1 to 3 clear photos of your face." })],
+    inputs: [
+      input("you", "You", "refs", { min: 1, max: 3, hint: "1 to 3 clear photos of your face." }),
+      input("crew", "Friends", "refs", { min: 0, max: 3, hint: "Optional. One clear photo per friend, with their OK." }),
+    ],
     fields: [
       sceneChoice(false),
       choice("look", "Look", FIVE_STAR_LOOKS),
