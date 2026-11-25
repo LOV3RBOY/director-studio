@@ -1,12 +1,13 @@
 import "server-only";
 
 import { MAX_BATCH, formatCredits, planOf } from "@/config/economy";
-import { assetRef, catalogEndpoint, getModel, quoteJob, resolveValues, visibleSlots, type Filled, type Kind, type MediaRef, type MediaType, type ModelDef, type Values } from "@/registry";
+import { assetRef, catalogEndpoint, getModel, muapiPath, quoteJob, resolveValues, visibleSlots, type Filled, type Kind, type MediaRef, type MediaType, type ModelDef, type Values } from "@/registry";
 import { assetsOfJobs, ownedAsset, removeAsset, toAsset, type Asset, type AssetRow } from "./assets";
 import type { User } from "./auth";
 import { balance, hold, release } from "./credits";
 import { all, get, newId, parseJson, run, tx, type Param } from "./db";
 import { ApiError, badRequest, notFound } from "./errors";
+import { muapiKey } from "./muapi";
 import { tregMode } from "./treg";
 import { kick, outputOf } from "./worker";
 
@@ -208,6 +209,9 @@ export function submitJobs(user: User, input: SubmitInput): Job[] {
   const asked = Math.floor(Number(input.count)) || 1;
   const quote = quoteJob(model, { prompt, values, media, filled, count: model.batch.native ? asked : Math.min(asked, MAX_BATCH) });
   if (!catalogEndpoint(quote.request.endpoint)) throw new ApiError(409, "model_unavailable", `${model.name} is not available right now.`);
+  if (muapiPath(quote.request.endpoint) && tregMode() === "live" && !muapiKey()) {
+    throw new ApiError(409, "model_unavailable", `${model.name} isn't connected on this server yet. Add the MuAPI key.`);
+  }
 
   const have = balance(user.id);
   if (have < quote.millicredits) {

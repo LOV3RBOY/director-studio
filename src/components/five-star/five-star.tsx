@@ -1,17 +1,18 @@
 "use client";
 
 /**
- * FIVE STAR: add your photo (and friends'), choose Photo or Video, a look and a scene.
- * Photo runs the `five-star` app. Video runs it too, then feeds the finished still into
- * `five-star-motion` as the first frame. Three video shots fill the trailer reel.
+ * FIVE STAR: a thin wrapper around the models with the game's look locked in.
+ *   Photo                  reference photos + scene -> `five-star` (Nano Banana Pro)
+ *   Video · References     reference photos + scene -> `five-star-video` (Seedance 2.5 on MuAPI)
+ *   Video · Frames         first (+ last) frame + scene -> `five-star-frames` (Seedance 2.5 on MuAPI)
+ * "Make it move" on a photo runs Frames with that photo as the first frame.
  * Built on the Apps API, so jobs, credits, refunds and the Library work as everywhere else.
- * Styled with the Out of Order finishes (ooo-hero, ooo-panel, ooo-pill) like the Style Library.
  */
 import {
   Building2, CarFront, Clapperboard, Download, IdCard, Image as ImageIcon, Play, Plus, RotateCcw, Siren, Star, TreePalm, Vault, X,
   type LucideIcon,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import useSWR from "swr";
 import { LoginDialog } from "@/components/entry/login-dialog";
 import type { AppDetail, AppRun, Price } from "@/components/apps/types";
@@ -23,10 +24,11 @@ import { refreshSession, setBalance, useSession } from "@/lib/session";
 import { isActive } from "@/lib/studio";
 import { Spinner, cn } from "@/ui";
 
-const STILL = "five-star";
-const MOTION = "five-star-motion";
+const PHOTO = "five-star";
+const VIDEO = "five-star-video";
+const FRAMES = "five-star-frames";
+type AppId = typeof PHOTO | typeof VIDEO | typeof FRAMES;
 const CAST_KEY = "fivestar.cast.v2";
-const PENDING_KEY = "fivestar.pending-video.v1";
 const MAX_YOU = 3;
 const MAX_CREW = 3;
 
@@ -38,53 +40,44 @@ const field = "w-full rounded-xl border border-border-default bg-surface-field p
 const label = "text-[11px] leading-4 font-semibold tracking-[0.14em] text-text-secondary uppercase";
 
 type Mode = "photo" | "video";
+type Source = "refs" | "frames";
 type Cast = { you: Asset[]; crew: Asset[] };
+type Slot = "you" | "crew" | "first" | "last";
 const slim = (a: Asset) => ({ id: a.id, url: a.url, posterUrl: a.posterUrl, kind: a.kind }) as Asset;
 
-/** A tiny store over localStorage, read with useSyncExternalStore so the server render stays empty. */
-function localStore<T>(key: string, empty: T, valid: (v: unknown) => v is T) {
-  let cache: T | null = null;
+/** The cast lives in localStorage, read with useSyncExternalStore so the server render stays empty. */
+const castStore = (() => {
+  const empty: Cast = { you: [], crew: [] };
+  const ok = (v: unknown): v is Asset[] => Array.isArray(v) && v.every((a) => a && typeof a.id === "string" && typeof a.url === "string");
+  let cache: Cast | null = null;
   const listeners = new Set<() => void>();
   return {
-    get(): T {
+    get(): Cast {
       if (cache) return cache;
       try {
-        const raw = JSON.parse(window.localStorage.getItem(key) ?? "null");
-        cache = valid(raw) ? raw : empty;
+        const raw = JSON.parse(window.localStorage.getItem(CAST_KEY) ?? "null");
+        cache = raw && ok(raw.you) && ok(raw.crew) ? raw : empty;
       } catch {
         cache = empty;
       }
-      return cache;
+      return cache!;
     },
     server: () => empty,
     subscribe(fn: () => void) {
       listeners.add(fn);
       return () => void listeners.delete(fn);
     },
-    set(next: T) {
+    set(next: Cast) {
       cache = next;
       try {
-        window.localStorage.setItem(key, JSON.stringify(next));
+        window.localStorage.setItem(CAST_KEY, JSON.stringify(next));
       } catch {
         /* private mode: kept for this visit only */
       }
       listeners.forEach((fn) => fn());
     },
   };
-}
-
-const isAssets = (v: unknown): v is Asset[] => Array.isArray(v) && v.every((a) => a && typeof a.id === "string" && typeof a.url === "string");
-const EMPTY_CAST: Cast = { you: [], crew: [] };
-const castStore = localStore<Cast>(CAST_KEY, EMPTY_CAST, (v): v is Cast => !!v && typeof v === "object" && isAssets((v as Cast).you) && isAssets((v as Cast).crew));
-/** Still runs that should become video once they finish: run id -> the scene text. */
-const EMPTY_PENDING: Record<string, string> = {};
-const pendingStore = localStore<Record<string, string>>(PENDING_KEY, EMPTY_PENDING, (v): v is Record<string, string> => !!v && typeof v === "object" && !Array.isArray(v));
-
-/** Today's starter: the same for everyone on a given day. */
-function sceneOfTheDay(ids: string[], nowSeconds: number | null): string | null {
-  if (ids.length === 0 || nowSeconds === null) return null;
-  return ids[Math.floor(nowSeconds / 86400) % ids.length];
-}
+})();
 
 const done = (j: Job | undefined): j is Job => !!j && j.status === "succeeded" && j.assets.length > 0;
 
@@ -129,10 +122,10 @@ function Segment<T extends string>({ name, value, options, onChange }: { name: s
   );
 }
 
-/** A photo in the cast: a rounded tile, like a thumbnail in the Library. */
-function Tile({ asset, tag, onRemove }: { asset: Asset; tag?: string; onRemove?: () => void }) {
+/** A picked image: a rounded tile, like a thumbnail in the Library. */
+function Tile({ asset, tag, onRemove, wide }: { asset: Asset; tag?: string; onRemove?: () => void; wide?: boolean }) {
   return (
-    <span className="relative block h-20 w-16 shrink-0 overflow-clip rounded-xl border border-border-default bg-surface-tertiary">
+    <span className={cn("relative block h-20 shrink-0 overflow-clip rounded-xl border border-border-default bg-surface-tertiary", wide ? "w-28" : "w-16")}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={asset.posterUrl ?? asset.url} alt={tag ?? "You"} className="size-full object-cover" />
       {tag ? <span className="absolute inset-x-1 bottom-1 rounded-md bg-black/55 text-center text-[10px] leading-4 font-semibold text-white backdrop-blur-sm">{tag}</span> : null}
@@ -145,9 +138,15 @@ function Tile({ asset, tag, onRemove }: { asset: Asset; tag?: string; onRemove?:
   );
 }
 
-function AddTile({ text, onClick, busy, kind }: { text: string; onClick: () => void; busy: boolean; kind: string }) {
+function AddTile({ text, onClick, busy, kind, wide }: { text: string; onClick: () => void; busy: boolean; kind: string; wide?: boolean }) {
   return (
-    <button type="button" data-upload={kind} onClick={onClick} disabled={busy} className="ooo-control flex h-20 w-16 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border-strong bg-surface-secondary text-text-secondary hover:text-text-primary">
+    <button
+      type="button"
+      data-upload={kind}
+      onClick={onClick}
+      disabled={busy}
+      className={cn("ooo-control flex h-20 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border-strong bg-surface-secondary text-text-secondary hover:text-text-primary", wide ? "w-28" : "w-16")}
+    >
       {busy ? <Spinner label="Uploading" /> : <Plus size={16} strokeWidth={1.75} aria-hidden />}
       <span className="text-[11px] leading-4 font-semibold">{text}</span>
     </button>
@@ -156,89 +155,103 @@ function AddTile({ text, onClick, busy, kind }: { text: string; onClick: () => v
 
 export function FiveStar() {
   const { user, loading: sessionLoading } = useSession();
-  const still = useSWR<{ app: AppDetail }>(`/api/apps/${STILL}`, fetcher);
-  const motion = useSWR<{ app: AppDetail }>(`/api/apps/${MOTION}`, fetcher);
-  const app = still.data?.app;
-
-  const choices = useCallback(
-    (id: string) => {
-      const f = app?.form.fields.find((x) => x.id === id);
-      return f && f.type === "choice" ? f.options : [];
-    },
-    [app],
-  );
-  const looks = useMemo(() => choices("look"), [choices]);
+  const photoApp = useSWR<{ app: AppDetail }>(`/api/apps/${PHOTO}`, fetcher);
+  const framesApp = useSWR<{ app: AppDetail }>(`/api/apps/${FRAMES}`, fetcher);
+  const looks = useMemo(() => {
+    const f = photoApp.data?.app.form.fields.find((x) => x.id === "look");
+    return f && f.type === "choice" ? f.options : [];
+  }, [photoApp.data]);
   const now = useNow();
-  const day = now === null ? null : Math.floor(now / 86400) * 86400;
-  const today = useMemo(() => sceneOfTheDay(fiveStarStarters.map((s) => s.id), day), [day]);
+  const day = now === null ? null : Math.floor(now / 86400);
+  const today = day === null ? null : fiveStarStarters[day % fiveStarStarters.length].id;
 
   const cast = useSyncExternalStore(castStore.subscribe, castStore.get, castStore.server);
-  const pending = useSyncExternalStore(pendingStore.subscribe, pendingStore.get, pendingStore.server);
   const [mode, setMode] = useState<Mode>("photo");
+  const [source, setSource] = useState<Source>("refs");
+  const [frames, setFrames] = useState<{ first: Asset | null; last: Asset | null }>({ first: null, last: null });
   const [concept, setConcept] = useState("");
   const scene = concept.trim();
   const [look, setLook] = useState("in-engine");
-  const [uploading, setUploading] = useState<"you" | "crew" | null>(null);
-  const [busy, setBusy] = useState<Mode | "move" | null>(null);
+  const [uploading, setUploading] = useState<Slot | null>(null);
+  const [busy, setBusy] = useState<"make" | "move" | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [loginOpen, setLoginOpen] = useState(false);
   const [price, setPrice] = useState<Price | null>(null);
-  const youRef = useRef<HTMLInputElement>(null);
-  const crewRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const target = useRef<Slot>("you");
 
-  const stillRuns = useSWR<{ runs: AppRun[] }>(user ? `/api/apps/${STILL}/runs?limit=24` : null, fetcher);
-  const motionRuns = useSWR<{ runs: AppRun[] }>(user ? `/api/apps/${MOTION}/runs?limit=24` : null, fetcher);
-  const stills = useMemo(() => stillRuns.data?.runs ?? [], [stillRuns.data]);
-  const clips = useMemo(() => motionRuns.data?.runs ?? [], [motionRuns.data]);
-  const { mutate: reloadStill } = stillRuns;
-  const { mutate: reloadMotion } = motionRuns;
-  const waitingForVideo = stills.some((r) => pending[r.id]);
-  const working = waitingForVideo || [...stills, ...clips].some((r) => r.jobs.some(isActive));
+  const appId: AppId = mode === "photo" ? PHOTO : source === "refs" ? VIDEO : FRAMES;
+  const usesCast = appId !== FRAMES;
+  const inputs = useMemo((): Record<string, string[]> => {
+    if (usesCast) return { you: cast.you.map((a) => a.id), crew: cast.crew.map((a) => a.id) };
+    return { first: frames.first ? [frames.first.id] : [], last: frames.last ? [frames.last.id] : [] };
+  }, [usesCast, cast, frames]);
+  const ready = usesCast ? cast.you.length > 0 : !!frames.first;
+
+  // The member's runs of all three apps, polled while anything is being made.
+  const runsOf = (id: AppId) => (user ? `/api/apps/${id}/runs?limit=24` : null);
+  const photoRuns = useSWR<{ runs: AppRun[] }>(runsOf(PHOTO), fetcher);
+  const videoRuns = useSWR<{ runs: AppRun[] }>(runsOf(VIDEO), fetcher);
+  const framesRuns = useSWR<{ runs: AppRun[] }>(runsOf(FRAMES), fetcher);
+  const reloaders = useMemo(() => ({ [PHOTO]: photoRuns.mutate, [VIDEO]: videoRuns.mutate, [FRAMES]: framesRuns.mutate }), [photoRuns.mutate, videoRuns.mutate, framesRuns.mutate]);
+  const all = useMemo(
+    () => [...(photoRuns.data?.runs ?? []), ...(videoRuns.data?.runs ?? []), ...(framesRuns.data?.runs ?? [])].sort((a, b) => b.createdAt - a.createdAt),
+    [photoRuns.data, videoRuns.data, framesRuns.data],
+  );
+  const working = all.some((r) => r.jobs.some(isActive));
   useEffect(() => {
     if (!working) return;
-    const t = window.setInterval(() => {
-      void reloadStill();
-      void reloadMotion();
-    }, 1500);
+    const t = window.setInterval(() => Object.values(reloaders).forEach((reload) => void reload()), 1500);
     return () => window.clearInterval(t);
-  }, [working, reloadStill, reloadMotion]);
+  }, [working, reloaders]);
   const wasWorking = useRef(false);
   useEffect(() => {
     if (wasWorking.current && !working) void refreshSession();
     wasWorking.current = working;
   }, [working]);
 
-  // Live price of one still. A video adds the motion app's price.
+  // Live price for what the button will run.
+  const priceBody = JSON.stringify({
+    fields: { concept: scene || "price", look },
+    values: {},
+    inputs: Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, Math.max(v.length, k === "you" || k === "first" ? 1 : 0)])),
+    count: 1,
+  });
   useEffect(() => {
-    if (!app) return;
     let live = true;
     const t = window.setTimeout(() => {
-      api<{ price: Price }>(`/api/apps/${STILL}/price`, {
-        method: "POST",
-        body: { fields: { concept: scene || "price", look }, values: {}, inputs: { you: Math.max(1, cast.you.length), crew: cast.crew.length }, count: 1 },
-      })
+      api<{ price: Price }>(`/api/apps/${appId}/price`, { method: "POST", body: JSON.parse(priceBody) })
         .then((r) => live && setPrice(r.price))
-        .catch(() => undefined);
+        .catch(() => live && setPrice(null));
     }, 250);
     return () => {
       live = false;
       window.clearTimeout(t);
     };
-  }, [app, look, cast.you.length, cast.crew.length, scene]);
-  const motionPrice = motion.data?.app.price?.millicredits ?? 0;
-  const total = price ? price.millicredits + (mode === "video" ? motionPrice : 0) : null;
+  }, [appId, priceBody]);
+  const movePrice = framesApp.data?.app.price?.millicredits ?? 0;
 
-  const needSession = useCallback(() => {
+  const needSession = () => {
     if (user) return true;
     setLoginOpen(true);
     return false;
-  }, [user]);
+  };
 
-  async function upload(list: FileList | null, who: "you" | "crew") {
-    if (!list?.length || !needSession()) return;
+  function pick(slot: Slot) {
+    if (!needSession()) return;
+    target.current = slot;
+    if (fileRef.current) {
+      fileRef.current.multiple = slot === "you";
+      fileRef.current.click();
+    }
+  }
+
+  async function upload(list: FileList | null) {
+    const slot = target.current;
+    if (!list?.length) return;
     setProblem(null);
-    setUploading(who);
-    const room = who === "you" ? MAX_YOU : MAX_CREW - cast.crew.length;
+    setUploading(slot);
+    const room = slot === "you" ? MAX_YOU : slot === "crew" ? MAX_CREW - cast.crew.length : 1;
     const added: Asset[] = [];
     try {
       for (const file of Array.from(list).slice(0, room)) {
@@ -248,34 +261,26 @@ export function FiveStar() {
         const { asset } = await api<{ asset: Asset }>("/api/assets", { method: "POST", body: form });
         added.push(slim(asset));
       }
-      const now = castStore.get();
-      castStore.set(who === "you" ? { ...now, you: added } : { ...now, crew: [...now.crew, ...added].slice(0, MAX_CREW) });
+      const nowCast = castStore.get();
+      if (slot === "you") castStore.set({ ...nowCast, you: added });
+      else if (slot === "crew") castStore.set({ ...nowCast, crew: [...nowCast.crew, ...added].slice(0, MAX_CREW) });
+      else setFrames((f) => ({ ...f, [slot]: added[0] ?? null }));
     } catch (e) {
       setProblem(errorMessage(e));
     } finally {
       setUploading(null);
-      for (const r of [youRef, crewRef]) if (r.current) r.current.value = "";
+      if (fileRef.current) fileRef.current.value = "";
     }
   }
 
-  const run = useCallback(
-    async (appId: string, body: { fields: Record<string, string>; inputs: Record<string, string[]> }): Promise<AppRun> => {
-      const r = await api<{ run: AppRun; balance: number }>(`/api/apps/${appId}/run`, { method: "POST", body: { ...body, values: {}, count: 1 } });
-      void setBalance(r.balance);
-      const reload = appId === STILL ? reloadStill : reloadMotion;
-      await reload((d) => ({ runs: [r.run, ...(d?.runs ?? [])] }), { revalidate: true });
-      return r.run;
-    },
-    [reloadStill, reloadMotion],
-  );
-
-  async function make() {
+  async function run(id: AppId, body: { fields: Record<string, string>; inputs: Record<string, string[]> }, kind: "make" | "move") {
     if (!needSession()) return;
     setProblem(null);
-    setBusy(mode);
+    setBusy(kind);
     try {
-      const r = await run(STILL, { fields: { concept: scene, look }, inputs: { you: cast.you.map((a) => a.id), crew: cast.crew.map((a) => a.id) } });
-      if (mode === "video") pendingStore.set({ ...pendingStore.get(), [r.id]: scene });
+      const r = await api<{ run: AppRun; balance: number }>(`/api/apps/${id}/run`, { method: "POST", body: { ...body, values: {}, count: 1 } });
+      void setBalance(r.balance);
+      await reloaders[id]((d) => ({ runs: [r.run, ...(d?.runs ?? [])] }), { revalidate: true });
     } catch (e) {
       setProblem(errorMessage(e));
     } finally {
@@ -283,51 +288,16 @@ export function FiveStar() {
     }
   }
 
-  const moveFrom = useCallback(
-    async (asset: Asset, sceneId: string) => {
-      setProblem(null);
-      setBusy("move");
-      try {
-        await run(MOTION, { fields: { concept: sceneId }, inputs: { still: [asset.id] } });
-      } catch (e) {
-        setProblem(errorMessage(e));
-      } finally {
-        setBusy(null);
-      }
-    },
-    [run],
-  );
+  const make = () => void run(appId, { fields: { concept: scene, look }, inputs }, "make");
 
-  // A Video request: once its still is finished, shoot the motion from it (once).
-  const fired = useRef(new Set<string>());
-  useEffect(() => {
-    for (const r of stills) {
-      const sceneId = pending[r.id];
-      if (!sceneId || fired.current.has(r.id)) continue;
-      const job = r.jobs[0];
-      if (job && isActive(job)) continue;
-      fired.current.add(r.id);
-      const next = { ...pendingStore.get() };
-      delete next[r.id];
-      pendingStore.set(next);
-      // Deferred: starting the clip updates state, which must not happen inside the effect body.
-      if (done(job)) void Promise.resolve().then(() => moveFrom(job.assets[0], sceneId));
-    }
-  }, [stills, pending, moveFrom]);
-
-  const latest = stills[0];
+  const latest = all[0];
   const latestJob = latest?.jobs[0];
-  const latestStill = done(latestJob) ? latestJob.assets[0] : null;
-  const clipRun = latestStill ? clips.find((r) => r.inputs.still?.[0] === latestStill.id) : undefined;
-  const clipJob = clipRun?.jobs[0];
-  const clipDone = done(clipJob);
-  const clipFailed = clipJob?.status === "failed";
-  const videoWanted = !!latest && (!!pending[latest.id] || !!clipRun);
-  const reel = clips.flatMap((r) => r.jobs.filter(done).map((j) => j.assets[0])).slice(0, 3);
-  const level = Math.min(5, stills.filter((r) => r.jobs.some(done)).length + reel.length);
+  const latestAsset = done(latestJob) ? latestJob.assets[0] : null;
+  const reel = all.filter((r) => r.appId !== PHOTO).flatMap((r) => r.jobs.filter(done).map((j) => j.assets[0])).slice(0, 3);
+  const level = Math.min(5, all.filter((r) => r.jobs.some(done)).length);
   const signedOut = !sessionLoading && !user;
-  const canRun = !!app && cast.you.length > 0 && !!scene && busy === null;
-  const runLabel = signedOut ? copy.run.signIn : cast.you.length === 0 ? copy.run.needYou : !scene ? copy.run.needScene : copy.run[mode];
+  const canRun = ready && !!scene && busy === null;
+  const runLabel = signedOut ? copy.run.signIn : !ready ? (usesCast ? copy.run.needYou : copy.run.needFirst) : !scene ? copy.run.needScene : copy.run[mode];
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pt-7 pb-12 sm:px-8 sm:pt-10">
@@ -343,54 +313,56 @@ export function FiveStar() {
       </header>
 
       <div className="grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,0.92fr)]">
-        <section aria-label="Make a scene" className="ooo-panel flex min-w-0 flex-col gap-6 p-5 sm:p-6">
+        <section aria-label="Make" className="ooo-panel flex min-w-0 flex-col gap-6 p-5 sm:p-6">
+          <div className="grid gap-3 min-[380px]:grid-cols-2">
+            <Segment name={copy.make} value={mode} onChange={setMode} options={[{ value: "photo", label: copy.photo, icon: ImageIcon }, { value: "video", label: copy.video, icon: Clapperboard }]} />
+            <Segment name={copy.look} value={look} onChange={setLook} options={[...looks].reverse().map((o) => ({ value: o.value, label: fiveStarLooks[o.value] ?? o.label }))} />
+          </div>
+
+          {mode === "video" ? <Segment name={copy.from} value={source} onChange={setSource} options={[{ value: "refs", label: copy.references }, { value: "frames", label: copy.frames }]} /> : null}
+
           <div className="flex flex-col gap-3">
-            <p className={label}>{copy.cast}</p>
-            <div className="scroll-none -mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:px-0">
-              {cast.you.map((a) => (
-                <Tile key={a.id} asset={a} />
-              ))}
-              <AddTile kind="you" text={cast.you.length ? "Change" : copy.you} busy={uploading === "you"} onClick={() => (needSession() ? youRef.current?.click() : undefined)} />
-              {cast.crew.map((a) => (
-                <Tile key={a.id} asset={a} tag={copy.friend} onRemove={() => castStore.set({ ...cast, crew: cast.crew.filter((x) => x.id !== a.id) })} />
-              ))}
-              {cast.you.length && cast.crew.length < MAX_CREW ? (
-                <AddTile kind="crew" text={copy.friend} busy={uploading === "crew"} onClick={() => (needSession() ? crewRef.current?.click() : undefined)} />
-              ) : null}
-            </div>
-            <p className="text-xs leading-5 text-text-secondary">{cast.you.length ? copy.castSaved : copy.castHint}</p>
-            <input ref={youRef} type="file" accept="image/*" multiple hidden aria-hidden onChange={(e) => void upload(e.target.files, "you")} />
-            <input ref={crewRef} type="file" accept="image/*" hidden aria-hidden onChange={(e) => void upload(e.target.files, "crew")} />
+            <p className={label}>{usesCast ? copy.cast : copy.frames}</p>
+            {usesCast ? (
+              <div className="scroll-none -mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:px-0">
+                {cast.you.map((a) => (
+                  <Tile key={a.id} asset={a} />
+                ))}
+                <AddTile kind="you" text={cast.you.length ? copy.change : copy.you} busy={uploading === "you"} onClick={() => pick("you")} />
+                {cast.crew.map((a) => (
+                  <Tile key={a.id} asset={a} tag={copy.friend} onRemove={() => castStore.set({ ...cast, crew: cast.crew.filter((x) => x.id !== a.id) })} />
+                ))}
+                {cast.you.length && cast.crew.length < MAX_CREW ? <AddTile kind="crew" text={copy.friend} busy={uploading === "crew"} onClick={() => pick("crew")} /> : null}
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                {(["first", "last"] as const).map((slot) => {
+                  const a = frames[slot];
+                  const name = slot === "first" ? copy.firstFrame : copy.lastFrame;
+                  return a ? (
+                    <Tile key={slot} wide asset={a} tag={name} onRemove={() => setFrames((f) => ({ ...f, [slot]: null }))} />
+                  ) : (
+                    <AddTile key={slot} wide kind={slot} text={name} busy={uploading === slot} onClick={() => pick(slot)} />
+                  );
+                })}
+              </div>
+            )}
+            <p className="text-xs leading-5 text-text-secondary">{usesCast ? (cast.you.length ? copy.castSaved : copy.castHint) : copy.framesHint}</p>
+            <input ref={fileRef} type="file" accept="image/*" hidden aria-hidden onChange={(e) => void upload(e.target.files)} />
           </div>
 
           <div className="flex flex-col gap-3">
             <label htmlFor="five-star-scene" className={label}>
               {copy.scene}
             </label>
-            <textarea
-              id="five-star-scene"
-              data-concept
-              value={concept}
-              rows={4}
-              maxLength={400}
-              onChange={(e) => setConcept(e.target.value)}
-              placeholder={copy.scenePlaceholder}
-              className={cn(field, "resize-none")}
-            />
+            <textarea id="five-star-scene" data-concept value={concept} rows={4} maxLength={400} onChange={(e) => setConcept(e.target.value)} placeholder={copy.scenePlaceholder} className={cn(field, "resize-none")} />
             <p className="text-xs leading-4 text-text-secondary">{copy.starters}</p>
             <div className="scroll-none -mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:flex-wrap sm:px-0">
               {fiveStarStarters.map((o) => {
                 const on = concept === o.text;
                 const Icon = STARTER_ICON[o.id] ?? Star;
                 return (
-                  <button
-                    key={o.id}
-                    type="button"
-                    aria-pressed={on}
-                    data-starter={o.id}
-                    onClick={() => setConcept(o.text)}
-                    className="ooo-filter ooo-control flex items-center gap-2 text-sm leading-5"
-                  >
+                  <button key={o.id} type="button" aria-pressed={on} data-starter={o.id} onClick={() => setConcept(o.text)} className="ooo-filter ooo-control flex items-center gap-2 text-sm leading-5">
                     <Icon size={15} strokeWidth={1.75} aria-hidden />
                     {o.label}
                     {today === o.id ? <span className={cn("rounded-full px-1.5 text-[10px] leading-4 font-bold uppercase", on ? "bg-white/15" : "bg-surface-tertiary text-text-primary")}>{copy.today}</span> : null}
@@ -398,11 +370,6 @@ export function FiveStar() {
                 );
               })}
             </div>
-          </div>
-
-          <div className="grid gap-3 min-[380px]:grid-cols-2">
-            <Segment name={copy.make} value={mode} onChange={setMode} options={[{ value: "photo", label: copy.photo, icon: ImageIcon }, { value: "video", label: copy.video, icon: Clapperboard }]} />
-            <Segment name={copy.look} value={look} onChange={setLook} options={[...looks].reverse().map((o) => ({ value: o.value, label: fiveStarLooks[o.value] ?? o.label }))} />
           </div>
 
           {problem ? (
@@ -414,64 +381,73 @@ export function FiveStar() {
           <button
             type="button"
             data-run="make"
-            onClick={signedOut ? () => setLoginOpen(true) : () => void make()}
+            onClick={signedOut ? () => setLoginOpen(true) : make}
             disabled={!signedOut && !canRun}
-            aria-busy={busy === mode}
+            aria-busy={busy === "make"}
             className="ooo-pill ooo-primary min-h-12 w-full text-[15px] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {busy === mode ? <Spinner label="Starting" /> : mode === "video" ? <Clapperboard size={16} strokeWidth={1.75} aria-hidden /> : <ImageIcon size={16} strokeWidth={1.75} aria-hidden />}
+            {busy === "make" ? <Spinner label="Starting" /> : mode === "video" ? <Clapperboard size={16} strokeWidth={1.75} aria-hidden /> : <ImageIcon size={16} strokeWidth={1.75} aria-hidden />}
             {runLabel}
-            {total !== null && !signedOut && cast.you.length > 0 ? (
+            {price && !signedOut && ready ? (
               <span className="font-mono text-xs leading-4 text-white/55" data-price>
-                · {formatCredits(total)} cr
+                · {formatCredits(price.millicredits)} cr
               </span>
             ) : null}
           </button>
         </section>
 
         <div className="flex min-w-0 flex-col gap-4">
-          {/* The one dark element on the page: the screen your scene lands on. */}
-          <section aria-label={copy.result} className="ooo-hero-art relative mx-auto aspect-[9/16] w-full max-w-[420px] overflow-clip rounded-[28px]" data-result={clipDone ? "video" : latestStill ? "photo" : "empty"}>
-            {clipDone ? (
-              <video src={clipJob.assets[0].url} poster={clipJob.assets[0].posterUrl ?? undefined} controls playsInline autoPlay muted loop className="size-full object-cover" />
-            ) : latestStill ? (
+          {/* The one dark element on the page: the screen your result lands on. */}
+          <section aria-label={copy.result} className="ooo-hero-art relative mx-auto aspect-[9/16] w-full max-w-[420px] overflow-clip rounded-[28px]" data-result={latestAsset ? latestAsset.kind : "empty"}>
+            {latestAsset?.kind === "video" ? (
+              <video src={latestAsset.url} poster={latestAsset.posterUrl ?? undefined} controls playsInline autoPlay muted loop className="size-full object-cover" />
+            ) : latestAsset ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={latestStill.url} alt="Your scene" className={cn("size-full object-cover transition-opacity duration-500", videoWanted && !clipFailed && "opacity-55")} />
+              <img src={latestAsset.url} alt="Your scene" className="size-full object-cover" />
             ) : null}
 
             {latestJob && isActive(latestJob) ? (
-              <Overlay text={videoWanted ? copy.renderingVideo : copy.renderingPhoto} />
-            ) : videoWanted && !clipDone && !clipFailed ? (
-              <Overlay text={copy.renderingVideo} />
-            ) : latestJob?.status === "failed" || clipFailed ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#111116a6] text-center backdrop-blur-[2px]">
+                <Spinner className="text-white" label={copy.working} />
+                <p className="text-sm leading-5 text-white">{latest.appId === PHOTO ? copy.renderingPhoto : copy.renderingVideo}…</p>
+              </div>
+            ) : latestJob?.status === "failed" ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#111116d9] p-8 text-center">
-                <p className="text-sm leading-5 text-white">{(clipFailed ? clipJob?.error?.message : latestJob?.error?.message) ?? copy.failed}</p>
-                <button type="button" onClick={() => void make()} className="ooo-pill min-h-10 text-sm">
+                <p className="text-sm leading-5 text-white">{latestJob.error?.message ?? copy.failed}</p>
+                <p className="text-xs leading-4 text-white/60">{copy.refunded}</p>
+                <button type="button" onClick={make} className="ooo-pill min-h-10 text-sm">
                   <RotateCcw size={15} strokeWidth={1.75} aria-hidden /> {copy.retry}
                 </button>
               </div>
-            ) : !latestStill ? (
+            ) : !latestAsset ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-10 text-center">
                 <Star size={28} strokeWidth={1.25} aria-hidden className="text-white/35" />
                 <p className="max-w-[220px] text-sm leading-5 text-white/60">{copy.emptyResult}</p>
               </div>
             ) : null}
 
-            {latestStill && !(latestJob && isActive(latestJob)) && (!videoWanted || clipDone) ? (
-              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-t from-black/70 to-transparent p-4 pt-12">
-                <a
-                  href={`${(clipDone ? clipJob.assets[0] : latestStill).url}?download=1`}
-                  download
-                  aria-label="Download"
-                  className="flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md"
-                >
+            {latestAsset && !(latestJob && isActive(latestJob)) ? (
+              <div
+                className={cn(
+                  "absolute inset-x-0 flex items-center justify-between gap-2 p-4",
+                  // A video keeps its own controls at the bottom, so its actions sit on top.
+                  latestAsset.kind === "video" ? "top-0 bg-gradient-to-b from-black/50 to-transparent pb-10" : "bottom-0 bg-gradient-to-t from-black/70 to-transparent pt-12",
+                )}
+              >
+                <a href={`${latestAsset.url}?download=1`} download aria-label="Download" className="flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md">
                   <Download size={17} strokeWidth={1.75} aria-hidden />
                 </a>
-                {!videoWanted ? (
-                  <button type="button" data-run="move" disabled={busy !== null} onClick={() => void moveFrom(latestStill, String(latest?.fields.concept ?? scene))} className="ooo-pill min-h-11 disabled:opacity-50">
+                {latestAsset.kind === "image" ? (
+                  <button
+                    type="button"
+                    data-run="move"
+                    disabled={busy !== null}
+                    onClick={() => void run(FRAMES, { fields: { concept: String(latest.fields.concept ?? scene), look: String(latest.fields.look ?? look) }, inputs: { first: [latestAsset.id], last: [] } }, "move")}
+                    className="ooo-pill min-h-11 disabled:opacity-50"
+                  >
                     {busy === "move" ? <Spinner label="Starting" /> : <Play size={13} className="fill-current" strokeWidth={1.75} aria-hidden />}
                     {copy.makeMove}
-                    {motionPrice ? <span className="font-mono text-xs text-text-secondary">· {formatCredits(motionPrice)} cr</span> : null}
+                    {movePrice ? <span className="font-mono text-xs text-text-secondary">· {formatCredits(movePrice)} cr</span> : null}
                   </button>
                 ) : null}
               </div>
@@ -479,19 +455,9 @@ export function FiveStar() {
           </section>
 
           {reel.length ? <Reel clips={reel} /> : null}
-
         </div>
       </div>
       <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} mode="join" next="/five-star" />
-    </div>
-  );
-}
-
-function Overlay({ text }: { text: string }) {
-  return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#111116a6] text-center backdrop-blur-[2px]">
-      <Spinner className="text-white" label={text} />
-      <p className="text-sm leading-5 text-white">{text}…</p>
     </div>
   );
 }

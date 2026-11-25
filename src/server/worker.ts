@@ -1,7 +1,7 @@
 import "server-only";
 
 import { usdToMillicredits } from "@/config/economy";
-import { catalogEndpoint, getModel, type MediaType } from "@/registry";
+import { catalogEndpoint, getModel, muapiPath, type MediaType } from "@/registry";
 import { assetsOfJobs, ownedAsset, readAsset, removeAsset, saveAsset, type AssetRow } from "./assets";
 import { grant, release, settle } from "./credits";
 import { all, get, parseJson, run, tx } from "./db";
@@ -9,7 +9,8 @@ import { ApiError } from "./errors";
 import { ResultError, mediaFromReply, mediaFromTask } from "./extract";
 import type { JobRow } from "./jobs";
 import { mockDelayMs, mockMedia, mockShouldFail } from "./mock";
-import { TregUnreachable, classify, redact, taskFailure, taskOutcome, tregCall, tregMode, tregTask, tregUploadMedia, type TregTask } from "./treg";
+import { MuapiRefused, MuapiUnreachable, muapiResult, muapiSubmit } from "./muapi";
+import { TregUnreachable, classify, downloadResult, redact, taskFailure, taskOutcome, tregCall, tregMode, tregTask, tregUploadMedia, type TregTask } from "./treg";
 
 /**
  * The worker: one loop inside the server process that moves jobs along.
@@ -162,6 +163,9 @@ async function start(job: JobRow) {
     throw err;
   }
 
+  const mu = muapiPath(job.endpoint);
+  if (mu) return startMuapi(job, attempts, mu, body);
+
   const rule = catalogEndpoint(job.endpoint);
   let reply;
   try {
@@ -201,6 +205,50 @@ async function start(job: JobRow) {
   if (reply.costMicro != null) run("UPDATE jobs SET provider_cost_micro = ? WHERE id = ?", reply.costMicro, job.id);
   const files = await mediaFromReply(reply, output, job.expect_count);
   await finish(job, files, reply.callId, reply.costMicro);
+}
+
+/** MuAPI jobs skip the gateway: send to MuAPI, keep its request id, poll it like any task. */
+async function startMuapi(job: JobRow, attempts: number, path: string, body: unknown) {
+  let requestId: string;
+  try {
+    requestId = await muapiSubmit(path, body);
+  } catch (err) {
+    if (err instanceof MuapiRefused) {
+      console.warn(`[worker] ${job.id} ${job.endpoint} refused (${err.status}): ${err.message}`);
+      if (err.retry) return retryOrFail(job, attempts, err.message);
+      return fail(job.id, err.status === 503 ? "model_unavailable" : "provider_error", err.message);
+    }
+    if (!(err instanceof MuapiUnreachable)) throw err;
+    console.warn(`[worker] ${job.id} ${job.endpoint}: ${err.message}`);
+    // No answer: MuAPI may have taken it, so do not send it twice.
+    return fail(job.id, "interrupted", "The connection to the model dropped. Try again.");
+  }
+  run("UPDATE jobs SET treg_call_id = ?, next_poll_at = ? WHERE id = ?", `muapi:${requestId}`, Date.now() + 15_000, job.id);
+}
+
+async function pollMuapi(job: JobRow, output: MediaType) {
+  const later = (ms: number) => void run("UPDATE jobs SET next_poll_at = ? WHERE id = ? AND status = 'running'", Date.now() + ms, job.id);
+  let result;
+  try {
+    result = await muapiResult(job.treg_call_id!.slice("muapi:".length));
+  } catch (err) {
+    if (!(err instanceof MuapiUnreachable) && !(err instanceof MuapiRefused && err.retry)) throw err;
+    if (expired(job, output)) return fail(job.id, "timeout", TOO_SLOW);
+    return later(10_000);
+  }
+  if (result.state === "failed") return fail(job.id, "provider_error", result.message);
+  if (result.state === "running") {
+    if (expired(job, output)) return fail(job.id, "timeout", TOO_SLOW);
+    return later(8000);
+  }
+  let files: Buffer[];
+  try {
+    files = await Promise.all(result.urls.slice(0, job.expect_count).map((url) => downloadResult(url)));
+  } catch {
+    await sleep(3000);
+    files = await Promise.all(result.urls.slice(0, job.expect_count).map((url) => downloadResult(url)));
+  }
+  await finish(job, files);
 }
 
 function retryOrFail(job: JobRow, attempts: number, message = "The model is busy or unavailable. Try again shortly.") {
@@ -259,6 +307,8 @@ async function poll(job: JobRow) {
     const files = await mockMedia({ output, prompt: job.prompt, params: parseJson(job.params, {}), count: job.expect_count, seed: job.id });
     return finish(job, files);
   }
+
+  if (job.treg_call_id?.startsWith("muapi:")) return pollMuapi(job, output);
 
   const later = (ms: number) => void run("UPDATE jobs SET next_poll_at = ? WHERE id = ? AND status = 'running'", Date.now() + ms, job.id);
 

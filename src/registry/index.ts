@@ -5,10 +5,11 @@
  */
 import { musicModels, speechModels } from "./audio";
 import { imageModels } from "./image";
+import { muapiVideoModels } from "./muapi";
 import { videoModels } from "./video";
 import type { ModelDef } from "./types";
 
-export const models: ModelDef[] = [...imageModels, ...videoModels, ...speechModels, ...musicModels];
+export const models: ModelDef[] = [...imageModels, ...videoModels, ...muapiVideoModels, ...speechModels, ...musicModels];
 
 const byId = new Map(models.map((m) => [m.id, m]));
 
@@ -30,3 +31,4 @@ export function defaultModel(surface: string): ModelDef | undefined {
 export * from "./types";
 export * from "./logic";
 export { quoteUsd, catalogEndpoint } from "./quote";
+export { muapiPath } from "./muapi";

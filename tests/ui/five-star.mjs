@@ -1,5 +1,5 @@
-// Five Star walk-through: saved cast (you + a friend), Photo then Make it move, Video (still chains
-// into a clip on its own), three shots fill the reel, the trailer plays.
+// Five Star walk-through: saved cast (you + a friend), Photo then Make it move, Frames mode waits
+// for a first frame, Video from References, three shots fill the reel, the trailer plays.
 import { launch } from "./browser.mjs";
 
 const [base, out, W = "393", H = "852"] = process.argv.slice(2);
@@ -29,19 +29,24 @@ try {
   await b.sleep(600);
   await b.shot("01-start", { full: true });
 
-  // Photo, then Make it move.
-  if (!(await b.evaluate(`document.querySelector('[data-run="make"]').disabled`))) throw new Error("Make should wait for a scene");
+  // Photo, then Make it move (Seedance frames from that photo).
   await b.click('[data-starter="chase"]');
   await b.until(`!document.querySelector('[data-run="make"]').disabled`, 10000, "make enabled");
   await b.click('[data-run="make"]');
-  await b.until(`document.querySelector('[data-result]')?.dataset.result === "photo" && !!document.querySelector('[data-run="move"]')`, 60000, "photo");
+  await b.until(`document.querySelector('[data-result]')?.dataset.result === "image" && !!document.querySelector('[data-run="move"]')`, 60000, "photo");
   await b.sleep(500);
   await b.shot("02-photo", { full: true });
   await b.click('[data-run="move"]');
   await b.until(`document.querySelector('[data-result]')?.dataset.result === "video"`, 90000, "clip from photo");
 
-  // Video mode: one press makes the still, then the clip.
+  // Video from Frames waits for a first frame.
   await b.click('[data-option="video"]');
+  await b.click('[data-option="frames"]');
+  await b.until(`!!document.querySelector('[data-upload="first"]') && document.querySelector('[data-run="make"]').disabled`, 10000, "frames mode");
+  await b.shot("03-frames", { full: true });
+
+  // Video from References: one press, straight to Seedance.
+  await b.click('[data-option="refs"]');
   for (const sc of ["beach", "penthouse"]) {
     const before = await b.evaluate(videoCount);
     await b.click(`[data-starter="${sc}"]`);
@@ -51,10 +56,10 @@ try {
   }
   await b.until(`!!document.querySelector('[data-run="trailer"]')`, 20000, "trailer button");
   await b.sleep(800);
-  await b.shot("03-reel", { full: true });
+  await b.shot("04-reel", { full: true });
   await b.click('[data-run="trailer"]');
   await b.sleep(1500);
-  await b.shot("04-trailer-playing");
+  await b.shot("05-trailer-playing");
   const errors = b.logs().filter((l) => !l.startsWith("warning"));
   if (errors.length) throw new Error(`console: ${errors.join(" | ").slice(0, 600)}`);
   console.log("OK");

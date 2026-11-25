@@ -1,7 +1,9 @@
 /**
- * FIVE STAR: put yourself in an open-world crime-saga scene. Two apps that chain:
- *   five-star         photos + the member's own scene + look -> a 9:16 still (Nano Banana Pro, identity from refs)
- *   five-star-motion  that still + the same scene            -> a 5s 9:16 clip with sound (Seedance 2.5, still as first frame)
+ * FIVE STAR: a thin wrapper around the models, with the game's look locked into every prompt.
+ *   five-star         reference photos + scene + look       -> a 9:16 still (Nano Banana Pro)
+ *   five-star-video   reference photos + scene + look       -> a 9:16 clip (Seedance 2.5 omni-reference on MuAPI)
+ *   five-star-frames  first frame (+ last) + scene + look   -> a clip (Seedance 2.5 frames on MuAPI)
+ * "Make it move" on a photo is five-star-frames with that photo as the first frame.
  *
  * The prompts name the reference style so the model hits it exactly, but every prompt forbids logos,
  * titles and on-screen text, and the product itself never uses the game's name or marks.
@@ -40,33 +42,56 @@ export const FIVE_STAR_LOOKS: ChoiceOption[] = [
   },
 ];
 
+/** The same looks for moving pictures: footage, not a still. */
+export const FIVE_STAR_LOOKS_VIDEO: ChoiceOption[] = FIVE_STAR_LOOKS.map((o) => ({
+  ...o,
+  prompt: (o.prompt ?? "")
+    .replace("An in-game frame from Grand Theft Auto VI, captured in photo mode on PS5 Pro:", "In-game footage from Grand Theft Auto VI, as in its trailers and gameplay captured on PS5 Pro, at a steady cinematic 30 fps:")
+    .replace("Official Grand Theft Auto VI promotional artwork style,", "Animated in the official Grand Theft Auto VI promotional artwork style, every frame a painted illustration,"),
+}));
+
 const IDENTITY =
   "The first reference photos show the main character: keep their exact face, skin tone, hairstyle and build recognisable. " +
   "Any further reference photos show other people: put each of them in the scene beside the main character as their crew, each one just as recognisable.";
 
+const VIDEO_IDENTITY =
+  "The reference images are the cast: the first show the main character, any others are their crew. Keep every face, skin tone, hairstyle and build exactly as in the references.";
+const FRAME_IDENTITY = "Keep every face, outfit and the setting exactly as in the frames; the motion fills in the time between them.";
+const concept = () => text("concept", "Your scene", { required: true, placeholder: "Leaning out of a muscle car in a police chase at night", maxLength: 400 });
+const cast = () => [
+  input("you", "You", "refs", { min: 1, max: 3, hint: "1 to 3 clear photos of your face." }),
+  input("crew", "Friends", "refs", { min: 0, max: 3, hint: "Optional. One clear photo per friend, with their OK." }),
+];
+
 export const fiveStarApps: AppDef[] = [
   app({
     id: "five-star", name: "Five Star", category: "template", badge: "new", added: ADDED,
-    pitch: "Put yourself and your crew in an open-world crime-saga scene. One selfie, one tap.",
+    pitch: "Put yourself and your crew in any scene, in the style of the game. A photo or a video.",
     tags: ["character", "game", "poster", "selfie"],
     modelId: "nano-banana-pro", values: { aspect: "9:16", resolution: "2K" },
-    inputs: [
-      input("you", "You", "refs", { min: 1, max: 3, hint: "1 to 3 clear photos of your face." }),
-      input("crew", "Friends", "refs", { min: 0, max: 3, hint: "Optional. One clear photo per friend, with their OK." }),
-    ],
-    fields: [
-      text("concept", "Your scene", { required: true, placeholder: "Leaning out of a muscle car in a police chase at night", maxLength: 400 }),
-      choice("look", "Look", FIVE_STAR_LOOKS),
-    ],
+    inputs: cast(),
+    fields: [concept(), choice("look", "Look", FIVE_STAR_LOOKS)],
     template: `{{look}} Vertical 9:16 frame. The scene: {{concept}}. ${IDENTITY} ${NO_MARKS}`,
   }),
   app({
-    id: "five-star-motion", name: "Five Star: Make it move", category: "template", badge: "new", added: ADDED,
-    pitch: "Turn your Five Star still into a 5-second trailer shot with sound.",
+    id: "five-star-video", name: "Five Star: Video", category: "template", badge: "new", added: ADDED,
+    pitch: "Seedance 2.5 from your reference photos, in the style of the game.",
     tags: ["character", "game", "trailer", "video"],
-    modelId: "seedance-2.5", values: { aspect: "9:16", duration: 5, resolution: "720p", audio: true },
-    inputs: [input("still", "Your still", "start", { hint: "Your Five Star picture. It becomes the first frame." })],
-    fields: [text("concept", "Your scene", { required: true, placeholder: "Leaning out of a muscle car in a police chase at night", maxLength: 400 })],
-    template: `Starting from the image, a cinematic game-trailer shot that brings this scene to life: {{concept}}. One natural camera move and character action that fit the moment, with matching ambient sound and effects. Keep every face and outfit exactly as in the first frame. ${NO_MARKS}`,
+    modelId: "seedance-2.5-refs", values: { aspect: "9:16", duration: "5", resolution: "1080p" },
+    inputs: cast(),
+    fields: [concept(), choice("look", "Look", FIVE_STAR_LOOKS_VIDEO)],
+    template: `{{look}} Vertical 9:16 video. The scene: {{concept}}. ${VIDEO_IDENTITY} ${NO_MARKS}`,
+  }),
+  app({
+    id: "five-star-frames", name: "Five Star: Frames", category: "template", badge: "new", added: ADDED,
+    pitch: "Seedance 2.5 from a first frame and an optional last frame, in the style of the game.",
+    tags: ["game", "trailer", "video", "frames"],
+    modelId: "seedance-2.5-frames", values: { duration: "5", resolution: "1080p" },
+    inputs: [
+      input("first", "First frame", "start", { hint: "The shot starts on this image." }),
+      input("last", "Last frame", "end", { min: 0, hint: "Optional. The shot lands on this image." }),
+    ],
+    fields: [concept(), choice("look", "Look", FIVE_STAR_LOOKS_VIDEO)],
+    template: `{{look}} The shot: {{concept}}. ${FRAME_IDENTITY} ${NO_MARKS}`,
   }),
 ];
